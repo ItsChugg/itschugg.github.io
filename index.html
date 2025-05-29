@@ -1,8 +1,130 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ItsChugg's Website</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #121212;
+      color: white;
+      text-align: center;
+    }
+    nav {
+      display: flex;
+      justify-content: start;
+      padding: 20px;
+      background-color: #121212;
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-right: 20px;
+      font-weight: bold;
+    }
+    .logo {
+      width: 100px;
+      margin: 20px auto;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin: 10px 0;
+    }
+    .subtitle {
+      font-size: 1rem;
+      margin-bottom: 30px;
+      color: #ccc;
+    }
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 40px;
+    }
+    .buttons a {
+      background-color: #333;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+    .buttons a:hover {
+      background-color: #555;
+    }
+    .contributors {
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: left;
+    }
+    .contributor {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .contributor img {
+      width: 50px;
+      height: 50px;
+      border-radius: 5px;
+      margin-right: 15px;
+    }
+    .contributor-name {
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    .contributor-role {
+      color: #ccc;
+    }
+  </style>
+</head>
 <body>
-<h1>Hello World!</h1>
-<p>I'm hosted with GitHub Pages.</p>
-<p>I'm another line, to see if pushing an update fixes something.</p>
+  <nav>
+    <a href="#">Home</a>
+    <a href="#">Evolutionary</a>
+  </nav>
+
+  <img src="assets/chugg-icon.png" alt="ItsChugg Icon" class="logo">
+
+  <h1>ItsChugg’s Website</h1>
+  <p class="subtitle">Currently under renovation.</p>
+
+  <div class="buttons">
+    <a href="#">YOUTUBE</a>
+    <a href="#">DISCORD</a>
+    <a href="#">TWITTER</a>
+    <a href="#">BLUESKY</a>
+    <a href="#">STEAM</a>
+    <a href="#">GITHUB</a>
+  </div>
+
+  <h2>Contributors</h2>
+  <div class="contributors">
+    <div class="contributor">
+      <img src="assets/chugg-icon.png" alt="ItsChugg">
+      <div>
+        <div class="contributor-name">ItsChugg</div>
+        <div class="contributor-role">Website Manager, Evolutionary Manager.</div>
+      </div>
+    </div>
+    <div class="contributor">
+      <img src="assets/rat.png" alt="ZM.B">
+      <div>
+        <div class="contributor-name">ZM.B</div>
+        <div class="contributor-role">Evolutionary Manager.</div>
+      </div>
+    </div>
+    <div class="contributor">
+      <img src="assets/dragonais.png" alt="Dragonais">
+      <div>
+        <div class="contributor-name">Dragonais</div>
+        <div class="contributor-role">Website Artist, Evolutionary Artist.</div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
