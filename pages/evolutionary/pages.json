@@ -1,0 +1,34 @@
+[
+  {
+    "category": "Life",
+    "pages": [
+      { "title": "Non-Sentient", "file": "life/non-sentient.html" },
+      { "title": "Sentient", "file": "life/sentient.html" },
+      { "title": "Pre-Sapient", "file": "life/pre-sapient.html" },
+      { "title": "Sapient", "file": "life/sapient.html" },
+      { "title": "Post-Sapient", "file": "life/post-sapient.html" }
+    ]
+  },
+  {
+    "category": "Magic",
+    "pages": [
+      { "title": "Mana", "file": "magic/mana.html" },
+      { "title": "Magical Elements", "file": "magic/elements.html" }
+    ]
+  },
+  {
+    "category": "Technology",
+    "pages": [
+      { "title": "Spatial Drive", "file": "technology/spatial-drive.html" },
+      { "title": "Glacier", "file": "technology/glacier.html" }
+    ]
+  },
+  {
+    "category": "Galaxy",
+    "pages": [
+      { "title": "Aquin System", "file": "galaxy/map.html" },
+      { "title": "Livionian System", "file": "galaxy/factions.html" },
+      { "title": "Voloid System", "file": "galaxy/factions.html" }
+    ]
+  }
+]

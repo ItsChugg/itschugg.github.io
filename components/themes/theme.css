@@ -1,73 +1,412 @@
-/* RESET + FONT */
-*{margin:0;padding:0;box-sizing:border-box}
-html, body {
+/* ──────────────────────────────── RESET + FONT ──────────────────────────────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
   height: 100%;
   width: 100%;
-  position: relative; /* ensure ::before/::after position fixed respects boundaries */
-  z-index: 0;          /* allow ::before/::after z-index -1 to appear behind */
+  position: relative;
+  z-index: 0;
   font-family: 'Orbitron', sans-serif;
   transition: color 0.3s ease, text-shadow 0.3s ease;
 }
 
-
-/* ───────────────── BACKGROUND CROSS‑FADE (DUAL‑LAYER) ───────────────── */
-/* Dark image on ::before, light image on ::after so we can cross‑fade opacity */
-body::before,body::after{
-  content:"";position:fixed;inset:0;z-index:-1;
-  background-size:cover;background-position:center;background-attachment:fixed;
-  transition:opacity .45s ease;pointer-events:none
+/* ───────────────────────────── BACKGROUND CROSS‑FADE (DUAL‑LAYER) ───────────────────────────── */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  transition: opacity 0.45s ease;
+  pointer-events: none;
 }
-body::before{background-image:url('/assets/backgrounds/dark_page_background.jpg');opacity:1}
-body::after {background-image:url('/assets/backgrounds/light_page_background.jpg');opacity:0}
-/* When in light theme we fade the layers */
-body.light::before{opacity:0}
-body.light::after {opacity:1}
 
-/* helper class so first swap animates */
-body.theme-transition::before,body.theme-transition::after{transition:opacity .45s ease}
+body::before {
+  background-image: url('/assets/backgrounds/dark_page_background.jpg');
+  opacity: 1;
+}
+body::after {
+  background-image: url('/assets/backgrounds/light_page_background.jpg');
+  opacity: 0;
+}
+body.light::before { opacity: 0; }
+body.light::after  { opacity: 1; }
+body.theme-transition::before,
+body.theme-transition::after {
+  transition: opacity 0.45s ease;
+}
 
-/* ───────────────── DARK / LIGHT ROOT TEXT ───────────────── */
-body.dark{color:#fff;text-shadow:1px 1px 2px rgba(0,0,0,.8)}
-body.light{color:#222;text-shadow:none}
+/* ───────────────────────────── DARK / LIGHT ROOT TEXT ──────────────────────────── */
+body.dark {
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+body.light {
+  color: #222;
+  text-shadow: none;
+}
 
-/* ───────────────── NAVBAR ───────────────── */
-nav{display:flex;align-items:center;gap:20px;padding:18px 24px;border-bottom:1px solid rgba(255,255,255,.4);backdrop-filter:blur(6px);transition:background-color .45s ease,box-shadow .45s ease,border .45s ease}
-body.dark nav{background-color:rgba(0,0,0,.4);box-shadow:0 2px 4px rgba(255,255,255,.4)}
-body.light nav{background-color:rgba(255,255,255,.75);border-bottom:1px solid rgba(0,0,0,.25);box-shadow:0 2px 4px rgba(0,0,0,.4)}
-nav a{font-weight:700;text-decoration:none;white-space:nowrap;color:inherit}
-nav .spacer{flex:1 1 auto}
+/* ───────────────────────────────── NAVBAR ───────────────────────────────── */
+nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(6px);
+  transition: background-color 0.45s ease, box-shadow 0.45s ease, border 0.45s ease;
+}
+body.dark nav {
+  background-color: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.4);
+}
+body.light nav {
+  background-color: rgba(255, 255, 255, 0.75);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+nav a {
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  color: inherit;
+}
+nav .spacer { flex: 1 1 auto; }
 
-/* ───────────────── THEME SWITCH ───────────────── */
-.theme-switch{position:relative;width:50px;height:26px;cursor:pointer}
-.theme-switch input{opacity:0;width:0;height:0}
-.theme-switch .slider{position:absolute;inset:0;background:#444;border-radius:26px;transition:background .3s ease}
-.theme-switch .slider::before{content:"\1F31E";position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none;transition:left .4s ease,content .4s}
-.theme-switch .slider::after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transform:none;transition:transform .45s ease}
-body.light .theme-switch .slider{background:#ddd}
-body.light .theme-switch .slider::before{content:"\1F319";left:auto;right:6px}
-body.light .theme-switch .slider::after{transform:translateX(24px)}
+/* ───────────────────────────────── THEME SWITCH ───────────────────────────────── */
+.theme-switch {
+  position: relative;
+  width: 50px;
+  height: 26px;
+  cursor: pointer;
+}
+.theme-switch input { opacity: 0; width: 0; height: 0; }
+.theme-switch .slider {
+  position: absolute;
+  inset: 0;
+  background: #444;
+  border-radius: 26px;
+  transition: background 0.3s ease;
+}
+.theme-switch .slider::before {
+  content: "\1F31E";
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  pointer-events: none;
+  transition: left 0.4s ease, content 0.4s;
+}
+.theme-switch .slider::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.45s ease;
+}
+body.light .theme-switch .slider { background: #ddd; }
+body.light .theme-switch .slider::before {
+  content: "\1F319";
+  left: auto;
+  right: 6px;
+}
+body.light .theme-switch .slider::after {
+  transform: translateX(24px);
+}
 
-/* ───────────────── HERO SECTION ───────────────── */
-.highlighted-section{margin:40px auto;max-width:650px;padding:24px;border-radius:12px;text-align:center;display:flex;flex-direction:column;align-items:center;backdrop-filter:blur(6px);transition:background-color .45s ease,box-shadow .45s ease,border .45s ease}
-body.dark .highlighted-section{background-color:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.4);box-shadow:0 0 6px rgba(255,255,255,.6)}
-body.light .highlighted-section{background-color:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.25);box-shadow:0 0 6px rgba(0,0,0,.15)}
-.logo{width:100px;border-radius:16px;margin-bottom:20px}
-h1{font-size:2.5rem;margin:8px 0}.subtitle{font-size:1rem;margin-bottom:24px;opacity:.9}
+/* ─────────────────────────────────── HERO SECTION ─────────────────────────────────── */
+.highlighted-section {
+  margin: 40px auto;
+  max-width: 650px;
+  padding: 24px;
+  border-radius: 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  backdrop-filter: blur(6px);
+  transition: background-color 0.45s ease, box-shadow 0.45s ease, border 0.45s ease;
+}
+body.dark .highlighted-section {
+  background-color: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+}
+body.light .highlighted-section {
+  background-color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
+}
+.logo { width: 100px; border-radius: 16px; margin-bottom: 20px; }
+h1 { font-size: 2.5rem; margin: 8px 0; }
+.subtitle { font-size: 1rem; margin-bottom: 24px; opacity: 0.9; }
 
-/* ───────────────── BUTTONS ───────────────── */
-.buttons{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:12px}
-.buttons a{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;font-weight:700;text-decoration:none;border-radius:10px;border:1px solid currentColor;transition:background-color .45s ease,box-shadow .45s ease,color .45s ease}
-body.dark .buttons a{color:#fff;background-color:rgba(0,0,0,.55);box-shadow:0 0 4px rgba(255,255,255,.4)}
-body.light .buttons a{color:#000;background-color:rgba(255,255,255,.7);box-shadow:0 0 4px rgba(0,0,0,.15)}
-.buttons a:hover{filter:brightness(1.1)}
+/* ───────────────────────────────── BUTTONS ───────────────────────────────── */
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.buttons a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: 10px;
+  border: 1px solid currentColor;
+  transition: background-color 0.45s ease, box-shadow 0.45s ease, color 0.45s ease;
+}
+body.dark .buttons a {
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.55);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
+}
+body.light .buttons a {
+  color: #000;
+  background-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
+}
+.buttons a:hover { filter: brightness(1.1); }
+.buttons a img { width: 20px; height: 20px; border-radius: 4px; transition: filter 0.3s ease; }
+body.dark .buttons a img { filter: brightness(1.2); }
+body.light .buttons a img { filter: brightness(0.9); }
 
-/* ───────────────── CONTRIBUTORS ───────────────── */
-.contributors{margin:0 auto;max-width:600px;border-radius:12px;padding:24px;backdrop-filter:blur(6px);transition:background-color .45s ease,box-shadow .45s ease,border .45s ease}
-body.dark .contributors{background-color:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.4);box-shadow:0 0 6px rgba(255,255,255,.6)}
-body.light .contributors{background-color:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.25);box-shadow:0 0 6px rgba(0,0,0,.15)}
-.contributors h2{text-align:center;margin-bottom:18px}
-.contributor{display:flex;align-items:center;margin-bottom:14px}
-.contributor img{width:48px;height:48px;border-radius:6px;margin-right:14px}
-.contributor-divider{border:none;height:1px;margin:12px 0;transition:background .45s ease}
-body.dark .contributor-divider{background:rgba(255,255,255,.3)}
-body.light .contributor-divider{background:rgba(0,0,0,.2)}
+/* ───────────────────────────────── CONTRIBUTORS ───────────────────────────────── */
+.contributors {
+  margin: 0 auto;
+  max-width: 600px;
+  border-radius: 12px;
+  padding: 24px;
+  backdrop-filter: blur(6px);
+  transition: background-color 0.45s ease, box-shadow 0.45s ease, border 0.45s ease;
+}
+body.dark .contributors {
+  background-color: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+}
+body.light .contributors {
+  background-color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
+}
+.contributors h2 { text-align: center; margin-bottom: 18px; }
+.contributor { display: flex; align-items: center; margin-bottom: 14px; }
+.contributor img { width: 48px; height: 48px; border-radius: 6px; margin-right: 14px; }
+.contributor-divider { border: none; height: 1px; margin: 12px 0; transition: background 0.45s ease; }
+body.dark .contributor-divider { background: rgba(255, 255, 255, 0.3); }
+body.light .contributor-divider { background: rgba(0, 0, 0, 0.2); }
+
+/* ───────────────────────────────── MAIN LAYOUT ───────────────────────────────── */
+.main-layout {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+  padding: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+.text-panel {
+  flex: 1;
+  min-width: 300px;
+  max-width: 400px;
+  padding: 24px;
+  border-radius: 12px;
+  backdrop-filter: blur(6px);
+  transition: background-color 0.45s ease, box-shadow 0.45s ease, border 0.45s ease;
+}
+body.dark .text-panel {
+  background-color: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+}
+body.light .text-panel {
+  background-color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
+}
+.text-panel h2 { font-size: 1.5rem; margin-bottom: 12px; }
+.text-panel p { font-size: 1rem; line-height: 1.5; }
+
+/* ───────────────────────────────── WIKI PAGE LAYOUT ───────────────────────────────── */
+.wiki-layout {
+  display: flex;
+  gap: 40px;
+  max-width: 1200px;
+  margin: 60px auto;
+  padding: 0 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.wiki-article {
+  flex: 2;
+  min-width: 320px;
+  max-width: 750px;
+  backdrop-filter: blur(6px);
+  border-radius: 12px;
+  padding: 24px;
+  transition: background-color 0.45s ease, box-shadow 0.45s ease, border 0.45s ease;
+}
+body.dark .wiki-article {
+  background-color: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+}
+body.light .wiki-article {
+  background-color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
+}
+.wiki-sidebar { flex: 1; min-width: 250px; max-width: 300px; }
+
+/* ───────────────────────────────── INFOBOX ───────────────────────────────── */
+.infobox {
+  padding: 18px;
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+  transition: background-color 0.45s ease, box-shadow 0.45s ease, border 0.45s ease;
+  margin-top: 24px;
+}
+body.dark .infobox {
+  background-color: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+}
+body.light .infobox {
+  background-color: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+.infobox ul { list-style: none; padding: 0; margin: 0; }
+.infobox li { margin-bottom: 8px; }
+
+/* ───────────────────────────────── WIKI CONTENT ───────────────────────────────── */
+.wiki-article h2 {
+  margin-top: 32px;
+  margin-bottom: 12px;
+  font-size: 1.4rem;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 4px;
+}
+.wiki-article p { margin-bottom: 16px; line-height: 1.6; }
+
+/* ───────────────────────────────── WIKI LAYOUT STRUCTURE ───────────────────────────────── */
+html, body { height: 100%; }
+.wiki-container { display: flex; height: 100%; }
+#navbar-container { z-index: 10; position: relative; }
+
+/* ───────────────────────────────── SIDEBAR-CONTAINER ───────────────────────────────── */
+#sidebar-container {
+  width: 220px;
+  position: fixed;
+  top: 70px;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+}
+
+/* ───────────────────────────────── PAGE INDEX SIDEBAR ───────────────────────────────── */
+.subpage-bar {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;               /* ← center every child horizontally */
+  width: 100%;
+  height: 100%;
+  padding: 24px 16px;
+  overflow-y: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(6px);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+body.light .subpage-bar {
+  background-color: rgba(255, 255, 255, 0.75);
+  border-right: 1px solid rgba(0, 0, 0, 0.2);
+}
+.subpage-bar h3 {
+  font-size: 1.2rem;
+  margin-bottom: 12px;
+}
+.subpage-bar h4 {
+  font-size: 1rem;
+  margin: 8px 0 4px;
+}
+.subpage-bar hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  margin: 2px 0;                     /* ← tighten the gap */
+}
+body.light .subpage-bar hr {
+  border-top: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+/* ───────────────────────────────── DROPDOWNS ───────────────────────────────── */
+.dropdown-toggle {
+  all: unset;
+  font-weight: 700;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  width: 100%;
+  padding: 4px 0;
+  text-align: left;
+}
+.dropdown-toggle .arrow {
+  transition: transform 0.3s ease;
+}
+.dropdown-toggle.active .arrow {
+  transform: rotate(180deg);
+}
+
+.dropdown {
+  list-style: none;
+  margin: 4px auto 0;                /* ← center the UL and remove left indent */
+  padding: 0;
+  width: auto;                       /* ← shrink-wrap to its contents */
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+.dropdown.open {
+  max-height: 300px;
+}
+.dropdown li {
+  margin: 2px 0;                     /* ← tighten up vertical spacing */
+}
+.dropdown a {
+  display: inline-block;             /* ← shrink-wrap link to text */
+  text-decoration: none;
+  color: inherit;
+  font-weight: 600;
+  text-align: center;                /* ← center the text inside the link */
+  padding: 2px 8px;
+}
+.dropdown a:hover {
+  text-decoration: underline;
+}
+
+
+

@@ -1,153 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/png" href="/assets/icons/favicon.png" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Evolutionary</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet" />
-  <style>
-    body {
-      font-family: 'Orbitron', sans-serif;
-      background: url('../../assets/backgrounds/main_page_background.jpg') no-repeat center center fixed;
-      background-size: cover;
-      color: #ffffff;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-      min-height: 100vh;
-      font-weight: bold;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-    }
-
-    nav {
-      background: rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(5px);
-      padding: 20px;
-      display: flex;
-      gap: 20px;
-      font-weight: bold;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-      box-shadow: 0 4px 6px rgba(255, 255, 255, 0.4);
-    }
-
-    nav a {
-      color: white;
-      text-decoration: none;
-    }
-
-    .wiki-container {
-      max-width: 1100px;
-      margin: 40px auto;
-      padding: 30px;
-      background: rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(5px);
-      border-radius: 12px;
-      box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
-    }
-
-    blockquote {
-      font-style: italic;
-      color: #ccc;
-      margin: 20px 0;
-      padding: 10px;
-      border-left: 3px solid #aaa;
-    }
-
-    .alert-box {
-      background: rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(5px);
-      padding: 15px;
-      margin: 30px 0;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      border-radius: 6px;
-      box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
-    }
-
-    .alert-box a {
-      color: #66ccff;
-    }
-
-    .card-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      justify-content: center;
-      margin-top: 30px;
-    }
-
-    .card {
-      background: rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(5px);
-      padding: 20px;
-      border-radius: 12px;
-      width: 250px;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
-      text-align: left;
-    }
-
-    .card h2 {
-      font-size: 1.25rem;
-      margin-top: 0;
-    }
-
-    .card ul {
-      list-style: none;
-      padding-left: 0;
-    }
-
-    .card li {
-      margin: 8px 0;
-    }
-
-    .card a {
-      color: #88cfff;
-      text-decoration: none;
-    }
-  </style>
+  <title>Evolutionary | ItsChugg Wiki</title>
+  <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="/components/themes/theme.css" />
+  
 </head>
 <body>
-  <nav>
-    <a href="/">Home</a>
-    <a href="/pages/evolutionary/">Evolutionary</a>
-  </nav>
+  <!-- Navbar -->
+  <div id="navbar-container"></div>
 
-  <div class="wiki-container">
-    <h1>Evolutionary</h1>
-    <p>Welcome to the Evolutionary Wiki. Here, you'll find a comprehensive collection of everything created over years of development.</p>
-    
+  <!-- Fixed Sidebar will be injected here -->
+  <div id="sidebar-container"></div>
 
-    <div class="alert-box">
-      &#x26a0; This Evolutionary wiki is still being built. &#x26a0;
-    </div>
+  <!-- Wikipedia Layout Container -->
+  <div class="wiki-layout">
+    <!-- Main Article Column -->
+    <main class="wiki-article">
+      <h2>Evolutionary</h2>
+      <p><b>Evolutionary</b> is a fictional universe developed by Russell G. Rinaldo and associates, centered around the concepts of sci-fi, magic, evolution, and biology. It is constantly under development, and is subject to change.</p>
+      <p>We need a better description here, because it's difficult to describe Evolutuionary right now. A B C D E F G AAAAAAAAAAAAA AEIOU</p>
 
-    <div class="card-grid">
-      <div class="card">
-        <h2>🧙 Magic</h2>
-        <ul>
-          <li><a href="../evolutionary/prion/">Prion</a></li>
-          <li><a href="../evolutionary/crystals/">Crystals</a></li>
-        </ul>
-        <h2>🚀 Space-time</h2>
-        <ul>
-          <li><a href="#">Systems</a></li>
-          <li><a href="#">Anomalies</a></li>
-        </ul>
+      <h2>Summary</h2>
+      <p>Something something ignis aqua earth idk, what do we put here?</p>
+
+      <h2>Inspiration</h2>
+      <p>Inspired by games and concepts such as Stellaris, Spore, Dune..</p>
+
+      <h2></h2>
+      <p>Can't choose what to view first? Click **here** to view a random page.</p>
+    </main>
+
+    <!-- Sidebar Infobox (right side) -->
+    <aside class="wiki-sidebar">
+      <div class="infobox">
+        <h2>???</h2>
+        <p>test</p>
       </div>
-      <div class="card">
-        <h2>🧬 Species</h2>
-        <ul>
-          <li><a href="../evolutionary/species/non-sentient/">Non-Sentient</a></li>
-          <li><a href="../evolutionary/species/sentient/">Sentient</a></li>
-          <li><a href="../evolutionary/species/pre-sapient/">Pre-Sapient</a></li>
-          <li><a href="../evolutionary/species/sapient/">Sapient</a></li>
-          <li><a href="../evolutionary/species/post-sapient/">Post-Sapient</a></li>
-        </ul>
-      </div>
-    </div>
+    </aside>
   </div>
+
+  <!-- Scripts -->
+  <script src="/components/navbar/inject-navbar.js" defer></script>
+  <script src="/components/themes/theme-switcher.js" defer></script>
+  <script src="/components/sidebar/inject-sidebar.js" defer></script>
 </body>
 </html>
