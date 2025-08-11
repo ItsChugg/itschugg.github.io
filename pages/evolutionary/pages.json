@@ -1,6 +1,28 @@
 [
+    {
+    "category": "Anomalies",
+    "pages": [
+      {"title": "Diseased Space", "file": "anomalies/diseased-space.html", "icon": "/assets/icons/bacterium.png"}
+    ]
+  },
   {
-    "category": "Life",
+    "category": "Elements",
+    "pages": [
+      { "title": "Periodic Matter", "file": "technology/periodic-elements.html", "icon": "/assets/icons/element.png" },
+      { "title": "Dark Matter", "file": "technology/dark-matter.html", "icon": "/assets/icons/dark_matter.png" },
+      { "title": "Ambrosia", "file": "technology/ambrosia.html", "icon": "/assets/icons/ambrosia.png" }
+    ]
+  },
+  {
+    "category": "Magic",
+    "pages": [
+      { "title": "Ichor", "file": "magic/ichor.html", "icon": "/assets/icons/ichor.png" },
+      { "title": "Hyperlanes", "file": "magic/hyperlanes.html", "icon": "/assets/icons/hyperlanes.png" },
+      { "title": "Wormholes", "file": "magic/wormholes.html", "icon": "/assets/icons/wormholes.png" }
+    ]
+  },
+  {
+    "category": "Species",
     "pages": [
       { "title": "Non-Sentient", "file": "life/non-sentient.html" },
       { "title": "Sentient", "file": "life/sentient.html" },
@@ -10,25 +32,28 @@
     ]
   },
   {
-    "category": "Magic",
-    "pages": [
-      { "title": "Mana", "file": "magic/mana.html" },
-      { "title": "Magical Elements", "file": "magic/elements.html" }
-    ]
-  },
-  {
     "category": "Technology",
     "pages": [
-      { "title": "Spatial Drive", "file": "technology/spatial-drive.html" },
+      { "title": "Ichor Drive", "file": "technology/ichor-drive.html" },
+      { "title": "Tectonic Generator", "file": "technology/seismic-generator.html" },
       { "title": "Glacier", "file": "technology/glacier.html" }
     ]
   },
   {
-    "category": "Galaxy",
+    "category": "Unique Systems",
     "pages": [
-      { "title": "Aquin System", "file": "galaxy/map.html" },
-      { "title": "Livionian System", "file": "galaxy/factions.html" },
-      { "title": "Voloid System", "file": "galaxy/factions.html" }
+      { "title": "Lacus Magna", "file": "systems/aquin-system.html" },
+      { "title": "Essentia", "file": "systems/livionian-system.html" },
+      { "title": "Voloid System", "file": "systems/voloid-system.html" }
+    ]
+  },
+  {
+    "category": "Unique Characters",
+    "pages": [
+      { "title": "Dr. Rin", "file": "characters/dr-rin.html" },
+      { "title": "Mizu Vermont", "file": "characters/mizu-vermont.html" },
+      { "title": "Rivers", "file": "characters/rivers.html" }
     ]
   }
 ]
+

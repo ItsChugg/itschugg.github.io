@@ -29,14 +29,14 @@ document.addEventListener("DOMContentLoaded", () => {
         section.style.display = "flex";
         section.style.flexDirection = "column";
         section.style.alignItems = "center";
-        section.style.width = "100%";         // full sidebar width for consistency
-        section.style.gap = "2px";            // tight space
-        section.style.marginBottom = "2px";   // minimal group spacing
+        section.style.width = "100%";
+        section.style.gap = "2px";
+        section.style.marginBottom = "2px";
 
         // Toggle button
         const toggle = document.createElement("button");
         toggle.className = "dropdown-toggle";
-        toggle.innerHTML = `${group.category} <span class=\"arrow\">▾</span>`;
+        toggle.innerHTML = `${group.category} <span class="arrow">▾</span>`;
         toggle.style.width = "auto";
         toggle.style.textAlign = "center";
         section.appendChild(toggle);
@@ -50,14 +50,29 @@ document.addEventListener("DOMContentLoaded", () => {
         let isCurrentCategory = false;
         group.pages.forEach(page => {
           const li = document.createElement("li");
+          
+          // --- ICON (if provided in JSON) ---
+          if (page.icon) {
+            const img = document.createElement("img");
+            img.src = page.icon;
+            img.alt = "";
+            img.className = "sidebar-page-icon";
+            li.appendChild(img);
+          }
+
+          // --- LINK ---
           const a = document.createElement("a");
           a.textContent = page.title;
           a.href = page.file;
-          // handle long text
+          // allow wrapping but prevent overflow
           a.style.wordBreak = "break-word";
-          a.style.whiteSpace = "normal";
-          a.style.textAlign = "center";
-          if (currentPath.includes(page.file)) isCurrentCategory = true;
+          a.style.whiteSpace  = "normal";
+          a.style.textAlign   = "center";
+
+          if (currentPath.includes(page.file)) {
+            isCurrentCategory = true;
+          }
+
           li.appendChild(a);
           list.appendChild(li);
         });
@@ -65,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Divider line
         const hr = document.createElement("hr");
-        hr.style.width = "80%";                // consistent length
+        hr.style.width  = "80%";
         hr.style.margin = "2px auto 0";
         section.appendChild(hr);
 

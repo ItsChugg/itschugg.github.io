@@ -359,33 +359,40 @@ body.light .subpage-bar hr {
   border-top: 1px solid rgba(0, 0, 0, 0.2);
 }
 
-/* ───────────────────────────────── DROPDOWNS ───────────────────────────────── */
+/* ────────────────────────── TEXT-ONLY DROPDOWN TOGGLE ────────────────────────── */
 .dropdown-toggle {
-  all: unset;
-  font-weight: 700;
+  all: unset;                /* keep your reset */
+  display: inline-flex;      /* shrink-wrap the text+arrow */
+  align-items: center;
+  font-weight: 600;
   font-family: inherit;
   font-size: inherit;
   color: inherit;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  padding: 4px 0;            /* just a little vertical hit-area */
+  margin: 4px 0 0;           /* same gap as your lists */
   cursor: pointer;
-  width: 100%;
-  padding: 4px 0;
   text-align: left;
 }
+
 .dropdown-toggle .arrow {
+  margin-left: 0.25em;       /* space before the ▼ */
   transition: transform 0.3s ease;
 }
+
 .dropdown-toggle.active .arrow {
   transform: rotate(180deg);
 }
 
+.dropdown-toggle {
+  white-space: nowrap;       /* 🚫 no more wrapping */
+}
+
+/* ───────────────────────────────── DROPDOWNS ───────────────────────────────── */
 .dropdown {
   list-style: none;
-  margin: 4px auto 0;                /* ← center the UL and remove left indent */
+  margin: 4px 0 0;         /* no auto centering now */
   padding: 0;
-  width: auto;                       /* ← shrink-wrap to its contents */
+  width: 100%;             /* fill sidebar */
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.4s ease;
@@ -394,18 +401,33 @@ body.light .subpage-bar hr {
   max-height: 300px;
 }
 .dropdown li {
-  margin: 2px 0;                     /* ← tighten up vertical spacing */
+  text-align: center;      /* center each link */
+  margin: 2px 0;
 }
 .dropdown a {
-  display: inline-block;             /* ← shrink-wrap link to text */
+  display: inline-block;
   text-decoration: none;
   color: inherit;
   font-weight: 600;
-  text-align: center;                /* ← center the text inside the link */
   padding: 2px 8px;
 }
 .dropdown a:hover {
   text-decoration: underline;
+}
+
+/* little “favicon” to the left of each dropdown link */
+.sidebar-page-icon {
+  width: 1em;              /* or 16px */
+  height: 1em;             /* or auto */
+  margin-right: 0em;
+  vertical-align: middle;  /* keeps it centered with the text */
+}
+
+/* if you used <i> tags (font icons) instead: */
+.dropdown li i {
+  margin-right: 0.5em;
+  font-size: 1em;
+  vertical-align: middle;
 }
 
 
