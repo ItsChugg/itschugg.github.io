@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap');
 
+/* v3 */
 /* ── Variables ───────────────────────────────────────────────────────────── */
 
 :root {
@@ -138,8 +139,8 @@ hr {
   position: relative;
   z-index: 1;
   max-width: 1200px;
-  margin: 0 auto;
-  padding: 36px 28px;
+  margin: 0;
+  padding: 36px 40px;
 }
 
 /* ── Panels / cards ──────────────────────────────────────────────────────── */
