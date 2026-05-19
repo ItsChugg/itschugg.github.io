@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Globe Viewer — itschu.gg</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <canvas id="globe-canvas"></canvas>
+
+  <div id="panel">
+    <div id="panel-header">
+      <h1>Globe Viewer</h1>
+      <button id="panel-toggle" title="Collapse panel">◀</button>
+    </div>
+
+    <div id="panel-body">
+      <section>
+        <h2>Appearance</h2>
+        <div class="control-row">
+          <label for="atmosphere-toggle">Atmosphere</label>
+          <input type="checkbox" id="atmosphere-toggle" checked>
+        </div>
+        <div class="control-row">
+          <label for="stars-toggle">Stars</label>
+          <input type="checkbox" id="stars-toggle" checked>
+        </div>
+      </section>
+
+      <section>
+        <h2>Textures</h2>
+
+        <p class="tex-slot-label">Day Side</p>
+        <div class="control-row">
+          <button id="upload-day-btn">Upload</button>
+        </div>
+        <div class="tex-file-row" id="day-file-row">
+          <span id="day-file-name"></span>
+          <button id="clear-day-btn" class="clear-btn">✕</button>
+        </div>
+
+        <p class="tex-slot-label">Night Side</p>
+        <div class="control-row">
+          <button id="upload-night-btn">Upload</button>
+        </div>
+        <div class="tex-file-row" id="night-file-row">
+          <span id="night-file-name"></span>
+          <button id="clear-night-btn" class="clear-btn">✕</button>
+        </div>
+
+        <p class="tex-slot-label">Background</p>
+        <div class="control-row">
+          <button id="upload-bg-btn">Upload</button>
+        </div>
+        <div class="tex-file-row" id="bg-file-row">
+          <span id="bg-file-name"></span>
+          <button id="clear-bg-btn" class="clear-btn">✕</button>
+        </div>
+
+        <input type="file" id="day-tex-input"   accept="image/*">
+        <input type="file" id="night-tex-input" accept="image/*">
+        <input type="file" id="bg-tex-input"    accept="image/*">
+      </section>
+
+      <section>
+        <h2>Rotation</h2>
+        <div class="control-row">
+          <label for="rotate-toggle">Auto Rotate</label>
+          <input type="checkbox" id="rotate-toggle" checked>
+        </div>
+        <div class="control-row">
+          <label for="speed-slider">Speed</label>
+          <input type="range" id="speed-slider" min="0" max="200" value="2">
+        </div>
+        <div class="control-row">
+          <label for="axial-tilt-slider">Axis Tilt</label>
+          <input type="range" id="axial-tilt-slider" min="0" max="45" value="0">
+          <span id="axial-tilt-value">0°</span>
+        </div>
+        <div class="control-row">
+          <label for="equator-tilt-slider">Equator Tilt</label>
+          <input type="range" id="equator-tilt-slider" min="0" max="45" value="0">
+          <span id="equator-tilt-value">0°</span>
+        </div>
+        <div class="control-row tilt-lock-row">
+          <label for="tilt-lock">Lock Tilts</label>
+          <input type="checkbox" id="tilt-lock" checked>
+        </div>
+      </section>
+
+      <section>
+        <h2>Lighting</h2>
+        <div class="control-row">
+          <label for="daynight-toggle">Day/Night Cycle</label>
+          <input type="checkbox" id="daynight-toggle">
+        </div>
+        <div class="control-row" id="sun-intensity-row" style="display:none">
+          <label for="sun-intensity-slider">Sun Intensity</label>
+          <input type="range" id="sun-intensity-slider" min="0" max="100" value="75">
+        </div>
+      </section>
+
+      <section>
+        <h2>Export</h2>
+        <div class="control-row">
+          <button id="screenshot-btn">Save Screenshot</button>
+        </div>
+        <div class="control-row">
+          <label for="gif-frames-slider">Frames</label>
+          <input type="range" id="gif-frames-slider" min="12" max="120" value="60">
+          <span id="gif-frames-value">60</span>
+        </div>
+        <div class="control-row">
+          <label for="gif-delay-slider">Frame Delay</label>
+          <input type="range" id="gif-delay-slider" min="16" max="200" value="50">
+          <span id="gif-delay-value">50ms</span>
+        </div>
+        <div class="control-row">
+          <label for="gif-size-slider">GIF Size</label>
+          <input type="range" id="gif-size-slider" min="200" max="800" step="100" value="500">
+          <span id="gif-size-value">500px</span>
+        </div>
+        <div class="control-row">
+          <button id="gif-btn">Export GIF</button>
+        </div>
+        <div id="gif-progress">
+          <div id="gif-progress-bar"></div>
+          <span id="gif-progress-text">Capturing…</span>
+        </div>
+      </section>
+      <section id="experimental-section">
+        <h2 id="experimental-toggle" class="collapsible-header">
+          Experimental
+          <span class="exp-chevron">▶</span>
+        </h2>
+        <div id="experimental-body" class="collapsible-body">
+          <div class="control-row">
+            <label for="tilt-fullrange">Full Tilt Range</label>
+            <input type="checkbox" id="tilt-fullrange">
+          </div>
+          <div class="control-row">
+            <label for="sun-speed-lock">Unlock Sun Speed</label>
+            <input type="checkbox" id="sun-speed-lock">
+          </div>
+          <div class="control-row">
+            <label for="sun-speed-slider">Sun Speed</label>
+            <input type="range" id="sun-speed-slider" min="0" max="200" value="2" disabled>
+          </div>
+          <div class="control-row">
+            <label for="ambient-slider">Ambient</label>
+            <input type="range" id="ambient-slider" min="0" max="100" value="25">
+          </div>
+          <div class="control-row">
+            <label for="wireframe-toggle">Wireframe</label>
+            <input type="checkbox" id="wireframe-toggle" checked>
+          </div>
+          <div class="control-row" id="wire-style-row">
+            <label for="wire-style">Style</label>
+            <select id="wire-style">
+              <option value="grid">Grid</option>
+              <option value="triangle" selected>Triangle</option>
+              <option value="hexagon">Hexagon</option>
+              <option value="brick">Brick</option>
+              <option value="diamond">Diamond</option>
+              <option value="loxodrome">Loxodrome</option>
+              <option value="voronoi">Voronoi</option>
+              <option value="greatcircle">Great Circles</option>
+            </select>
+          </div>
+          <div class="control-row">
+            <label for="wire-density">Density</label>
+            <input type="range" id="wire-density" min="1" max="10" value="5">
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="vendor/gif.js"></script>
+  <script type="module" src="js/app.js?v=15"></script>
+</body>
+</html>
