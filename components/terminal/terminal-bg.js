@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const PROMPT     = 'C:\\ITSCHU.GG> ';
+  const PROMPT     = 'Terminal > ';
   const CHAR_MIN   = 32;  // ms between typed characters (min)
   const CHAR_MAX   = 78;  // ms between typed characters (max)
   const OUT_DELAY  = 52;  // ms between output lines appearing
@@ -9,44 +9,16 @@
   const FADE_RANGE = 22;  // lines over which to go from clear → nearly invisible
 
   const SCRIPT = [
-    { t:'h', s:'Microsoft Windows [Version 2.0.26200.8246]' },
-    { t:'h', s:'(c) ItsChugg. All rights reserved.'         },
+    { t:'h', s:'Amber Terminal [Version 2.0]'       },
+    { t:'h', s:'(c) ItsChugg. All rights reserved.' },
     { t:'b' },
-    { t:'c', s:'whoami',                    p:1000 },
-    { t:'o', s:'HOST\\ITSCHUGG'                    },
+    { t:'c', s:'systeminfo',               p:900  },
+    { t:'o', s:'Host Name:        ITSCHU.GG'       },
+    { t:'o', s:'Website Version:  2.0'             },
     { t:'b' },
-    { t:'c', s:'systeminfo',                p:750  },
-    { t:'o', s:'Host Name:      ITSCHU.GG'         },
-    { t:'o', s:'OS Version:     2.0.26200'          },
-    { t:'o', s:'Build Type:     PUBLIC'             },
-    { t:'o', s:'User Status:    ACTIVE'             },
-    { t:'b' },
-    { t:'c', s:'dir /b',                    p:650  },
-    { t:'o', s:'evolutionary\\'                     },
-    { t:'o', s:'globe\\'                            },
-    { t:'o', s:'index.html'                         },
-    { t:'b' },
-    { t:'c', s:'sc query',                  p:800  },
-    { t:'o', s:'SERVICE_NAME: EVOLUTIONARY.WIKI'   },
-    { t:'o', s:'        STATE              : 4  RUNNING' },
-    { t:'o', s:'SERVICE_NAME: GLOBE.VIEWER'         },
-    { t:'o', s:'        STATE              : 4  RUNNING' },
-    { t:'b' },
-    { t:'c', s:'net user itschugg',         p:720  },
-    { t:'o', s:'User name          ITSCHUGG'        },
-    { t:'o', s:'Full Name          Russell G. Rinaldo' },
-    { t:'o', s:'Comment            Host, Programmer, Creator' },
-    { t:'o', s:'User active        Yes'             },
-    { t:'b' },
-    { t:'c', s:'ping evolutionary.itschu.gg', p:620 },
-    { t:'o', s:'Pinging evolutionary.itschu.gg [185.199.108.153]:' },
-    { t:'o', s:'Reply from 185.199.108.153: bytes=32 time<1ms TTL=128' },
-    { t:'o', s:'Reply from 185.199.108.153: bytes=32 time<1ms TTL=128' },
-    { t:'o', s:'Reply from 185.199.108.153: bytes=32 time<1ms TTL=128' },
-    { t:'o', s:'Reply from 185.199.108.153: bytes=32 time<1ms TTL=128' },
-    { t:'b' },
-    { t:'o', s:'Ping statistics for 185.199.108.153:'              },
-    { t:'o', s:'    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss)' },
+    { t:'c', s:'query services',           p:750  },
+    { t:'o', s:'EVOLUTIONARY.WIKI    [ RUNNING ]'  },
+    { t:'o', s:'GLOBE.VIEWER         [ RUNNING ]'  },
     { t:'b' },
   ];
 
