@@ -16,6 +16,22 @@
   </script>
 </head>
 <body>
+  <!-- Navbar inlined so it appears instantly (no fetch flash) -->
+  <nav class="navbar">
+    <span class="navbar-brand">ITSCHU.GG</span>
+    <div class="theme-swatches">
+      <button class="swatch" data-theme="red"   title="Red"></button>
+      <button class="swatch" data-theme="amber" title="Amber"></button>
+      <button class="swatch" data-theme="green" title="Green"></button>
+      <button class="swatch" data-theme="blue"  title="Blue"></button>
+    </div>
+    <ul class="navbar-links">
+      <li><a href="/">HOME</a></li>
+      <li><a href="/pages/evolutionary/">EVOLUTIONARY</a></li>
+      <li><a href="/globe/">GLOBE</a></li>
+    </ul>
+  </nav>
+
   <div id="globe-layout">
   <canvas id="globe-canvas"></canvas>
 
@@ -28,10 +44,6 @@
     <div id="panel-body">
       <section>
         <h2>Appearance</h2>
-        <div class="control-row">
-          <label for="atmosphere-toggle">Atmosphere</label>
-          <input type="checkbox" id="atmosphere-toggle" checked>
-        </div>
         <div class="control-row">
           <label for="stars-toggle">Stars</label>
           <input type="checkbox" id="stars-toggle" checked>
@@ -146,6 +158,10 @@
         </h2>
         <div id="experimental-body" class="collapsible-body">
           <div class="control-row">
+            <label for="atmosphere-toggle">Atmosphere Glow</label>
+            <input type="checkbox" id="atmosphere-toggle">
+          </div>
+          <div class="control-row">
             <label for="tilt-fullrange">Full Tilt Range</label>
             <input type="checkbox" id="tilt-fullrange">
           </div>
@@ -190,7 +206,7 @@
   </div><!-- #globe-layout -->
 
   <script src="vendor/gif.js"></script>
-  <script type="module" src="js/app.js?v=17"></script>
+  <script type="module" src="js/app.js?v=18"></script>
   <script src="/components/navbar/inject-navbar.js" defer></script>
 </body>
 </html>

@@ -660,13 +660,16 @@ function setWireframeStyle(style) {
 
 // ── Atmosphere ───────────────────────────────────────────────────────────────
 
+// MeshBasicMaterial — no directional lighting so it won't show a day/night
+// gradient when the day/night cycle is disabled.
 const atmosphere = new THREE.Mesh(
   new THREE.SphereGeometry(R * 1.055, 64, 64),
-  new THREE.MeshPhongMaterial({
-    color: 0xffffff, transparent: true, opacity: 0.06,
+  new THREE.MeshBasicMaterial({
+    color: 0xffffff, transparent: true, opacity: 0.05,
     side: THREE.FrontSide, depthWrite: false,
   })
 );
+atmosphere.visible = false;
 scene.add(atmosphere);
 
 const rimMat = new THREE.ShaderMaterial({
@@ -687,7 +690,7 @@ const rimMat = new THREE.ShaderMaterial({
   fragmentShader: `
     uniform vec3 glowColor;
     varying float rim;
-    void main() { gl_FragColor = vec4(glowColor, rim * 0.55); }
+    void main() { gl_FragColor = vec4(glowColor, rim * 0.18); }
   `,
   side: THREE.BackSide,
   blending: THREE.AdditiveBlending,
@@ -696,6 +699,7 @@ const rimMat = new THREE.ShaderMaterial({
 });
 
 const rimGlow = new THREE.Mesh(new THREE.SphereGeometry(R * 1.12, 64, 64), rimMat);
+rimGlow.visible = false; // hidden by default; atmosphere toggle enables it
 scene.add(rimGlow);
 
 // ── Lighting (for atmosphere mesh) ──────────────────────────────────────────
