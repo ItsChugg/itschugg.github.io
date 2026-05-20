@@ -529,26 +529,49 @@ hr {
   right: 0;
   bottom: 0;
   z-index: 0;
-  padding: 22px 36px;
   overflow: hidden;
   pointer-events: none;
   user-select: none;
+  /* Fade top edge to transparent — old lines dissolve as they scroll up */
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.15) 12%,
+    rgba(0,0,0,0.55) 26%,
+    black 42%);
+  mask-image: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.15) 12%,
+    rgba(0,0,0,0.55) 26%,
+    black 42%);
 }
 
-#terminal-bg pre {
+/* Inner container anchors content to the bottom so new lines push old up */
+.terminal-inner {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 22px 36px;
+  overflow: hidden;
+}
+
+.tline {
   font-family: var(--font-mono);
   font-size: 12.5px;
   line-height: 1.58;
-  color: rgba(255, 176, 0, 0.13);
-  white-space: pre;
-  margin: 0;
+  color: rgba(255, 176, 0, 0.14);
+  white-space: pre-wrap;
+  word-break: break-all;
+  min-height: 1.58em;
+  /* blur/opacity applied inline by JS for older lines */
+  will-change: opacity, filter;
 }
 
 .tcursor {
   display: inline-block;
   width: 7px;
   height: 0.8em;
-  background: rgba(255, 176, 0, 0.18);
+  background: rgba(255, 176, 0, 0.20);
   vertical-align: middle;
   animation: tcursor-blink 1.1s step-end infinite;
 }
