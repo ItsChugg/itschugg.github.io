@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Globe Viewer — itschu.gg</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/components/themes/theme.css?v=4">
   <script type="importmap">
   {
     "imports": {
@@ -15,6 +16,7 @@
   </script>
 </head>
 <body>
+  <div id="globe-layout">
   <canvas id="globe-canvas"></canvas>
 
   <div id="panel">
@@ -185,7 +187,10 @@
     </div>
   </div>
 
+  </div><!-- #globe-layout -->
+
   <script src="vendor/gif.js"></script>
   <script type="module" src="js/app.js?v=15"></script>
+  <script src="/components/navbar/inject-navbar.js" defer></script>
 </body>
 </html>
