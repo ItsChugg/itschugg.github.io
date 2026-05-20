@@ -560,7 +560,7 @@ hr {
   font-family: var(--font-mono);
   font-size: 12.5px;
   line-height: 1.58;
-  color: rgba(255, 176, 0, 0.14);
+  color: rgba(255, 176, 0, 0.28);
   white-space: pre-wrap;
   word-break: break-all;
   min-height: 1.58em;
@@ -572,7 +572,7 @@ hr {
   display: inline-block;
   width: 7px;
   height: 0.8em;
-  background: rgba(255, 176, 0, 0.20);
+  background: rgba(255, 176, 0, 0.35);
   vertical-align: middle;
   animation: tcursor-blink 1.1s step-end infinite;
 }
