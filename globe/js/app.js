@@ -724,7 +724,7 @@ syncSunDir();
 // Atmosphere & rim glow are always white — only wireframe + globe base change.
 const GLOBE_THEME_COLORS = {
   dark:  { line: new THREE.Color(0x888888), base: new THREE.Color(0x1a1a1a) },
-  light: { line: new THREE.Color(0x333344), base: new THREE.Color(0xd8d8e4) },
+  light: { line: new THREE.Color(0xcccccc), base: new THREE.Color(0x1a1a1a) },
   amber: { line: new THREE.Color(0xcc8800), base: new THREE.Color(0x0a0600) },
   red:   { line: new THREE.Color(0xcc2244), base: new THREE.Color(0x0a0002) },
   green: { line: new THREE.Color(0x22cc66), base: new THREE.Color(0x000a03) },
