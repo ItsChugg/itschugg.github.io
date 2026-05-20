@@ -21,7 +21,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 // ── Scene & Camera ───────────────────────────────────────────────────────────
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x07070f);
+scene.background = new THREE.Color(0x000000);
 
 const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
 camera.position.set(0, 0.4, 3.2);
@@ -34,31 +34,11 @@ controls.maxDistance = 10;
 controls.autoRotate = false;
 
 // ── Background stars ─────────────────────────────────────────────────────────
+// White circles at fixed pixel sizes (1–5 px) so they stay crisp at any zoom.
 
-const STAR_COUNT = 5000;
+const STAR_COUNT    = 5000;
 const starPositions = new Float32Array(STAR_COUNT * 3);
-const starColors    = new Float32Array(STAR_COUNT * 3);
 const starSizes     = new Float32Array(STAR_COUNT);
-
-const SPECTRAL = [
-  [0.65, 0.75, 1.00],
-  [0.92, 0.95, 1.00],
-  [1.00, 0.98, 0.88],
-  [1.00, 0.94, 0.68],
-  [1.00, 0.72, 0.38],
-  [1.00, 0.38, 0.18],
-];
-const SPECTRAL_WEIGHTS = [0.05, 0.12, 0.20, 0.26, 0.22, 0.15];
-
-function spectralColor() {
-  const r = Math.random();
-  let acc = 0;
-  for (let i = 0; i < SPECTRAL_WEIGHTS.length; i++) {
-    acc += SPECTRAL_WEIGHTS[i];
-    if (r < acc) return SPECTRAL[i];
-  }
-  return SPECTRAL[SPECTRAL.length - 1];
-}
 
 for (let i = 0; i < STAR_COUNT; i++) {
   const theta = Math.random() * Math.PI * 2;
@@ -67,44 +47,33 @@ for (let i = 0; i < STAR_COUNT; i++) {
   starPositions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
   starPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
   starPositions[i * 3 + 2] = r * Math.cos(phi);
-  const [sr, sg, sb] = spectralColor();
-  starColors[i * 3]     = sr;
-  starColors[i * 3 + 1] = sg;
-  starColors[i * 3 + 2] = sb;
-  starSizes[i] = 0.04 + Math.random() * 0.14;
+  starSizes[i] = 1.0 + Math.random() * 4.0; // 1–5 px
 }
 
 const starGeo = new THREE.BufferGeometry();
 starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-starGeo.setAttribute('color',    new THREE.BufferAttribute(starColors, 3));
 starGeo.setAttribute('size',     new THREE.BufferAttribute(starSizes, 1));
 
 const starMat = new THREE.ShaderMaterial({
   uniforms: { opacity: { value: 1.0 } },
   vertexShader: `
     attribute float size;
-    attribute vec3 color;
-    varying vec3 vColor;
     void main() {
-      vColor = color;
-      vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-      gl_PointSize = size * (300.0 / -mvPos.z);
-      gl_Position = projectionMatrix * mvPos;
+      gl_PointSize = size;
+      gl_Position  = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
   `,
   fragmentShader: `
     uniform float opacity;
-    varying vec3 vColor;
     void main() {
-      float d = length(gl_PointCoord - 0.5) * 2.0;
+      float d     = length(gl_PointCoord - 0.5) * 2.0;
       if (d > 1.0) discard;
-      float alpha = (1.0 - smoothstep(0.3, 1.0, d)) * opacity;
-      gl_FragColor = vec4(vColor, alpha);
+      float alpha = (1.0 - smoothstep(0.5, 1.0, d)) * opacity;
+      gl_FragColor = vec4(1.0, 1.0, 1.0, alpha);
     }
   `,
   transparent: true,
-  depthWrite: false,
-  vertexColors: true,
+  depthWrite:  false,
 });
 
 const stars = new THREE.Points(starGeo, starMat);
@@ -694,7 +663,7 @@ function setWireframeStyle(style) {
 const atmosphere = new THREE.Mesh(
   new THREE.SphereGeometry(R * 1.055, 64, 64),
   new THREE.MeshPhongMaterial({
-    color: 0x0d3faa, transparent: true, opacity: 0.10,
+    color: 0xffffff, transparent: true, opacity: 0.06,
     side: THREE.FrontSide, depthWrite: false,
   })
 );
@@ -702,7 +671,7 @@ scene.add(atmosphere);
 
 const rimMat = new THREE.ShaderMaterial({
   uniforms: {
-    glowColor:  { value: new THREE.Color(0x1a55cc) },
+    glowColor:  { value: new THREE.Color(0xffffff) },
     viewVector: { value: new THREE.Vector3() },
   },
   vertexShader: `
@@ -748,38 +717,17 @@ syncSunDir();
 // ── Theme sync ───────────────────────────────────────────────────────────────
 // Maps site theme names → globe material colors
 
+// Atmosphere & rim glow are always white — only wireframe + globe base change.
 const GLOBE_THEME_COLORS = {
-  amber: {
-    line:       new THREE.Color(0xcc8800),
-    glow:       new THREE.Color(0x886600),
-    atmosphere: new THREE.Color(0x332200),
-    base:       new THREE.Color(0x0a0600),
-  },
-  red: {
-    line:       new THREE.Color(0xcc2244),
-    glow:       new THREE.Color(0x881020),
-    atmosphere: new THREE.Color(0x330008),
-    base:       new THREE.Color(0x0a0002),
-  },
-  green: {
-    line:       new THREE.Color(0x22cc66),
-    glow:       new THREE.Color(0x116633),
-    atmosphere: new THREE.Color(0x003316),
-    base:       new THREE.Color(0x000a03),
-  },
-  blue: {
-    line:       new THREE.Color(0x2266cc),
-    glow:       new THREE.Color(0x1a55cc),
-    atmosphere: new THREE.Color(0x0d3faa),
-    base:       new THREE.Color(0x060618),
-  },
+  amber: { line: new THREE.Color(0xcc8800), base: new THREE.Color(0x0a0600) },
+  red:   { line: new THREE.Color(0xcc2244), base: new THREE.Color(0x0a0002) },
+  green: { line: new THREE.Color(0x22cc66), base: new THREE.Color(0x000a03) },
+  blue:  { line: new THREE.Color(0x2266cc), base: new THREE.Color(0x060618) },
 };
 
 function applyGlobeTheme(name) {
-  const c = GLOBE_THEME_COLORS[name] || GLOBE_THEME_COLORS.blue;
+  const c = GLOBE_THEME_COLORS[name] || GLOBE_THEME_COLORS.amber;
   graticuleMat.uniforms.lineColor.value.copy(c.line);
-  rimMat.uniforms.glowColor.value.copy(c.glow);
-  atmosphere.material.color.copy(c.atmosphere);
   globeMat.uniforms.baseColor.value.copy(c.base);
 }
 
@@ -920,7 +868,7 @@ $('bg-tex-input').addEventListener('change', e => {
 });
 $('clear-bg-btn').addEventListener('click', () => {
   if (scene.background && scene.background.isTexture) scene.background.dispose();
-  scene.background = new THREE.Color(0x07070f);
+  scene.background = new THREE.Color(0x000000);
   stars.visible    = $('stars-toggle').checked;
   state.hasBgTex   = false;
   hideFileRow('bg-file-row');

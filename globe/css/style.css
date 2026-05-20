@@ -5,7 +5,7 @@
 }
 
 body {
-  background: #07070f;
+  background: #000000;
   color: var(--text-muted);
   font-family: var(--font-mono);
   overflow: hidden;
