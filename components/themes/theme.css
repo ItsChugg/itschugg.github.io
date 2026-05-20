@@ -532,7 +532,11 @@ hr {
   overflow: hidden;
   pointer-events: none;
   user-select: none;
-  /* Fade top edge to transparent — old lines dissolve as they scroll up */
+  /* Flex: push terminal-inner to the bottom; it grows upward as lines accumulate */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  /* Fade top edge — old lines dissolve as they move up */
   -webkit-mask-image: linear-gradient(to bottom,
     transparent 0%,
     rgba(0,0,0,0.15) 12%,
@@ -545,14 +549,11 @@ hr {
     black 42%);
 }
 
-/* Inner container anchors content to the bottom so new lines push old up */
+/* flex-shrink:0 lets this grow taller than the container;
+   overflow at the top is clipped by the parent's overflow:hidden */
 .terminal-inner {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  flex-shrink: 0;
   padding: 22px 36px;
-  overflow: hidden;
 }
 
 .tline {
