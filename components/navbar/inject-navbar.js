@@ -40,7 +40,7 @@ function wireNavbar() {
 if (document.querySelector('.navbar')) {
   wireNavbar();
 } else {
-  fetch('/components/navbar/navbar.html?v=5')
+  fetch('/components/navbar/navbar.html?v=6')
     .then(res => res.text())
     .then(html => {
       document.body.insertAdjacentHTML('afterbegin', html);

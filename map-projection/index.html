@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map Projection — itschu.gg</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/components/themes/theme.css?v=5">
+</head>
+<body>
+  <!-- Navbar inlined so it appears instantly (no fetch flash) -->
+  <nav class="navbar">
+    <span class="navbar-brand">ITSCHU.GG</span>
+    <div class="theme-swatches">
+      <button class="swatch" data-theme="dark"  title="Dark"></button>
+      <button class="swatch" data-theme="light" title="Light"></button>
+      <button class="swatch" data-theme="amber" title="Amber"></button>
+      <button class="swatch" data-theme="red"   title="Red"></button>
+      <button class="swatch" data-theme="green" title="Green"></button>
+      <button class="swatch" data-theme="blue"  title="Blue"></button>
+    </div>
+    <ul class="navbar-links">
+      <li><a href="/">HOME</a></li>
+      <li><a href="/pages/evolutionary/">EVOLUTIONARY</a></li>
+      <li><a href="/map-to-globe/">MAP TO GLOBE</a></li>
+      <li><a href="/map-projection/">MAP PROJECTION</a></li>
+    </ul>
+  </nav>
+
+  <div id="proj-layout">
+
+    <div id="proj-view">
+      <div id="proj-placeholder">
+        <span id="placeholder-text">Upload an equirectangular map to get started</span>
+      </div>
+      <canvas id="output-canvas"></canvas>
+    </div>
+
+    <div id="panel">
+      <div id="panel-header">
+        <h1>Map Projection</h1>
+        <button id="panel-toggle" title="Collapse panel">◀</button>
+      </div>
+
+      <div id="panel-body">
+
+        <section>
+          <h2>Source Map</h2>
+          <p class="panel-hint">Input is assumed to be equirectangular (plate carrée).</p>
+          <div class="control-row">
+            <button id="upload-btn">Upload Map</button>
+          </div>
+          <div class="file-row" id="file-row">
+            <span id="file-name"></span>
+            <button id="clear-btn" class="clear-btn">✕</button>
+          </div>
+          <input type="file" id="file-input" accept="image/*">
+        </section>
+
+        <section>
+          <h2>Output Projection</h2>
+          <div class="control-row">
+            <select id="projection-select">
+              <option value="equirectangular">Equirectangular</option>
+              <option value="mercator" selected>Mercator</option>
+              <option value="mollweide">Mollweide</option>
+              <option value="sinusoidal">Sinusoidal</option>
+              <option value="azimuthal">Azimuthal Equidistant</option>
+              <option value="orthographic">Orthographic</option>
+            </select>
+          </div>
+
+          <div id="center-controls">
+            <div class="control-row">
+              <label for="center-lat">Center Lat</label>
+              <input type="range" id="center-lat" min="-90" max="90" value="0">
+              <span id="center-lat-val">0°</span>
+            </div>
+            <div class="control-row">
+              <label for="center-lon">Center Lon</label>
+              <input type="range" id="center-lon" min="-180" max="180" value="0">
+              <span id="center-lon-val">0°</span>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>Output</h2>
+          <div class="control-row">
+            <label for="size-slider">Width</label>
+            <input type="range" id="size-slider" min="256" max="2048" step="128" value="1024">
+            <span id="size-val">1024px</span>
+          </div>
+          <div class="control-row">
+            <button id="process-btn" disabled>Convert</button>
+          </div>
+          <div id="proc-progress">
+            <div id="proc-bar"></div>
+            <span id="proc-text">Processing…</span>
+          </div>
+          <div class="control-row" id="download-row">
+            <button id="download-btn" disabled>Download PNG</button>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+  </div><!-- #proj-layout -->
+
+  <script src="/components/navbar/inject-navbar.js" defer></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
