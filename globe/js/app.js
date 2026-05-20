@@ -745,6 +745,52 @@ function syncSunDir() {
 }
 syncSunDir();
 
+// ── Theme sync ───────────────────────────────────────────────────────────────
+// Maps site theme names → globe material colors
+
+const GLOBE_THEME_COLORS = {
+  amber: {
+    line:       new THREE.Color(0xcc8800),
+    glow:       new THREE.Color(0x886600),
+    atmosphere: new THREE.Color(0x332200),
+    base:       new THREE.Color(0x0a0600),
+  },
+  red: {
+    line:       new THREE.Color(0xcc2244),
+    glow:       new THREE.Color(0x881020),
+    atmosphere: new THREE.Color(0x330008),
+    base:       new THREE.Color(0x0a0002),
+  },
+  green: {
+    line:       new THREE.Color(0x22cc66),
+    glow:       new THREE.Color(0x116633),
+    atmosphere: new THREE.Color(0x003316),
+    base:       new THREE.Color(0x000a03),
+  },
+  blue: {
+    line:       new THREE.Color(0x2266cc),
+    glow:       new THREE.Color(0x1a55cc),
+    atmosphere: new THREE.Color(0x0d3faa),
+    base:       new THREE.Color(0x060618),
+  },
+};
+
+function applyGlobeTheme(name) {
+  const c = GLOBE_THEME_COLORS[name] || GLOBE_THEME_COLORS.blue;
+  graticuleMat.uniforms.lineColor.value.copy(c.line);
+  rimMat.uniforms.glowColor.value.copy(c.glow);
+  atmosphere.material.color.copy(c.atmosphere);
+  globeMat.uniforms.baseColor.value.copy(c.base);
+}
+
+// Apply saved theme on load
+applyGlobeTheme(localStorage.getItem('itschu-theme') || 'amber');
+
+// React instantly when user clicks a swatch on any page
+new MutationObserver(() => {
+  applyGlobeTheme(localStorage.getItem('itschu-theme') || 'amber');
+}).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
 // ── State ────────────────────────────────────────────────────────────────────
 
 const state = {
