@@ -1,5 +1,5 @@
 // Inject navbar and highlight the active link
-fetch('/components/navbar/navbar.html')
+fetch('/components/navbar/navbar.html?v=3')
   .then(res => res.text())
   .then(html => {
     document.body.insertAdjacentHTML('afterbegin', html);
