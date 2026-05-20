@@ -194,7 +194,7 @@ const globeMat = new THREE.ShaderMaterial({
   },
 });
 
-const globe = new THREE.Mesh(new THREE.SphereGeometry(R, 64, 64), globeMat);
+const globe = new THREE.Mesh(new THREE.SphereGeometry(R, 128, 128), globeMat);
 globe.visible = false; // hidden until a day texture is loaded
 equatorGroup.add(globe);
 
@@ -776,9 +776,17 @@ function hideFileRow(rowId) {
   $(rowId).style.display = 'none';
 }
 
+// Maximum anisotropy supported by the GPU — reduces blurring at oblique angles
+// (most noticeable near the poles where UV coordinates are compressed).
+const MAX_ANISOTROPY = renderer.capabilities.getMaxAnisotropy();
+
 function loadTex(url, onLoad) {
   new THREE.TextureLoader().load(url, tex => {
-    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.colorSpace  = THREE.SRGBColorSpace;
+    tex.anisotropy  = MAX_ANISOTROPY;
+    tex.minFilter   = THREE.LinearMipmapLinearFilter; // trilinear — best quality
+    tex.magFilter   = THREE.LinearFilter;
+    tex.needsUpdate = true;
     onLoad(tex);
     URL.revokeObjectURL(url);
   });
