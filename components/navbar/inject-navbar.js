@@ -1,7 +1,8 @@
-// Apply saved theme before first paint to prevent flash
+// Apply saved theme before first paint to prevent flash.
+// 'dark' is the default (no data-theme attribute = dark mode via :root).
 (function () {
   var t = localStorage.getItem('itschu-theme');
-  if (t && t !== 'amber') document.documentElement.setAttribute('data-theme', t);
+  if (t && t !== 'dark') document.documentElement.setAttribute('data-theme', t);
 }());
 
 function wireNavbar() {
@@ -16,12 +17,12 @@ function wireNavbar() {
   });
 
   // Wire up theme swatches
-  const currentTheme = localStorage.getItem('itschu-theme') || 'amber';
+  const currentTheme = localStorage.getItem('itschu-theme') || 'dark';
   document.querySelectorAll('.swatch').forEach(s => {
     s.classList.toggle('active', s.dataset.theme === currentTheme);
     s.addEventListener('click', () => {
       const name = s.dataset.theme;
-      if (name === 'amber') {
+      if (name === 'dark') {
         document.documentElement.removeAttribute('data-theme');
       } else {
         document.documentElement.setAttribute('data-theme', name);
@@ -39,7 +40,7 @@ function wireNavbar() {
 if (document.querySelector('.navbar')) {
   wireNavbar();
 } else {
-  fetch('/components/navbar/navbar.html?v=4')
+  fetch('/components/navbar/navbar.html?v=5')
     .then(res => res.text())
     .then(html => {
       document.body.insertAdjacentHTML('afterbegin', html);

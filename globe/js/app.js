@@ -723,6 +723,8 @@ syncSunDir();
 
 // Atmosphere & rim glow are always white — only wireframe + globe base change.
 const GLOBE_THEME_COLORS = {
+  dark:  { line: new THREE.Color(0x888888), base: new THREE.Color(0x1a1a1a) },
+  light: { line: new THREE.Color(0x333344), base: new THREE.Color(0xd8d8e4) },
   amber: { line: new THREE.Color(0xcc8800), base: new THREE.Color(0x0a0600) },
   red:   { line: new THREE.Color(0xcc2244), base: new THREE.Color(0x0a0002) },
   green: { line: new THREE.Color(0x22cc66), base: new THREE.Color(0x000a03) },
@@ -730,13 +732,13 @@ const GLOBE_THEME_COLORS = {
 };
 
 function applyGlobeTheme(name) {
-  const c = GLOBE_THEME_COLORS[name] || GLOBE_THEME_COLORS.amber;
+  const c = GLOBE_THEME_COLORS[name] || GLOBE_THEME_COLORS.dark;
   graticuleMat.uniforms.lineColor.value.copy(c.line);
   globeMat.uniforms.baseColor.value.copy(c.base);
 }
 
 // Apply saved theme on load
-applyGlobeTheme(localStorage.getItem('itschu-theme') || 'amber');
+applyGlobeTheme(localStorage.getItem('itschu-theme') || 'dark');
 
 // React instantly when user clicks a swatch on any page
 new MutationObserver(() => {

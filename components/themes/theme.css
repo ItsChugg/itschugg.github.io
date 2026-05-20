@@ -1,9 +1,57 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap');
 
-/* v4 */
-/* ── Variables — Amber (default) ─────────────────────────────────────────── */
+/* v5 */
+/* ── Variables — Dark (default) ──────────────────────────────────────────── */
 
 :root {
+  --bg:                 #111111;
+  --bg-panel:           rgba(22, 22, 22, 0.97);
+  --bg-hover:           rgba(220, 220, 220, 0.05);
+  --bg-glow:            rgba(220, 220, 220, 0.015);
+  --amber:              #d8d8d8;
+  --amber-bright:       #ffffff;
+  --amber-dim:          rgba(210, 210, 210, 0.22);
+  --amber-faint:        rgba(210, 210, 210, 0.07);
+  --text:               #d8d8d8;
+  --text-muted:         rgba(210, 210, 210, 0.50);
+  --text-faint:         rgba(210, 210, 210, 0.28);
+  --glow-sm:            0 0 6px  rgba(210, 210, 210, 0.18);
+  --glow-md:            0 0 14px rgba(210, 210, 210, 0.10);
+  --glow-lg:            0 0 28px rgba(210, 210, 210, 0.05);
+  --border:             1px solid rgba(210, 210, 210, 0.14);
+  --terminal-fg:        rgba(210, 210, 210, 0.18);
+  --terminal-cursor-bg: rgba(210, 210, 210, 0.45);
+  --icon-filter:        brightness(0) invert(1) opacity(0.70);
+  --font-head:          'Orbitron', sans-serif;
+  --font-mono:          'Share Tech Mono', 'Courier New', monospace;
+}
+
+/* ── Light theme ─────────────────────────────────────────────────────────── */
+
+[data-theme="light"] {
+  --bg:                 #f2f2f4;
+  --bg-panel:           rgba(255, 255, 255, 0.97);
+  --bg-hover:           rgba(30, 30, 46, 0.05);
+  --bg-glow:            rgba(30, 30, 46, 0.02);
+  --amber:              #1e1e2e;
+  --amber-bright:       #000010;
+  --amber-dim:          rgba(30, 30, 46, 0.22);
+  --amber-faint:        rgba(30, 30, 46, 0.07);
+  --text:               #1e1e2e;
+  --text-muted:         rgba(30, 30, 46, 0.55);
+  --text-faint:         rgba(30, 30, 46, 0.35);
+  --glow-sm:            0 0 6px  rgba(30, 30, 46, 0.08);
+  --glow-md:            0 0 14px rgba(30, 30, 46, 0.05);
+  --glow-lg:            0 0 28px rgba(30, 30, 46, 0.03);
+  --border:             1px solid rgba(30, 30, 46, 0.16);
+  --terminal-fg:        rgba(30, 30, 46, 0.15);
+  --terminal-cursor-bg: rgba(30, 30, 46, 0.40);
+  --icon-filter:        brightness(0) opacity(0.65);
+}
+
+/* ── Amber theme ─────────────────────────────────────────────────────────── */
+
+[data-theme="amber"] {
   --bg:                 #0a0700;
   --bg-panel:           rgba(18, 12, 0, 0.95);
   --bg-hover:           rgba(255, 176, 0, 0.07);
@@ -18,11 +66,10 @@
   --glow-sm:            0 0 6px  rgba(255, 176, 0, 0.40);
   --glow-md:            0 0 14px rgba(255, 176, 0, 0.35);
   --glow-lg:            0 0 28px rgba(255, 176, 0, 0.15);
-  --border:             1px solid var(--amber-dim);
+  --border:             1px solid rgba(255, 176, 0, 0.30);
   --terminal-fg:        rgba(255, 176, 0, 0.28);
   --terminal-cursor-bg: rgba(255, 176, 0, 0.35);
-  --font-head:          'Orbitron', sans-serif;
-  --font-mono:          'Share Tech Mono', 'Courier New', monospace;
+  --icon-filter:        sepia(1) saturate(3) hue-rotate(5deg) brightness(0.85);
 }
 
 /* ── Red theme ───────────────────────────────────────────────────────────── */
@@ -45,6 +92,7 @@
   --border:             1px solid rgba(255, 34, 68, 0.30);
   --terminal-fg:        rgba(255, 34, 68, 0.28);
   --terminal-cursor-bg: rgba(255, 34, 68, 0.38);
+  --icon-filter:        sepia(1) saturate(5) hue-rotate(325deg) brightness(0.90);
 }
 
 /* ── Green theme (classic phosphor) ─────────────────────────────────────── */
@@ -67,6 +115,7 @@
   --border:             1px solid rgba(51, 255, 119, 0.30);
   --terminal-fg:        rgba(51, 255, 119, 0.28);
   --terminal-cursor-bg: rgba(51, 255, 119, 0.38);
+  --icon-filter:        sepia(1) saturate(3) hue-rotate(95deg) brightness(0.90);
 }
 
 /* ── Blue theme (globe-matched) ──────────────────────────────────────────── */
@@ -89,6 +138,7 @@
   --border:             1px solid rgba(68, 136, 255, 0.30);
   --terminal-fg:        rgba(68, 136, 255, 0.28);
   --terminal-cursor-bg: rgba(68, 136, 255, 0.38);
+  --icon-filter:        sepia(1) saturate(3) hue-rotate(200deg) brightness(0.90);
 }
 
 /* ── Reset ───────────────────────────────────────────────────────────────── */
@@ -112,7 +162,7 @@ body {
   min-height: 100vh;
 }
 
-/* Subtle amber radial glow from top-center */
+/* Subtle radial glow from top-center */
 body::before {
   content: '';
   position: fixed;
@@ -155,7 +205,7 @@ hr {
   z-index: 100;
   background: var(--bg-panel);
   border-bottom: var(--border);
-  box-shadow: 0 0 20px rgba(255, 176, 0, 0.10);
+  box-shadow: var(--glow-lg);
   display: flex;
   align-items: center;
   padding: 0 28px;
@@ -193,8 +243,10 @@ hr {
   transition: opacity 0.15s, transform 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 
-.swatch[data-theme="red"]   { background: #ff2244; }
+.swatch[data-theme="dark"]  { background: #444444; }
+.swatch[data-theme="light"] { background: #d4d4d4; border-color: rgba(0,0,0,0.18); }
 .swatch[data-theme="amber"] { background: #ffb000; }
+.swatch[data-theme="red"]   { background: #ff2244; }
 .swatch[data-theme="green"] { background: #33ff77; }
 .swatch[data-theme="blue"]  { background: #4488ff; }
 
@@ -206,8 +258,13 @@ hr {
   border-color: rgba(255, 255, 255, 0.60);
 }
 
-.swatch[data-theme="red"].active   { box-shadow: 0 0 7px #ff2244; }
+/* Light swatch uses a dark ring so it's visible when active */
+.swatch[data-theme="light"].active { border-color: rgba(0, 0, 0, 0.45); }
+
+.swatch[data-theme="dark"].active  { box-shadow: 0 0 7px #888888; }
+.swatch[data-theme="light"].active { box-shadow: 0 0 7px rgba(0,0,0,0.30); }
 .swatch[data-theme="amber"].active { box-shadow: 0 0 7px #ffb000; }
+.swatch[data-theme="red"].active   { box-shadow: 0 0 7px #ff2244; }
 .swatch[data-theme="green"].active { box-shadow: 0 0 7px #33ff77; }
 .swatch[data-theme="blue"].active  { box-shadow: 0 0 7px #4488ff; }
 
@@ -360,12 +417,9 @@ hr {
   width: 18px;
   height: 18px;
   object-fit: contain;
-  filter: sepia(1) saturate(3) hue-rotate(5deg) brightness(0.85);
-  opacity: 0.65;
-  transition: opacity 0.15s;
+  filter: var(--icon-filter);
+  transition: filter 0.15s, opacity 0.15s;
 }
-
-.buttons a:hover img { opacity: 1; }
 
 /* ── Home layout ─────────────────────────────────────────────────────────── */
 
@@ -400,7 +454,7 @@ hr {
   border: 1px solid var(--amber-dim);
   object-fit: cover;
   flex-shrink: 0;
-  filter: sepia(0.25);
+  filter: sepia(0.15);
 }
 
 .contributor-name {
@@ -548,7 +602,7 @@ hr {
 /* ── Infobox ─────────────────────────────────────────────────────────────── */
 
 .infobox {
-  background: rgba(255, 176, 0, 0.03);
+  background: var(--bg-hover);
   border: var(--border);
   box-shadow: var(--glow-lg);
   padding: 16px;
@@ -632,7 +686,7 @@ hr {
   width: 100%;
   height: 1px;
   background: var(--amber-dim);
-  box-shadow: 0 0 8px rgba(255, 176, 0, 0.25);
+  box-shadow: 0 0 8px var(--amber-dim);
   margin-top: 28px;
 }
 

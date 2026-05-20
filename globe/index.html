@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Globe Viewer — itschu.gg</title>
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="/components/themes/theme.css?v=4">
+  <link rel="stylesheet" href="/components/themes/theme.css?v=5">
   <script type="importmap">
   {
     "imports": {
@@ -20,8 +20,10 @@
   <nav class="navbar">
     <span class="navbar-brand">ITSCHU.GG</span>
     <div class="theme-swatches">
-      <button class="swatch" data-theme="red"   title="Red"></button>
+      <button class="swatch" data-theme="dark"  title="Dark"></button>
+      <button class="swatch" data-theme="light" title="Light"></button>
       <button class="swatch" data-theme="amber" title="Amber"></button>
+      <button class="swatch" data-theme="red"   title="Red"></button>
       <button class="swatch" data-theme="green" title="Green"></button>
       <button class="swatch" data-theme="blue"  title="Blue"></button>
     </div>
@@ -62,8 +64,8 @@
           <button id="clear-day-btn" class="clear-btn">✕</button>
         </div>
 
-        <p class="tex-slot-label">Night Side</p>
-        <div class="control-row">
+        <p class="tex-slot-label tex-slot-opt">Night Side</p>
+        <div class="control-row opt-upload">
           <button id="upload-night-btn">Upload</button>
         </div>
         <div class="tex-file-row" id="night-file-row">
@@ -71,8 +73,8 @@
           <button id="clear-night-btn" class="clear-btn">✕</button>
         </div>
 
-        <p class="tex-slot-label">Background</p>
-        <div class="control-row">
+        <p class="tex-slot-label tex-slot-opt">Background</p>
+        <div class="control-row opt-upload">
           <button id="upload-bg-btn">Upload</button>
         </div>
         <div class="tex-file-row" id="bg-file-row">
