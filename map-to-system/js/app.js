@@ -97,7 +97,8 @@ function rebuildStarField(count) {
 // The sun sits at a distant position — the system's central star.
 // Its world position drives physically correct day/night shading per body.
 
-const SUN_WORLD_POS = new THREE.Vector3(80, 0, 0);
+const SUN_WORLD_POS   = new THREE.Vector3(80, 0, 0);
+const globalLightColor = new THREE.Color(1, 1, 1); // color of light cast on all bodies
 const sunGroup = new THREE.Group();
 
 const sunCoreMesh = new THREE.Mesh(
@@ -564,7 +565,7 @@ class Body {
         hasDayTex:      { value: false },
         hasNightTex:    { value: false },
         sunDir:         { value: new THREE.Vector3(1, 0, 0) },
-        sunColor:       { value: new THREE.Vector3(1, 1, 1) },
+        sunColor:       { value: new THREE.Vector3(globalLightColor.r, globalLightColor.g, globalLightColor.b) },
         sunIntensity:   { value: 1.5 },
         baseColor:      { value: new THREE.Color(0x060618) },
         ambientStr:     { value: 0.18 },
@@ -1158,8 +1159,7 @@ function populatePanel(body) {
   $('sun-options').style.display = body.dayNightCycle ? 'block' : 'none';
   const si = Math.round(body.globeMat.uniforms.sunIntensity.value * 50);
   $('sun-intensity-slider').value = si; $('sun-intensity-num').value = si;
-  const sc = body.globeMat.uniforms.sunColor.value;
-  $('sun-color').value = '#' + new THREE.Color(sc.x, sc.y, sc.z).getHexString();
+  $('sun-color').value = '#' + globalLightColor.getHexString();
 
   // ── Wireframe ─────────────────────────────────────────────────────────────
   $('wireframe-toggle').checked = body.wireframe.visible;
@@ -1408,8 +1408,9 @@ $('sun-intensity-slider').addEventListener('input', e => {
 });
 
 $('sun-color').addEventListener('input', e => {
-  const c = new THREE.Color(e.target.value);
-  selectedBody.globeMat.uniforms.sunColor.value.set(c.r, c.g, c.b);
+  globalLightColor.set(e.target.value);
+  for (const b of bodies)
+    b.globeMat.uniforms.sunColor.value.set(globalLightColor.r, globalLightColor.g, globalLightColor.b);
 });
 
 // ── Sun visual controls ────────────────────────────────────────────────────────
