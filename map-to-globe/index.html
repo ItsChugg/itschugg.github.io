@@ -81,25 +81,30 @@
           <label for="rotate-toggle">Auto Rotate</label>
           <input type="checkbox" id="rotate-toggle" checked>
         </div>
+        <p class="control-hint">Toggles planetary rotation.</p>
         <div class="control-row">
           <label for="speed-slider">Speed</label>
-          <input type="range" id="speed-slider" min="0" max="200" value="2">
-          <input type="number" id="speed-num" class="slider-num" min="0" max="200" value="2">
+          <input type="range" id="speed-slider" min="5" max="300" step="1" value="60">
+          <input type="number" id="speed-num" class="slider-num" min="5" max="300" step="1" value="60">
         </div>
+        <p class="control-hint">Length of time to finish a rotation.</p>
         <div class="control-row">
           <label for="axial-tilt-slider">Axis Tilt</label>
           <input type="range" id="axial-tilt-slider" min="0" max="45" value="0">
           <input type="number" id="axial-tilt-num" class="slider-num" min="0" max="45" value="0">
         </div>
+        <p class="control-hint">Changes angle relative to the sun.</p>
         <div class="control-row">
           <label for="equator-tilt-slider">Equator Tilt</label>
           <input type="range" id="equator-tilt-slider" min="0" max="45" value="0">
           <input type="number" id="equator-tilt-num" class="slider-num" min="0" max="45" value="0">
         </div>
+        <p class="control-hint">Changes the direction of rotation.</p>
         <div class="control-row tilt-lock-row">
           <label for="tilt-lock">Lock Tilts</label>
           <input type="checkbox" id="tilt-lock" checked>
         </div>
+        <p class="control-hint">Toggles the link between Tilts.</p>
       </section>
 
       <section>
@@ -203,13 +208,13 @@
         </div>
       </section>
     </div>
-    <div id="panel-version">v1.34</div>
+    <div id="panel-version">v1.35</div>
   </div>
 
   </div><!-- #globe-layout -->
 
   <script src="vendor/gif.js"></script>
-  <script type="module" src="js/app.js?v=38"></script>
+  <script type="module" src="js/app.js?v=39"></script>
   <script src="/components/navbar/inject-navbar.js" defer></script>
 </body>
 </html>

@@ -781,7 +781,7 @@ new MutationObserver(() => {
 
 const state = {
   autoRotate:     true,
-  rotateSpeed:    0.002,   // ≈ 1 full rotation per minute at 60 fps
+  rotateSpeed:    (2 * Math.PI) / (60 * 60), // 60 s per rotation (matches Speed slider default)
   dayNightCycle:  false,
   sunAngle:       0, // starts at (5, 0, 0) — sun directly to the right
   isCapturingGif: false,
@@ -941,7 +941,8 @@ $('rotate-toggle').addEventListener('change', e => {
 });
 
 $('speed-slider').addEventListener('input', e => {
-  state.rotateSpeed = e.target.value / 1000;
+  // Slider value is seconds per full rotation
+  state.rotateSpeed = (2 * Math.PI) / (e.target.value * 60);
   $('speed-num').value = e.target.value;
 });
 
