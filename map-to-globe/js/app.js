@@ -129,6 +129,7 @@ const FRAG = /* glsl */`
   uniform vec3      baseColor;
   uniform float     ambientStr;     // twilight scatter width/intensity 0..1
   uniform bool      flatLit;        // true when day/night cycle is off
+  uniform float     nightThreshold; // luminance below which night pixels are zeroed
 
   varying vec2  vUv;
   varying vec3  vWorldNormal;
@@ -162,9 +163,19 @@ const FRAG = /* glsl */`
       float litDisp = pow(max(lit, 0.0), 1.0 / 2.2);
 
       if (hasDayTex && hasNightTex) {
-        vec3 day   = texture2D(dayTex,   vUv).rgb;
-        vec3 night = texture2D(nightTex, vUv).rgb;
-        color = day * litDisp * sunColor + night * (1.0 - dayMask);
+        vec3 day      = texture2D(dayTex,   vUv).rgb;
+        vec3 nightRaw = texture2D(nightTex, vUv).rgb;
+
+        // Luminance bright-pass — only pixels brighter than nightThreshold
+        // contribute. Soft knee of 0.08 avoids a hard clip on dim city glow.
+        // This lets you upload any texture as the night side and only the
+        // genuinely bright spots (city lights) will show through.
+        float lum       = dot(nightRaw, vec3(0.2126, 0.7152, 0.0722));
+        vec3 cityLights = nightRaw * smoothstep(nightThreshold, nightThreshold + 0.08, lum);
+
+        // Additive blend: city lights sit on top of the day lighting so they
+        // naturally vanish on the fully-lit day side and peak on the night side.
+        color = day * litDisp * sunColor + cityLights * (1.0 - dayMask);
 
       } else if (hasDayTex) {
         color = texture2D(dayTex, vUv).rgb * litDisp * sunColor;
@@ -190,12 +201,13 @@ const globeMat = new THREE.ShaderMaterial({
     nightTex:    { value: null },
     hasDayTex:   { value: false },
     hasNightTex: { value: false },
-    sunDir:       { value: new THREE.Vector3(1, 0, 0) }, // sun directly to the right on equator
-    sunColor:     { value: new THREE.Vector3(1, 1, 1) },
-    sunIntensity: { value: 1.5 },
-    baseColor:    { value: new THREE.Color(0x060618) },
-    ambientStr:   { value: 0.18 },
-    flatLit:      { value: true },  // off by default until day/night cycle is enabled
+    sunDir:         { value: new THREE.Vector3(1, 0, 0) }, // sun directly to the right on equator
+    sunColor:       { value: new THREE.Vector3(1, 1, 1) },
+    sunIntensity:   { value: 1.5 },
+    baseColor:      { value: new THREE.Color(0x060618) },
+    ambientStr:     { value: 0.18 },
+    flatLit:        { value: true },  // off by default until day/night cycle is enabled
+    nightThreshold: { value: 0.05 }, // 5% — passes city lights, rejects dark ocean/land
   },
 });
 
@@ -877,6 +889,7 @@ $('night-tex-input').addEventListener('change', e => {
     globeMat.uniforms.nightTex.value    = tex;
     globeMat.uniforms.hasNightTex.value = true;
     showFileRow('night-file-row', 'night-file-name', file.name);
+    $('night-threshold-row').style.display = 'flex';
   });
   e.target.value = '';
 });
@@ -885,6 +898,12 @@ $('clear-night-btn').addEventListener('click', () => {
   globeMat.uniforms.nightTex.value    = null;
   globeMat.uniforms.hasNightTex.value = false;
   hideFileRow('night-file-row');
+  $('night-threshold-row').style.display = 'none';
+});
+
+$('night-threshold-slider').addEventListener('input', e => {
+  globeMat.uniforms.nightThreshold.value = e.target.value / 100;
+  $('night-threshold-num').value = e.target.value;
 });
 
 // Background texture (equirectangular → scene.background)
@@ -1236,7 +1255,8 @@ wireSliderNum('ambient-slider',       'ambient-num');
 wireSliderNum('gif-duration-slider',  'gif-duration-num');
 wireSliderNum('gif-fps-slider',       'gif-fps-num');
 wireSliderNum('gif-size-slider',      'gif-size-num');
-wireSliderNum('wire-density',         'wire-density-num');
+wireSliderNum('wire-density',            'wire-density-num');
+wireSliderNum('night-threshold-slider', 'night-threshold-num');
 
 // ── Render loop ──────────────────────────────────────────────────────────────
 
