@@ -796,16 +796,24 @@ const state = {
 
 const $ = id => document.getElementById(id);
 
-function showFileRow(rowId, nameId, filename) {
-  const row = $(rowId);
-  row.style.display = 'flex';
-  $(nameId).textContent = filename.length > 22
-    ? filename.slice(0, 10) + '…' + filename.slice(-9)
-    : filename;
+// Sets an upload button to show the loaded filename and reveals its ✕ sibling.
+// Font size scales down smoothly for long names so text never overflows.
+function setUploadLoaded(btnId, clearId, filename) {
+  const btn = $(btnId);
+  btn.textContent = filename;
+  const len  = filename.length;
+  btn.style.fontSize = len > 18
+    ? Math.max(0.42, 0.58 - (len - 18) * 0.007) + 'rem'
+    : '';
+  $(clearId).style.display = 'inline-block';
 }
 
-function hideFileRow(rowId) {
-  $(rowId).style.display = 'none';
+// Resets an upload button to its default "Upload" label and hides the ✕.
+function resetUpload(btnId, clearId) {
+  const btn = $(btnId);
+  btn.textContent  = 'Upload';
+  btn.style.fontSize = '';
+  $(clearId).style.display = 'none';
 }
 
 // Maximum anisotropy supported by the GPU — reduces blurring at oblique angles
@@ -864,7 +872,7 @@ $('day-tex-input').addEventListener('change', e => {
     globeMat.uniforms.dayTex.value    = tex;
     globeMat.uniforms.hasDayTex.value = true;
     globe.visible = true;
-    showFileRow('day-file-row', 'day-file-name', file.name);
+    setUploadLoaded('upload-day-btn', 'clear-day-btn', file.name);
     // Auto-disable wireframe
     wireframe.visible = false;
     $('wireframe-toggle').checked = false;
@@ -876,7 +884,7 @@ $('clear-day-btn').addEventListener('click', () => {
   globeMat.uniforms.dayTex.value    = null;
   globeMat.uniforms.hasDayTex.value = false;
   globe.visible = false;
-  hideFileRow('day-file-row');
+  resetUpload('upload-day-btn', 'clear-day-btn');
 });
 
 // Night texture
@@ -888,7 +896,7 @@ $('night-tex-input').addEventListener('change', e => {
     if (globeMat.uniforms.nightTex.value) globeMat.uniforms.nightTex.value.dispose();
     globeMat.uniforms.nightTex.value    = tex;
     globeMat.uniforms.hasNightTex.value = true;
-    showFileRow('night-file-row', 'night-file-name', file.name);
+    setUploadLoaded('upload-night-btn', 'clear-night-btn', file.name);
     $('night-threshold-row').style.display = 'flex';
   });
   e.target.value = '';
@@ -897,7 +905,7 @@ $('clear-night-btn').addEventListener('click', () => {
   if (globeMat.uniforms.nightTex.value) globeMat.uniforms.nightTex.value.dispose();
   globeMat.uniforms.nightTex.value    = null;
   globeMat.uniforms.hasNightTex.value = false;
-  hideFileRow('night-file-row');
+  resetUpload('upload-night-btn', 'clear-night-btn');
   $('night-threshold-row').style.display = 'none';
 });
 
@@ -916,7 +924,7 @@ $('bg-tex-input').addEventListener('change', e => {
     scene.background = tex;
     stars.visible    = false; // hide procedural stars
     state.hasBgTex   = true;
-    showFileRow('bg-file-row', 'bg-file-name', file.name);
+    setUploadLoaded('upload-bg-btn', 'clear-bg-btn', file.name);
   });
   e.target.value = '';
 });
@@ -925,7 +933,7 @@ $('clear-bg-btn').addEventListener('click', () => {
   scene.background = new THREE.Color(0x000000);
   stars.visible    = $('stars-toggle').checked;
   state.hasBgTex   = false;
-  hideFileRow('bg-file-row');
+  resetUpload('upload-bg-btn', 'clear-bg-btn');
 });
 
 // ── Rotation ─────────────────────────────────────────────────────────────────

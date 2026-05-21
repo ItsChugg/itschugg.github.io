@@ -278,30 +278,43 @@ input[type="range"]::-moz-range-thumb {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-faint);
-  margin: 10px 0 5px;
+  margin: 10px 0 3px;
 }
 
 .tex-slot-label:first-child { margin-top: 0; }
 
-.tex-file-row {
-  display: none;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
-  background: var(--amber-faint);
-  border: var(--border);
-  padding: 4px 8px;
+/* Hint that lives between a tex-slot-label and its upload slot */
+.tex-hint {
+  margin: 0 0 5px !important;
 }
 
-.tex-file-row span {
+/* ── Upload slot — button + clear button side by side ──────────────────────── */
+
+.upload-slot {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 7px;
+}
+
+/* The upload button stretches to fill remaining space */
+#panel .upload-slot button:first-child {
   flex: 1;
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  white-space: nowrap;
+  width: auto;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-align: left;
+  white-space: nowrap;
   min-width: 0;
+}
+
+/* Optional upload slots: smaller, dimmer */
+#panel .upload-slot-opt button:first-child {
+  font-size: 0.50rem;
+  padding: 4px 8px;
+  opacity: 0.60;
+}
+
+#panel .upload-slot-opt button:first-child:hover {
+  opacity: 1;
 }
 
 .clear-btn {
