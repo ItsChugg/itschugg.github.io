@@ -1032,9 +1032,11 @@ async function captureGif() {
     return;
   }
 
-  const frameCount = parseInt($('gif-frames-slider').value);
-  const delay      = parseInt($('gif-delay-slider').value);
-  const gifSize    = parseInt($('gif-size-slider').value);
+  const degPerFrame = parseInt($('gif-frames-slider').value);
+  const frameCount  = Math.ceil(360 / degPerFrame);
+  const fps         = parseInt($('gif-delay-slider').value);
+  const delay       = Math.round(1000 / fps);
+  const gifSize     = parseInt($('gif-size-slider').value);
 
   state.isCapturingGif = true;
   $('gif-btn').disabled = true;
