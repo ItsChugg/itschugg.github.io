@@ -446,7 +446,7 @@ select option {
   letter-spacing: 0.10em;
   text-align: center;
   padding: 8px 16px 10px;
-  opacity: 0.45;
+  opacity: 0.75;
   border-top: var(--border);
   flex-shrink: 0;
 }
