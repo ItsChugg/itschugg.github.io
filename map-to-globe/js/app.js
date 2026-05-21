@@ -783,8 +783,6 @@ const state = {
   autoRotate:     true,
   rotateSpeed:    0.002,   // ≈ 1 full rotation per minute at 60 fps
   dayNightCycle:  false,
-  sunSpeed:       0.002,   // starts locked to rotateSpeed
-  sunSpeedLocked: true,
   sunAngle:       0, // starts at (5, 0, 0) — sun directly to the right
   isCapturingGif: false,
   axialTilt:      0,       // degrees — tilts the spin axis
@@ -945,11 +943,6 @@ $('rotate-toggle').addEventListener('change', e => {
 $('speed-slider').addEventListener('input', e => {
   state.rotateSpeed = e.target.value / 1000;
   $('speed-num').value = e.target.value;
-  if (state.sunSpeedLocked) {
-    state.sunSpeed              = state.rotateSpeed;
-    $('sun-speed-slider').value = e.target.value;
-    $('sun-speed-num').value    = e.target.value;
-  }
 });
 
 // Applies both tilt values to the group hierarchy.
@@ -998,18 +991,6 @@ $('tilt-lock').addEventListener('change', e => {
   }
 });
 
-$('sun-speed-lock').addEventListener('change', e => {
-  const locked = e.target.checked;
-  state.sunSpeedLocked           = locked;
-  $('sun-speed-slider').disabled = locked;
-  $('sun-speed-num').disabled    = locked;
-  if (locked) {
-    // Re-locking: snap sun speed back to current rotation speed
-    state.sunSpeed              = state.rotateSpeed;
-    $('sun-speed-slider').value = Math.round(state.rotateSpeed * 1000);
-    $('sun-speed-num').value    = Math.round(state.rotateSpeed * 1000);
-  }
-});
 
 $('tilt-fullrange').addEventListener('change', e => {
   const max = e.target.checked ? 360 : 45;
@@ -1041,10 +1022,6 @@ $('daynight-toggle').addEventListener('change', e => {
   $('sun-options').style.display       = e.target.checked ? 'block' : 'none';
 });
 
-$('sun-speed-slider').addEventListener('input', e => {
-  if (!state.sunSpeedLocked) state.sunSpeed = e.target.value / 1000;
-  $('sun-speed-num').value = e.target.value;
-});
 
 $('sun-intensity-slider').addEventListener('input', e => {
   // Map 0–100 → 0–3.0 sun intensity in the globe shader
@@ -1260,7 +1237,6 @@ wireSliderNum('speed-slider',         'speed-num');
 wireSliderNum('axial-tilt-slider',    'axial-tilt-num');
 wireSliderNum('equator-tilt-slider',  'equator-tilt-num');
 wireSliderNum('sun-intensity-slider', 'sun-intensity-num');
-wireSliderNum('sun-speed-slider',     'sun-speed-num');
 wireSliderNum('ambient-slider',       'ambient-num');
 wireSliderNum('gif-duration-slider',  'gif-duration-num');
 wireSliderNum('gif-fps-slider',       'gif-fps-num');
@@ -1286,7 +1262,7 @@ function animate() {
     // Negate so the sun orbits counterclockwise around Y — same direction
     // as the globe's spinGroup rotation — keeping the terminator stationary
     // on the surface when sun speed equals rotation speed.
-    state.sunAngle -= state.sunSpeed * dt * 60;
+    state.sunAngle -= state.rotateSpeed * dt * 60;
     sunLight.position.set(
       Math.cos(state.sunAngle) * 5,
       0, // Y=0 keeps sun on equatorial plane → terminator stays vertical
