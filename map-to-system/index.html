@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Map to System — itschu.gg</title>
-  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="stylesheet" href="css/style.css?v=5">
   <link rel="stylesheet" href="/components/themes/theme.css?v=5">
   <script type="importmap">
   {
@@ -49,7 +49,13 @@
         <h2 class="collapsible-header open">Bodies <span class="exp-chevron">▶</span></h2>
         <div class="collapsible-body open">
           <div id="body-tree"></div>
-          <div class="control-row" style="margin-top:6px">
+          <div class="control-row" style="margin-top:8px">
+            <label for="body-size-slider">Size</label>
+            <input type="range" id="body-size-slider" min="0.1" max="5" step="0.05" value="1">
+            <input type="number" id="body-size-num" class="slider-num" min="0.1" max="5" step="0.05" value="1">
+          </div>
+          <p class="control-hint">Radius of the body in scene units.</p>
+          <div class="control-row" style="margin-top:4px">
             <button id="add-body-btn">+ Add Body</button>
           </div>
           <div id="add-body-form" style="display:none">
@@ -327,13 +333,13 @@
         </div>
       </section>
     </div>
-    <div id="panel-version">v2.1</div>
+    <div id="panel-version">v2.2</div>
   </div>
 
   </div><!-- #globe-layout -->
 
   <script src="vendor/gif.js"></script>
-  <script type="module" src="js/app.js?v=43"></script>
+  <script type="module" src="js/app.js?v=44"></script>
   <script src="/components/navbar/inject-navbar.js" defer></script>
 </body>
 </html>

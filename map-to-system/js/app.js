@@ -580,6 +580,18 @@ class Body {
     this.wireframe.geometry = buildWireGeometry(this.size * 1.001, this.wireStyle, this.wireDensity);
   }
 
+  setSize(s) {
+    this.size = s;
+    this.mesh.geometry.dispose();
+    this.mesh.geometry = new THREE.SphereGeometry(s, 256, 256);
+    this.wireframe.geometry.dispose();
+    this.wireframe.geometry = buildWireGeometry(s * 1.001, this.wireStyle, this.wireDensity);
+    this.atmosphere.geometry.dispose();
+    this.atmosphere.geometry = new THREE.SphereGeometry(s * 1.055, 64, 64);
+    this.rimGlow.geometry.dispose();
+    this.rimGlow.geometry = new THREE.SphereGeometry(s * 1.12, 64, 64);
+  }
+
   update(dt) {
     switch (this.orbitType) {
       case 'circular':
@@ -733,31 +745,30 @@ function renderBodyTree() {
   const tree = $('body-tree');
   tree.innerHTML = '';
 
-  bodies.forEach((b, i) => {
-    const item = document.createElement('div');
-    item.className = 'body-item' + (b === selectedBody ? ' active' : '');
-    item.dataset.bodyIdx = i;
-    if (b.parent) item.style.paddingLeft = '28px';
-    else if (b.orbitType === 'binary' && !b.binaryIsHost) item.style.paddingLeft = '28px';
+  bodies.forEach(b => {
+    const slot = document.createElement('div');
+    slot.className = 'upload-slot body-slot';
+    const isChild = b.parent || (b.orbitType === 'binary' && !b.binaryIsHost);
+    if (isChild) slot.style.paddingLeft = '14px';
 
-    const badge = document.createElement('span');
-    badge.className   = 'body-type-badge';
-    badge.textContent = TYPE_LABEL[b.type] ?? b.type.toUpperCase();
-
-    const nameEl = document.createElement('span');
-    nameEl.className   = 'body-item-name';
-    nameEl.textContent = b.name;
+    const btn = document.createElement('button');
+    btn.className = 'body-select-btn' + (b === selectedBody ? ' active' : '');
+    btn.innerHTML = '<span class="body-btn-type">' + (TYPE_LABEL[b.type] ?? b.type.toUpperCase()) + '</span> ' + escHtml(b.name);
+    btn.addEventListener('click', () => selectBody(b));
 
     const removeBtn = document.createElement('button');
-    removeBtn.className   = 'body-item-remove';
+    removeBtn.className   = 'clear-btn';
     removeBtn.textContent = '✕';
     removeBtn.title       = 'Remove body';
     removeBtn.addEventListener('click', e => { e.stopPropagation(); removeBody(b); });
 
-    item.append(badge, nameEl, removeBtn);
-    item.addEventListener('click', () => selectBody(b));
-    tree.appendChild(item);
+    slot.append(btn, removeBtn);
+    tree.appendChild(slot);
   });
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 // ── Add-body form ─────────────────────────────────────────────────────────────
@@ -875,6 +886,10 @@ const ORBIT_HINTS = {
 };
 
 function populatePanel(body) {
+  // ── Size ──────────────────────────────────────────────────────────────────
+  $('body-size-slider').value = body.size;
+  $('body-size-num').value    = body.size;
+
   // ── Textures ───────────────────────────────────────────────────────────────
   if (body.dayTexName)   setUploadLoaded('upload-day-btn',   'clear-day-btn',   body.dayTexName);
   else                   resetUpload('upload-day-btn',   'clear-day-btn',   'Map Texture');
@@ -977,13 +992,13 @@ function applyGlobeTheme(name) {
   }
 }
 
-applyGlobeTheme(localStorage.getItem('itschu-theme') || 'dark');
-new MutationObserver(() => applyGlobeTheme(localStorage.getItem('itschu-theme') || 'amber'))
+new MutationObserver(() => applyGlobeTheme(localStorage.getItem('itschu-theme') || 'dark'))
   .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 // ── Default body ──────────────────────────────────────────────────────────────
 
 selectBody(createBody({ name: 'Planet 1', type: 'planet', orbitType: 'centered' }));
+applyGlobeTheme(localStorage.getItem('itschu-theme') || 'dark');
 
 // ── Panel listeners ───────────────────────────────────────────────────────────
 
@@ -1056,6 +1071,13 @@ $('clear-bg-btn').addEventListener('click', () => {
   scene.background = new THREE.Color(0x000000);
   bgStars.visible = $('stars-toggle').checked; hasBgTex = false;
   resetUpload('upload-bg-btn', 'clear-bg-btn', 'Background');
+});
+
+// ── Body size ─────────────────────────────────────────────────────────────────
+
+$('body-size-slider').addEventListener('input', e => {
+  selectedBody.setSize(parseFloat(e.target.value));
+  $('body-size-num').value = e.target.value;
 });
 
 // ── Orbit ─────────────────────────────────────────────────────────────────────
@@ -1336,6 +1358,7 @@ function wireSliderNum(sliderId, numId) {
   new MutationObserver(() => { n.disabled = s.disabled; }).observe(s, { attributes: true, attributeFilter: ['disabled'] });
 }
 
+wireSliderNum('body-size-slider',          'body-size-num');
 wireSliderNum('speed-slider',              'speed-num');
 wireSliderNum('axial-tilt-slider',         'axial-tilt-num');
 wireSliderNum('equator-tilt-slider',       'equator-tilt-num');
