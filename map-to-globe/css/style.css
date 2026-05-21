@@ -102,6 +102,11 @@ body {
   transform: rotate(180deg);
 }
 
+#panel.collapsed #panel-header {
+  justify-content: center;
+  padding: 12px 8px;
+}
+
 #panel-body {
   overflow-y: auto;
   overflow-x: hidden;
