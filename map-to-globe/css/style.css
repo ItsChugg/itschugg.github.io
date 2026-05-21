@@ -353,7 +353,7 @@ select option {
 
 .control-hint {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.55rem;
   color: var(--text-faint);
   line-height: 1.4;
   margin: -3px 0 8px;
