@@ -67,7 +67,6 @@
               <label for="new-body-type">Type</label>
               <select id="new-body-type">
                 <option value="planet">Planet</option>
-                <option value="star">Star</option>
                 <option value="moon">Moon</option>
               </select>
             </div>
@@ -104,7 +103,6 @@
               <label for="edit-body-type">Type</label>
               <select id="edit-body-type">
                 <option value="planet">Planet</option>
-                <option value="star">Star</option>
                 <option value="moon">Moon</option>
               </select>
             </div>
@@ -279,8 +277,23 @@
               <label for="sun-color">Sun Color</label>
               <input type="color" id="sun-color" value="#ffffff">
             </div>
-            <p class="control-hint">Changes the color of light.</p>
+            <p class="control-hint">Changes the color of light cast on planets.</p>
           </div>
+          <div class="control-row" style="margin-top:6px">
+            <label for="sun-visible-toggle">Show Sun</label>
+            <input type="checkbox" id="sun-visible-toggle" checked>
+          </div>
+          <p class="control-hint">Toggle the central star's visibility.</p>
+          <div class="control-row">
+            <label for="sun-size-slider">Sun Size</label>
+            <input type="range" id="sun-size-slider" min="0.2" max="5" step="0.1" value="1.5">
+            <input type="number" id="sun-size-num" class="slider-num" min="0.2" max="5" step="0.1" value="1.5">
+          </div>
+          <div class="control-row">
+            <label for="sun-vis-color">Sun Color</label>
+            <input type="color" id="sun-vis-color" value="#ffaa44">
+          </div>
+          <p class="control-hint">Visual appearance of the central star.</p>
         </div>
       </section>
 
@@ -354,6 +367,20 @@
             <input type="checkbox" id="stars-toggle" checked>
           </div>
           <div class="control-row">
+            <label for="star-count-slider">Star Count</label>
+            <input type="range" id="star-count-slider" min="500" max="8000" step="100" value="3000">
+            <input type="number" id="star-count-num" class="slider-num" min="500" max="8000" step="100" value="3000">
+          </div>
+          <div class="control-row">
+            <label for="star-size-slider">Star Size</label>
+            <input type="range" id="star-size-slider" min="1" max="8" step="0.5" value="3.5">
+            <input type="number" id="star-size-num" class="slider-num" min="1" max="8" step="0.5" value="3.5">
+          </div>
+          <div class="control-row">
+            <label for="star-color">Star Color</label>
+            <input type="color" id="star-color" value="#ffffff">
+          </div>
+          <div class="control-row">
             <label for="atmosphere-toggle">Atmosphere Glow</label>
             <input type="checkbox" id="atmosphere-toggle">
           </div>
@@ -365,13 +392,13 @@
         </div>
       </section>
     </div>
-    <div id="panel-version">v2.3</div>
+    <div id="panel-version">v2.4</div>
   </div>
 
   </div><!-- #globe-layout -->
 
   <script src="vendor/gif.js"></script>
-  <script type="module" src="js/app.js?v=45"></script>
+  <script type="module" src="js/app.js?v=46"></script>
   <script src="/components/navbar/inject-navbar.js" defer></script>
 </body>
 </html>

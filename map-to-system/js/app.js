@@ -33,48 +33,105 @@ controls.autoRotate    = false;
 
 // ── Background stars ─────────────────────────────────────────────────────────
 
-const STAR_COUNT    = 5000;
-const starPositions = new Float32Array(STAR_COUNT * 3);
-const starSizes     = new Float32Array(STAR_COUNT);
-
-for (let i = 0; i < STAR_COUNT; i++) {
-  const theta = Math.random() * Math.PI * 2;
-  const phi   = Math.acos(2 * Math.random() - 1);
-  const r     = 120 + Math.random() * 60;
-  starPositions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
-  starPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-  starPositions[i * 3 + 2] = r * Math.cos(phi);
-  starSizes[i] = 1.0 + Math.random() * 4.0;
+function buildStarGeo(count) {
+  const pos   = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi   = Math.acos(2 * Math.random() - 1);
+    const r     = 120 + Math.random() * 60;
+    pos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+    pos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+    pos[i*3+2] = r * Math.cos(phi);
+    sizes[i] = 0.4 + Math.random() * 1.6; // relative size multiplier (0.4–2.0)
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('size',     new THREE.BufferAttribute(sizes, 1));
+  return geo;
 }
 
-const starGeo = new THREE.BufferGeometry();
-starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-starGeo.setAttribute('size',     new THREE.BufferAttribute(starSizes, 1));
-
 const starMat = new THREE.ShaderMaterial({
-  uniforms: { opacity: { value: 1.0 } },
+  uniforms: {
+    baseSize:  { value: 3.5 },
+    starColor: { value: new THREE.Color(1, 1, 1) },
+  },
   vertexShader: `
     attribute float size;
+    uniform float baseSize;
     void main() {
-      gl_PointSize = size;
+      gl_PointSize = size * baseSize;
       gl_Position  = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
   `,
   fragmentShader: `
-    uniform float opacity;
+    uniform vec3 starColor;
     void main() {
-      float d     = length(gl_PointCoord - 0.5) * 2.0;
+      vec2  uv = gl_PointCoord - 0.5;
+      float d  = length(uv) * 2.0;
       if (d > 1.0) discard;
-      float alpha = (1.0 - smoothstep(0.5, 1.0, d)) * opacity;
-      gl_FragColor = vec4(1.0, 1.0, 1.0, alpha);
+      float core = pow(max(0.0, 1.0 - d * 2.5), 3.0);
+      float halo = pow(1.0 - d, 2.0) * 0.35;
+      float b    = clamp(core + halo, 0.0, 1.0);
+      gl_FragColor = vec4(starColor * b + vec3(b * 0.25), b);
     }
   `,
   transparent: true,
   depthWrite:  false,
+  blending:    THREE.AdditiveBlending,
 });
 
-const bgStars = new THREE.Points(starGeo, starMat);
+let bgStars = new THREE.Points(buildStarGeo(3000), starMat);
 scene.add(bgStars);
+
+function rebuildStarField(count) {
+  const wasVisible = bgStars.visible;
+  scene.remove(bgStars);
+  bgStars.geometry.dispose();
+  bgStars = new THREE.Points(buildStarGeo(count), starMat);
+  bgStars.visible = wasVisible;
+  scene.add(bgStars);
+}
+
+// ── Sun visual ────────────────────────────────────────────────────────────────
+// The sun is a constant at the origin — the system's central star.
+// Its position drives physically correct day/night shading per body.
+
+const sunGroup = new THREE.Group();
+
+const sunCoreMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(1.5, 32, 32),
+  new THREE.MeshBasicMaterial({ color: 0xffffff, depthWrite: false })
+);
+const sunGlow1 = new THREE.Mesh(
+  new THREE.SphereGeometry(2.1, 32, 32),
+  new THREE.MeshBasicMaterial({
+    color: 0xffcc44, transparent: true, opacity: 0.45,
+    side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false,
+  })
+);
+const sunGlow2 = new THREE.Mesh(
+  new THREE.SphereGeometry(3.5, 32, 32),
+  new THREE.MeshBasicMaterial({
+    color: 0xff8800, transparent: true, opacity: 0.18,
+    side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false,
+  })
+);
+sunGroup.add(sunCoreMesh, sunGlow1, sunGlow2);
+scene.add(sunGroup);
+
+function setSunSize(s) {
+  sunCoreMesh.geometry.dispose(); sunCoreMesh.geometry = new THREE.SphereGeometry(s,       32, 32);
+  sunGlow1.geometry.dispose();    sunGlow1.geometry    = new THREE.SphereGeometry(s * 1.4, 32, 32);
+  sunGlow2.geometry.dispose();    sunGlow2.geometry    = new THREE.SphereGeometry(s * 2.3, 32, 32);
+}
+
+function setSunColor(hex) {
+  const c = new THREE.Color(hex);
+  sunCoreMesh.material.color.copy(new THREE.Color(1, 1, 1).lerp(c, 0.35));
+  sunGlow1.material.color.copy(c);
+  sunGlow2.material.color.copy(c.clone().multiplyScalar(0.65));
+}
 
 // ── Shader source strings ─────────────────────────────────────────────────────
 
@@ -372,12 +429,11 @@ function buildWireGeometry(size, style, density) {
   }
 }
 
-// ── Sun light (fixed world-space direction — step 2) ──────────────────────────
+// ── Per-body sun direction temp vector ────────────────────────────────────────
+// Sun sits at origin. Each body's sunDir is computed per-frame from its
+// world position so day/night shading is correct at every orbital angle.
 
-const sunLight = new THREE.DirectionalLight(0xffffff, 3.0);
-sunLight.position.set(5, 0, 0);
-scene.add(sunLight);
-const SUN_DIR = new THREE.Vector3(1, 0, 0);
+const _sunDirTmp = new THREE.Vector3();
 
 // ── UI helpers ────────────────────────────────────────────────────────────────
 
@@ -505,7 +561,7 @@ class Body {
         nightTex:       { value: null },
         hasDayTex:      { value: false },
         hasNightTex:    { value: false },
-        sunDir:         { value: SUN_DIR.clone() },
+        sunDir:         { value: new THREE.Vector3(1, 0, 0) },
         sunColor:       { value: new THREE.Vector3(1, 1, 1) },
         sunIntensity:   { value: 1.5 },
         baseColor:      { value: new THREE.Color(0x060618) },
@@ -740,7 +796,7 @@ function removeBody(target) {
 
 // ── Body tree UI ──────────────────────────────────────────────────────────────
 
-const TYPE_LABEL = { star: 'STAR', planet: 'PLANET', moon: 'MOON' };
+const TYPE_LABEL = { planet: 'PLANET', moon: 'MOON' };
 
 function renderBodyTree() {
   const tree = $('body-tree');
@@ -910,7 +966,7 @@ $('cancel-edit-body').addEventListener('click', closeEditForm);
 
 function suggestName(type) {
   const count = bodies.filter(b => b.type === type).length + 1;
-  return { star: 'Star', planet: 'Planet', moon: 'Moon' }[type] + ' ' + count;
+  return { planet: 'Planet', moon: 'Moon' }[type] + ' ' + count;
 }
 
 function updateAddFormOrbitVisibility() {
@@ -1108,7 +1164,7 @@ new MutationObserver(() => applyGlobeTheme(localStorage.getItem('itschu-theme') 
 
 // ── Default body ──────────────────────────────────────────────────────────────
 
-selectBody(createBody({ name: 'Planet 1', type: 'planet', orbitType: 'centered' }));
+selectBody(createBody({ name: 'Planet 1', type: 'planet', orbitType: 'circular', orbitRadius: 5, orbitPeriod: 120 }));
 applyGlobeTheme(localStorage.getItem('itschu-theme') || 'dark');
 
 // ── Panel listeners ───────────────────────────────────────────────────────────
@@ -1321,8 +1377,18 @@ $('sun-intensity-slider').addEventListener('input', e => {
 $('sun-color').addEventListener('input', e => {
   const c = new THREE.Color(e.target.value);
   selectedBody.globeMat.uniforms.sunColor.value.set(c.r, c.g, c.b);
-  sunLight.color.set(e.target.value);
 });
+
+// ── Sun visual controls ────────────────────────────────────────────────────────
+
+$('sun-visible-toggle').addEventListener('change', e => { sunGroup.visible = e.target.checked; });
+
+$('sun-size-slider').addEventListener('input', e => {
+  setSunSize(parseFloat(e.target.value));
+  $('sun-size-num').value = e.target.value;
+});
+
+$('sun-vis-color').addEventListener('input', e => setSunColor(e.target.value));
 
 // ── Wireframe ─────────────────────────────────────────────────────────────────
 
@@ -1337,6 +1403,20 @@ $('wire-density').addEventListener('input', e => {
 // ── Experimental ──────────────────────────────────────────────────────────────
 
 $('stars-toggle').addEventListener('change', e => { bgStars.visible = e.target.checked && !hasBgTex; });
+
+$('star-count-slider').addEventListener('input', e => {
+  $('star-count-num').value = e.target.value;
+  rebuildStarField(parseInt(e.target.value));
+});
+
+$('star-size-slider').addEventListener('input', e => {
+  starMat.uniforms.baseSize.value = parseFloat(e.target.value);
+  $('star-size-num').value = e.target.value;
+});
+
+$('star-color').addEventListener('input', e => {
+  starMat.uniforms.starColor.value.set(new THREE.Color(e.target.value));
+});
 $('atmosphere-toggle').addEventListener('change', e => {
   selectedBody.atmosphere.visible = selectedBody.rimGlow.visible = e.target.checked;
 });
@@ -1486,6 +1566,9 @@ wireSliderNum('orbit-inclination-slider',  'orbit-inclination-num');
 wireSliderNum('orbit-eccentricity-slider', 'orbit-eccentricity-num');
 wireSliderNum('orbit-binary-sep-slider',   'orbit-binary-sep-num');
 wireSliderNum('orbit-binary-period-slider','orbit-binary-period-num');
+wireSliderNum('sun-size-slider',           'sun-size-num');
+wireSliderNum('star-count-slider',         'star-count-num');
+wireSliderNum('star-size-slider',          'star-size-num');
 
 // ── Render loop ───────────────────────────────────────────────────────────────
 
@@ -1495,7 +1578,17 @@ function animate() {
   requestAnimationFrame(animate);
   if (isCapturingGif) return;
   const dt = clock.getDelta();
-  for (const b of bodies) b.update(dt);
+  for (const b of bodies) {
+    // Compute physically correct sun direction from this body's world position
+    // toward the sun at origin (0,0,0). Only needed when day/night is active.
+    if (!b.globeMat.uniforms.flatLit.value) {
+      b.bodyGroup.getWorldPosition(_sunDirTmp);
+      _sunDirTmp.negate().normalize(); // direction: body → sun at origin
+      b.globeMat.uniforms.sunDir.value.copy(_sunDirTmp);
+      b.graticuleMat.uniforms.sunDir.value.copy(_sunDirTmp);
+    }
+    b.update(dt);
+  }
   controls.update();
   renderer.render(scene, camera);
 }
