@@ -47,7 +47,109 @@
     <div id="panel-body">
       <section>
         <h2 class="collapsible-header open">Bodies <span class="exp-chevron">▶</span></h2>
-        <div class="collapsible-body open" id="body-tree"></div>
+        <div class="collapsible-body open">
+          <div id="body-tree"></div>
+          <div class="control-row" style="margin-top:6px">
+            <button id="add-body-btn">+ Add Body</button>
+          </div>
+          <div id="add-body-form" style="display:none">
+            <div class="control-row">
+              <label for="new-body-name">Name</label>
+              <input type="text" id="new-body-name" class="body-text-input" value="Planet 2">
+            </div>
+            <div class="control-row">
+              <label for="new-body-type">Type</label>
+              <select id="new-body-type">
+                <option value="planet">Planet</option>
+                <option value="star">Star</option>
+                <option value="moon">Moon</option>
+              </select>
+            </div>
+            <div class="control-row">
+              <label for="new-body-parent">Parent</label>
+              <select id="new-body-parent"></select>
+            </div>
+            <div class="control-row">
+              <label for="new-body-orbit">Orbit</label>
+              <select id="new-body-orbit">
+                <option value="circular" selected>Circular</option>
+                <option value="elliptical">Elliptical</option>
+                <option value="centered">Centered</option>
+                <option value="binary">Binary</option>
+              </select>
+            </div>
+            <div class="control-row" id="new-body-partner-row" style="display:none">
+              <label for="new-body-partner">Partner</label>
+              <select id="new-body-partner"></select>
+            </div>
+            <div class="control-row">
+              <button id="confirm-add-body" class="half-btn">Confirm</button>
+              <button id="cancel-add-body" class="half-btn">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="collapsible-header open">Orbit <span class="exp-chevron">▶</span></h2>
+        <div class="collapsible-body open">
+          <div class="control-row">
+            <label for="orbit-type">Type</label>
+            <select id="orbit-type">
+              <option value="centered">Centered</option>
+              <option value="circular" selected>Circular</option>
+              <option value="elliptical">Elliptical</option>
+              <option value="binary">Binary</option>
+            </select>
+          </div>
+          <p class="control-hint" id="orbit-type-hint">Constant-radius circular path.</p>
+          <div id="orbit-params" style="display:none">
+            <div class="control-row">
+              <label for="orbit-radius-slider">Radius</label>
+              <input type="range" id="orbit-radius-slider" min="2" max="30" step="0.5" value="5">
+              <input type="number" id="orbit-radius-num" class="slider-num" min="2" max="30" step="0.5" value="5">
+            </div>
+            <p class="control-hint">Distance from parent center.</p>
+            <div class="control-row">
+              <label for="orbit-period-slider">Period (s)</label>
+              <input type="range" id="orbit-period-slider" min="5" max="600" step="5" value="120">
+              <input type="number" id="orbit-period-num" class="slider-num" min="5" max="600" step="5" value="120">
+            </div>
+            <p class="control-hint">Time for one full orbit.</p>
+            <div class="control-row">
+              <label for="orbit-inclination-slider">Inclination</label>
+              <input type="range" id="orbit-inclination-slider" min="-90" max="90" step="1" value="0">
+              <input type="number" id="orbit-inclination-num" class="slider-num" min="-90" max="90" step="1" value="0">
+            </div>
+            <p class="control-hint">Tilt of the orbital plane.</p>
+          </div>
+          <div id="orbit-eccentricity-row" style="display:none">
+            <div class="control-row">
+              <label for="orbit-eccentricity-slider">Eccentricity</label>
+              <input type="range" id="orbit-eccentricity-slider" min="0" max="99" step="1" value="0">
+              <input type="number" id="orbit-eccentricity-num" class="slider-num" min="0" max="99" step="1" value="0">
+            </div>
+            <p class="control-hint">Shape stretch (0 = circle, 99 = very elongated).</p>
+          </div>
+          <div id="orbit-binary-params" style="display:none">
+            <div class="control-row">
+              <label>Partner</label>
+              <span id="orbit-binary-partner-name" class="info-value">—</span>
+            </div>
+            <div class="control-row">
+              <label for="orbit-binary-sep-slider">Separation</label>
+              <input type="range" id="orbit-binary-sep-slider" min="1" max="20" step="0.5" value="4">
+              <input type="number" id="orbit-binary-sep-num" class="slider-num" min="1" max="20" step="0.5" value="4">
+            </div>
+            <p class="control-hint">Distance between binary partners.</p>
+            <div class="control-row">
+              <label for="orbit-binary-period-slider">Binary Period (s)</label>
+              <input type="range" id="orbit-binary-period-slider" min="5" max="300" step="5" value="60">
+              <input type="number" id="orbit-binary-period-num" class="slider-num" min="5" max="300" step="5" value="60">
+            </div>
+            <p class="control-hint">Mutual orbit period.</p>
+          </div>
+        </div>
       </section>
 
       <section>
@@ -225,13 +327,13 @@
         </div>
       </section>
     </div>
-    <div id="panel-version">v2.0</div>
+    <div id="panel-version">v2.1</div>
   </div>
 
   </div><!-- #globe-layout -->
 
   <script src="vendor/gif.js"></script>
-  <script type="module" src="js/app.js?v=42"></script>
+  <script type="module" src="js/app.js?v=43"></script>
   <script src="/components/navbar/inject-navbar.js" defer></script>
 </body>
 </html>

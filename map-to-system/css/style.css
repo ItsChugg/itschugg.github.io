@@ -493,6 +493,64 @@ input[type="color"]::-moz-color-swatch            { border: none; }
   color: var(--amber);
 }
 
+/* ── Body text input ───────────────────────────────────────────────────────── */
+
+.body-text-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--amber-dim);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  padding: 2px 4px;
+  outline: none;
+  min-width: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.body-text-input:focus {
+  border-bottom-color: var(--amber);
+  color: var(--amber);
+}
+
+/* ── Half-width buttons (confirm/cancel row) ───────────────────────────────── */
+
+.half-btn {
+  width: auto !important;
+  flex: 1;
+}
+
+/* ── Inline info value (e.g. binary partner name) ─────────────────────────── */
+
+.info-value {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--amber);
+  flex: 1;
+  text-align: right;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+/* ── Body tree remove button ───────────────────────────────────────────────── */
+
+.body-item-remove {
+  width: auto !important;
+  padding: 1px 6px !important;
+  font-size: 0.65rem !important;
+  flex-shrink: 0;
+  margin-left: auto;
+  line-height: 1.4;
+  opacity: 0.5;
+  transition: opacity 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.body-item:hover .body-item-remove,
+.body-item.active .body-item-remove {
+  opacity: 1;
+}
+
 /* ── GIF progress ──────────────────────────────────────────────────────────── */
 
 #gif-progress {

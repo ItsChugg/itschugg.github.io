@@ -21,15 +21,15 @@ renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
 
-const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
-camera.position.set(0, 0.4, 3.2);
+const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 500);
+camera.position.set(0, 2, 12);
 
 const controls = new OrbitControls(camera, canvas);
-controls.enableDamping  = true;
-controls.dampingFactor  = 0.06;
-controls.minDistance    = 1.6;
-controls.maxDistance    = 10;
-controls.autoRotate     = false;
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.minDistance   = 1.0;
+controls.maxDistance   = 200;
+controls.autoRotate    = false;
 
 // ── Background stars ─────────────────────────────────────────────────────────
 
@@ -40,7 +40,7 @@ const starSizes     = new Float32Array(STAR_COUNT);
 for (let i = 0; i < STAR_COUNT; i++) {
   const theta = Math.random() * Math.PI * 2;
   const phi   = Math.acos(2 * Math.random() - 1);
-  const r     = 60 + Math.random() * 30;
+  const r     = 120 + Math.random() * 60;
   starPositions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
   starPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
   starPositions[i * 3 + 2] = r * Math.cos(phi);
@@ -77,15 +77,11 @@ const bgStars = new THREE.Points(starGeo, starMat);
 scene.add(bgStars);
 
 // ── Shader source strings ─────────────────────────────────────────────────────
-// Defined as constants so each Body instance can create its own ShaderMaterial
-// without duplicating source text. Three.js caches compiled programs by source
-// hash, so all bodies that share the same strings share one GPU program.
 
 const GLOBE_VERT = /* glsl */`
   varying vec2  vUv;
   varying vec3  vWorldNormal;
   varying vec3  vViewDir;
-
   void main() {
     vUv          = uv;
     vWorldNormal = normalize(mat3(modelMatrix) * normal);
@@ -107,41 +103,32 @@ const GLOBE_FRAG = /* glsl */`
   uniform float     ambientStr;
   uniform bool      flatLit;
   uniform float     nightThreshold;
-
   varying vec2  vUv;
   varying vec3  vWorldNormal;
   varying vec3  vViewDir;
-
   void main() {
     vec3 color;
-
     if (flatLit) {
       color = hasDayTex ? texture2D(dayTex, vUv).rgb : baseColor;
-
     } else {
       vec3  N     = normalize(vWorldNormal);
       float NdotL = dot(N, sunDir);
-
       float dayMask = smoothstep(-0.02, 0.02, NdotL);
       float diffuse = clamp(NdotL * sunIntensity, 0.0, 1.0);
       float lit     = diffuse * (1.0 - ambientStr) + ambientStr * dayMask;
       float litDisp = pow(max(lit, 0.0), 1.0 / 2.2);
-
       if (hasDayTex && hasNightTex) {
         vec3 day      = texture2D(dayTex,   vUv).rgb;
         vec3 nightRaw = texture2D(nightTex, vUv).rgb;
         float lum       = dot(nightRaw, vec3(0.2126, 0.7152, 0.0722));
         vec3 cityLights = nightRaw * smoothstep(nightThreshold, nightThreshold + 0.08, lum);
         color = day * litDisp * sunColor + cityLights * (1.0 - dayMask);
-
       } else if (hasDayTex) {
         color = texture2D(dayTex, vUv).rgb * litDisp * sunColor;
-
       } else {
         color = baseColor * litDisp * sunColor;
       }
     }
-
     float dither = (fract(dot(gl_FragCoord.xy, vec2(0.75487766, 0.56984029))) - 0.5) / 255.0;
     gl_FragColor = vec4(clamp(color + dither, 0.0, 1.0), 1.0);
   }
@@ -192,30 +179,24 @@ const RIM_FRAG = /* glsl */`
   void main() { gl_FragColor = vec4(glowColor, rim * 0.18); }
 `;
 
-// ── Graticule builder functions ───────────────────────────────────────────────
-// All builders take an explicit `radius` — no global constant dependency.
+// ── Graticule builders ────────────────────────────────────────────────────────
 
 function buildGraticule(radius, latDiv, lonDiv, seg = 128) {
   const pts = [];
   for (let i = 1; i < latDiv; i++) {
     const phi = (i / latDiv) * Math.PI;
-    const y = radius * Math.cos(phi);
-    const r = radius * Math.sin(phi);
+    const y = radius * Math.cos(phi), r = radius * Math.sin(phi);
     for (let j = 0; j < seg; j++) {
-      const a1 = (j       / seg) * Math.PI * 2;
-      const a2 = ((j + 1) / seg) * Math.PI * 2;
-      pts.push(r * Math.cos(a1), y, r * Math.sin(a1));
-      pts.push(r * Math.cos(a2), y, r * Math.sin(a2));
+      const a1 = (j / seg) * Math.PI * 2, a2 = ((j + 1) / seg) * Math.PI * 2;
+      pts.push(r * Math.cos(a1), y, r * Math.sin(a1), r * Math.cos(a2), y, r * Math.sin(a2));
     }
   }
   for (let i = 0; i < lonDiv; i++) {
-    const theta = (i / lonDiv) * Math.PI * 2;
-    const ct = Math.cos(theta), st = Math.sin(theta);
+    const theta = (i / lonDiv) * Math.PI * 2, ct = Math.cos(theta), st = Math.sin(theta);
     for (let j = 0; j < seg; j++) {
-      const p1 = (j       / seg) * Math.PI;
-      const p2 = ((j + 1) / seg) * Math.PI;
-      pts.push(radius * Math.sin(p1) * ct, radius * Math.cos(p1), radius * Math.sin(p1) * st);
-      pts.push(radius * Math.sin(p2) * ct, radius * Math.cos(p2), radius * Math.sin(p2) * st);
+      const p1 = (j / seg) * Math.PI, p2 = ((j + 1) / seg) * Math.PI;
+      pts.push(radius * Math.sin(p1) * ct, radius * Math.cos(p1), radius * Math.sin(p1) * st,
+               radius * Math.sin(p2) * ct, radius * Math.cos(p2), radius * Math.sin(p2) * st);
     }
   }
   const geo = new THREE.BufferGeometry();
@@ -229,41 +210,29 @@ function buildTriangleGraticule(radius, detail = 4) {
 
 function buildHexGraticule(radius, detail = 2) {
   const icoGeo = new THREE.IcosahedronGeometry(1, detail);
-  const pos    = icoGeo.attributes.position;
-  const nFaces = pos.count / 3;
-  const PREC   = 1e6;
-  const vKey   = vi =>
-    `${Math.round(pos.getX(vi) * PREC)},${Math.round(pos.getY(vi) * PREC)},${Math.round(pos.getZ(vi) * PREC)}`;
-
+  const pos = icoGeo.attributes.position, nFaces = pos.count / 3;
+  const PREC = 1e6;
+  const vKey = vi => `${Math.round(pos.getX(vi)*PREC)},${Math.round(pos.getY(vi)*PREC)},${Math.round(pos.getZ(vi)*PREC)}`;
   const centroids = [];
   for (let i = 0; i < nFaces; i++) {
-    const a = i * 3, b = a + 1, c = a + 2;
-    centroids.push(
-      new THREE.Vector3(
-        (pos.getX(a) + pos.getX(b) + pos.getX(c)) / 3,
-        (pos.getY(a) + pos.getY(b) + pos.getY(c)) / 3,
-        (pos.getZ(a) + pos.getZ(b) + pos.getZ(c)) / 3,
-      ).normalize().multiplyScalar(radius)
-    );
+    const a = i*3, b = a+1, c = a+2;
+    centroids.push(new THREE.Vector3(
+      (pos.getX(a)+pos.getX(b)+pos.getX(c))/3,
+      (pos.getY(a)+pos.getY(b)+pos.getY(c))/3,
+      (pos.getZ(a)+pos.getZ(b)+pos.getZ(c))/3).normalize().multiplyScalar(radius));
   }
-
   const edgeMap = new Map();
   for (let i = 0; i < nFaces; i++) {
-    const vk = [vKey(i * 3), vKey(i * 3 + 1), vKey(i * 3 + 2)];
+    const vk = [vKey(i*3), vKey(i*3+1), vKey(i*3+2)];
     for (let e = 0; e < 3; e++) {
-      const k1 = vk[e], k2 = vk[(e + 1) % 3];
-      const edgeKey = k1 < k2 ? `${k1}|${k2}` : `${k2}|${k1}`;
-      if (!edgeMap.has(edgeKey)) edgeMap.set(edgeKey, []);
-      edgeMap.get(edgeKey).push(i);
+      const k1 = vk[e], k2 = vk[(e+1)%3];
+      const ek = k1 < k2 ? `${k1}|${k2}` : `${k2}|${k1}`;
+      if (!edgeMap.has(ek)) edgeMap.set(ek, []);
+      edgeMap.get(ek).push(i);
     }
   }
-
   const pts = [];
-  for (const faces of edgeMap.values()) {
-    if (faces.length === 2)
-      pts.push(...centroids[faces[0]].toArray(), ...centroids[faces[1]].toArray());
-  }
-
+  for (const f of edgeMap.values()) if (f.length === 2) pts.push(...centroids[f[0]].toArray(), ...centroids[f[1]].toArray());
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
   return geo;
@@ -272,28 +241,20 @@ function buildHexGraticule(radius, detail = 2) {
 function buildBrickGraticule(radius, latDiv, lonDiv, seg = 64) {
   const pts = [];
   for (let i = 1; i < latDiv; i++) {
-    const phi = (i / latDiv) * Math.PI;
-    const y = radius * Math.cos(phi), r = radius * Math.sin(phi);
+    const phi = (i/latDiv)*Math.PI, y = radius*Math.cos(phi), r = radius*Math.sin(phi);
     for (let j = 0; j < seg; j++) {
-      const a1 = (j       / seg) * Math.PI * 2;
-      const a2 = ((j + 1) / seg) * Math.PI * 2;
-      pts.push(r * Math.cos(a1), y, r * Math.sin(a1),
-               r * Math.cos(a2), y, r * Math.sin(a2));
+      const a1=(j/seg)*Math.PI*2, a2=((j+1)/seg)*Math.PI*2;
+      pts.push(r*Math.cos(a1),y,r*Math.sin(a1),r*Math.cos(a2),y,r*Math.sin(a2));
     }
   }
-  const vSeg = 8;
   for (let row = 0; row < latDiv; row++) {
-    const offset = (row % 2) * 0.5;
-    const phi1 = (row       / latDiv) * Math.PI;
-    const phi2 = ((row + 1) / latDiv) * Math.PI;
+    const off=(row%2)*0.5, phi1=(row/latDiv)*Math.PI, phi2=((row+1)/latDiv)*Math.PI;
     for (let j = 0; j < lonDiv; j++) {
-      const theta = ((j + offset) / lonDiv) * Math.PI * 2;
-      const ct = Math.cos(theta), st = Math.sin(theta);
-      for (let k = 0; k < vSeg; k++) {
-        const p1 = phi1 + (k       / vSeg) * (phi2 - phi1);
-        const p2 = phi1 + ((k + 1) / vSeg) * (phi2 - phi1);
-        pts.push(radius * Math.sin(p1) * ct, radius * Math.cos(p1), radius * Math.sin(p1) * st,
-                 radius * Math.sin(p2) * ct, radius * Math.cos(p2), radius * Math.sin(p2) * st);
+      const theta=((j+off)/lonDiv)*Math.PI*2, ct=Math.cos(theta), st=Math.sin(theta);
+      for (let k = 0; k < 8; k++) {
+        const p1=phi1+(k/8)*(phi2-phi1), p2=phi1+((k+1)/8)*(phi2-phi1);
+        pts.push(radius*Math.sin(p1)*ct,radius*Math.cos(p1),radius*Math.sin(p1)*st,
+                 radius*Math.sin(p2)*ct,radius*Math.cos(p2),radius*Math.sin(p2)*st);
       }
     }
   }
@@ -303,211 +264,120 @@ function buildBrickGraticule(radius, latDiv, lonDiv, seg = 64) {
 }
 
 function buildDiamondGraticule(radius, latDiv, lonDiv, seg = 8) {
-  const pts = [];
-  const v0 = new THREE.Vector3(), v1 = new THREE.Vector3();
-  const spt = (phi, theta) => new THREE.Vector3(
-    Math.sin(phi) * Math.cos(theta), Math.cos(phi), Math.sin(phi) * Math.sin(theta)
-  ).multiplyScalar(radius);
-
-  for (let i = 0; i < latDiv; i++) {
-    const phi1 = (i       / latDiv) * Math.PI;
-    const phi2 = ((i + 1) / latDiv) * Math.PI;
-    for (let j = 0; j < lonDiv; j++) {
-      const theta1 = (j       / lonDiv) * Math.PI * 2;
-      const theta2 = ((j + 1) / lonDiv) * Math.PI * 2;
-      const NW = spt(phi1, theta1), NE = spt(phi1, theta2);
-      const SW = spt(phi2, theta1), SE = spt(phi2, theta2);
-      for (const [a, b] of [[NW, SE], [NE, SW]]) {
-        for (let k = 0; k < seg; k++) {
-          v0.lerpVectors(a, b, k       / seg).normalize().multiplyScalar(radius);
-          v1.lerpVectors(a, b, (k + 1) / seg).normalize().multiplyScalar(radius);
-          pts.push(v0.x, v0.y, v0.z, v1.x, v1.y, v1.z);
+  const pts=[], v0=new THREE.Vector3(), v1=new THREE.Vector3();
+  const spt=(phi,theta)=>new THREE.Vector3(Math.sin(phi)*Math.cos(theta),Math.cos(phi),Math.sin(phi)*Math.sin(theta)).multiplyScalar(radius);
+  for (let i=0;i<latDiv;i++) {
+    const phi1=(i/latDiv)*Math.PI, phi2=((i+1)/latDiv)*Math.PI;
+    for (let j=0;j<lonDiv;j++) {
+      const t1=(j/lonDiv)*Math.PI*2, t2=((j+1)/lonDiv)*Math.PI*2;
+      const NW=spt(phi1,t1),NE=spt(phi1,t2),SW=spt(phi2,t1),SE=spt(phi2,t2);
+      for (const [a,b] of [[NW,SE],[NE,SW]])
+        for (let k=0;k<seg;k++) {
+          v0.lerpVectors(a,b,k/seg).normalize().multiplyScalar(radius);
+          v1.lerpVectors(a,b,(k+1)/seg).normalize().multiplyScalar(radius);
+          pts.push(v0.x,v0.y,v0.z,v1.x,v1.y,v1.z);
         }
-      }
     }
   }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
   return geo;
 }
 
-function buildLoxodromeGraticule(radius, count, angleDeg = 60, seg = 200) {
-  const pts  = [];
-  const tanA = Math.tan(THREE.MathUtils.degToRad(angleDeg));
-  const lo   = THREE.MathUtils.degToRad(-80);
-  const hi   = THREE.MathUtils.degToRad( 80);
-
-  for (let i = 0; i < count; i++) {
-    const lon0 = (i / count) * Math.PI * 2;
-    for (const sign of [1, -1]) {
-      for (let k = 0; k < seg - 1; k++) {
-        const lat1 = lo + (k       / (seg - 1)) * (hi - lo);
-        const lat2 = lo + ((k + 1) / (seg - 1)) * (hi - lo);
-        const M1   = Math.log(Math.tan(Math.PI / 4 + lat1 / 2));
-        const M2   = Math.log(Math.tan(Math.PI / 4 + lat2 / 2));
-        const lon1 = lon0 + sign * tanA * M1;
-        const lon2 = lon0 + sign * tanA * M2;
-        const co1 = Math.PI / 2 - lat1, co2 = Math.PI / 2 - lat2;
-        pts.push(
-          radius * Math.sin(co1) * Math.cos(lon1), radius * Math.cos(co1), radius * Math.sin(co1) * Math.sin(lon1),
-          radius * Math.sin(co2) * Math.cos(lon2), radius * Math.cos(co2), radius * Math.sin(co2) * Math.sin(lon2),
-        );
-      }
+function buildLoxodromeGraticule(radius, count, angleDeg=60, seg=200) {
+  const pts=[], tanA=Math.tan(THREE.MathUtils.degToRad(angleDeg));
+  const lo=THREE.MathUtils.degToRad(-80), hi=THREE.MathUtils.degToRad(80);
+  for (let i=0;i<count;i++) {
+    const lon0=(i/count)*Math.PI*2;
+    for (const sign of [1,-1]) for (let k=0;k<seg-1;k++) {
+      const lat1=lo+(k/(seg-1))*(hi-lo), lat2=lo+((k+1)/(seg-1))*(hi-lo);
+      const M1=Math.log(Math.tan(Math.PI/4+lat1/2)), M2=Math.log(Math.tan(Math.PI/4+lat2/2));
+      const lon1=lon0+sign*tanA*M1, lon2=lon0+sign*tanA*M2;
+      const co1=Math.PI/2-lat1, co2=Math.PI/2-lat2;
+      pts.push(radius*Math.sin(co1)*Math.cos(lon1),radius*Math.cos(co1),radius*Math.sin(co1)*Math.sin(lon1),
+               radius*Math.sin(co2)*Math.cos(lon2),radius*Math.cos(co2),radius*Math.sin(co2)*Math.sin(lon2));
     }
   }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
   return geo;
 }
 
-function buildVoronoiGraticule(radius, N, arcSeg = 6) {
-  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-  const seeds = [];
-  for (let i = 0; i < N; i++) {
-    const y = 1 - (2 * i + 1) / N;
-    const r = Math.sqrt(Math.max(0, 1 - y * y));
-    const theta = goldenAngle * i;
-    seeds.push(new THREE.Vector3(r * Math.cos(theta), y, r * Math.sin(theta)));
+function buildVoronoiGraticule(radius, N, arcSeg=6) {
+  const goldenAngle=Math.PI*(3-Math.sqrt(5)), seeds=[];
+  for (let i=0;i<N;i++) { const y=1-(2*i+1)/N,r=Math.sqrt(Math.max(0,1-y*y)),theta=goldenAngle*i; seeds.push(new THREE.Vector3(r*Math.cos(theta),y,r*Math.sin(theta))); }
+  const hullGeo=new ConvexGeometry(seeds), pos=hullGeo.attributes.position, nFaces=pos.count/3;
+  const PREC=1e6, vKey=vi=>`${Math.round(pos.getX(vi)*PREC)},${Math.round(pos.getY(vi)*PREC)},${Math.round(pos.getZ(vi)*PREC)}`;
+  const A=new THREE.Vector3(),B=new THREE.Vector3(),C=new THREE.Vector3();
+  const ab=new THREE.Vector3(),bc=new THREE.Vector3(),ca=new THREE.Vector3();
+  const circumcenters=[];
+  for (let i=0;i<nFaces;i++) {
+    const ai=i*3,bi=ai+1,ci=ai+2;
+    A.fromBufferAttribute(pos,ai);B.fromBufferAttribute(pos,bi);C.fromBufferAttribute(pos,ci);
+    ab.crossVectors(A,B);bc.crossVectors(B,C);ca.crossVectors(C,A);
+    const cc=new THREE.Vector3().addVectors(ab,bc).add(ca).normalize().multiplyScalar(radius);
+    if(cc.dot(A)<0)cc.negate(); circumcenters.push(cc);
   }
-
-  const hullGeo = new ConvexGeometry(seeds);
-  const pos     = hullGeo.attributes.position;
-  const nFaces  = pos.count / 3;
-  const PREC    = 1e6;
-  const vKey    = vi =>
-    `${Math.round(pos.getX(vi) * PREC)},${Math.round(pos.getY(vi) * PREC)},${Math.round(pos.getZ(vi) * PREC)}`;
-
-  const A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3();
-  const ab = new THREE.Vector3(), bc = new THREE.Vector3(), ca = new THREE.Vector3();
-  const circumcenters = [];
-  for (let i = 0; i < nFaces; i++) {
-    const ai = i * 3, bi = ai + 1, ci = ai + 2;
-    A.fromBufferAttribute(pos, ai); B.fromBufferAttribute(pos, bi); C.fromBufferAttribute(pos, ci);
-    ab.crossVectors(A, B); bc.crossVectors(B, C); ca.crossVectors(C, A);
-    const cc = new THREE.Vector3().addVectors(ab, bc).add(ca).normalize().multiplyScalar(radius);
-    if (cc.dot(A) < 0) cc.negate();
-    circumcenters.push(cc);
+  const edgeMap=new Map();
+  for (let i=0;i<nFaces;i++) {
+    const vk=[vKey(i*3),vKey(i*3+1),vKey(i*3+2)];
+    for (let e=0;e<3;e++) { const k1=vk[e],k2=vk[(e+1)%3],ek=k1<k2?`${k1}|${k2}`:`${k2}|${k1}`; if(!edgeMap.has(ek))edgeMap.set(ek,[]); edgeMap.get(ek).push(i); }
   }
-
-  const edgeMap = new Map();
-  for (let i = 0; i < nFaces; i++) {
-    const vk = [vKey(i * 3), vKey(i * 3 + 1), vKey(i * 3 + 2)];
-    for (let e = 0; e < 3; e++) {
-      const k1 = vk[e], k2 = vk[(e + 1) % 3];
-      const edgeKey = k1 < k2 ? `${k1}|${k2}` : `${k2}|${k1}`;
-      if (!edgeMap.has(edgeKey)) edgeMap.set(edgeKey, []);
-      edgeMap.get(edgeKey).push(i);
-    }
-  }
-
-  const pts = [];
-  const v0 = new THREE.Vector3(), v1 = new THREE.Vector3();
-  for (const faces of edgeMap.values()) {
-    if (faces.length === 2) {
-      const c1 = circumcenters[faces[0]], c2 = circumcenters[faces[1]];
-      for (let k = 0; k < arcSeg; k++) {
-        v0.lerpVectors(c1, c2, k       / arcSeg).normalize().multiplyScalar(radius);
-        v1.lerpVectors(c1, c2, (k + 1) / arcSeg).normalize().multiplyScalar(radius);
-        pts.push(v0.x, v0.y, v0.z, v1.x, v1.y, v1.z);
-      }
-    }
-  }
+  const pts=[],v0=new THREE.Vector3(),v1=new THREE.Vector3();
+  for (const f of edgeMap.values()) if(f.length===2) { const c1=circumcenters[f[0]],c2=circumcenters[f[1]]; for(let k=0;k<arcSeg;k++){v0.lerpVectors(c1,c2,k/arcSeg).normalize().multiplyScalar(radius);v1.lerpVectors(c1,c2,(k+1)/arcSeg).normalize().multiplyScalar(radius);pts.push(v0.x,v0.y,v0.z,v1.x,v1.y,v1.z);} }
   hullGeo.dispose();
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
   return geo;
 }
 
-function buildGreatCircleFan(radius, count, seg = 128) {
-  const pts         = [];
-  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-  const pole = new THREE.Vector3(), fallback = new THREE.Vector3();
-  const u = new THREE.Vector3(), v = new THREE.Vector3();
-  const p1 = new THREE.Vector3(), p2 = new THREE.Vector3();
-
-  for (let i = 0; i < count; i++) {
-    const y = (i + 0.5) / count;
-    const r = Math.sqrt(1 - y * y);
-    pole.set(r * Math.cos(goldenAngle * i), y, r * Math.sin(goldenAngle * i));
-    fallback.set(0, 1, 0);
-    if (Math.abs(pole.dot(fallback)) > 0.9) fallback.set(1, 0, 0);
-    u.crossVectors(pole, fallback).normalize();
-    v.crossVectors(pole, u);
-    for (let j = 0; j < seg; j++) {
-      const a1 = (j       / seg) * Math.PI * 2;
-      const a2 = ((j + 1) / seg) * Math.PI * 2;
-      p1.copy(u).multiplyScalar(Math.cos(a1) * radius).addScaledVector(v, Math.sin(a1) * radius);
-      p2.copy(u).multiplyScalar(Math.cos(a2) * radius).addScaledVector(v, Math.sin(a2) * radius);
-      pts.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+function buildGreatCircleFan(radius, count, seg=128) {
+  const pts=[],goldenAngle=Math.PI*(3-Math.sqrt(5));
+  const pole=new THREE.Vector3(),fallback=new THREE.Vector3(),u=new THREE.Vector3(),v=new THREE.Vector3(),p1=new THREE.Vector3(),p2=new THREE.Vector3();
+  for (let i=0;i<count;i++) {
+    const y=(i+0.5)/count,r=Math.sqrt(1-y*y);
+    pole.set(r*Math.cos(goldenAngle*i),y,r*Math.sin(goldenAngle*i));
+    fallback.set(0,1,0); if(Math.abs(pole.dot(fallback))>0.9)fallback.set(1,0,0);
+    u.crossVectors(pole,fallback).normalize(); v.crossVectors(pole,u);
+    for (let j=0;j<seg;j++) {
+      const a1=(j/seg)*Math.PI*2,a2=((j+1)/seg)*Math.PI*2;
+      p1.copy(u).multiplyScalar(Math.cos(a1)*radius).addScaledVector(v,Math.sin(a1)*radius);
+      p2.copy(u).multiplyScalar(Math.cos(a2)*radius).addScaledVector(v,Math.sin(a2)*radius);
+      pts.push(p1.x,p1.y,p1.z,p2.x,p2.y,p2.z);
     }
   }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
   return geo;
 }
 
 function addSphereNormals(geo) {
-  const pos   = geo.attributes.position;
-  const norms = new Float32Array(pos.count * 3);
-  const v     = new THREE.Vector3();
-  for (let i = 0; i < pos.count; i++) {
-    v.fromBufferAttribute(pos, i).normalize();
-    norms[i * 3] = v.x; norms[i * 3 + 1] = v.y; norms[i * 3 + 2] = v.z;
-  }
-  geo.setAttribute('normal', new THREE.BufferAttribute(norms, 3));
+  const pos=geo.attributes.position, norms=new Float32Array(pos.count*3), v=new THREE.Vector3();
+  for (let i=0;i<pos.count;i++) { v.fromBufferAttribute(pos,i).normalize(); norms[i*3]=v.x;norms[i*3+1]=v.y;norms[i*3+2]=v.z; }
+  geo.setAttribute('normal',new THREE.BufferAttribute(norms,3));
   return geo;
 }
 
 function buildWireGeometry(size, style, density) {
-  const idx = density - 1; // 0…9
-  const t   = idx / 9;    // 0…1
-  const wn  = g => addSphereNormals(g);
-
+  const idx=density-1, t=idx/9, wn=g=>addSphereNormals(g);
   switch (style) {
-    case 'triangle': {
-      const LEVELS = [0, 1, 2, 2, 3, 4, 4, 5, 5, 6];
-      return wn(buildTriangleGraticule(size, LEVELS[idx]));
-    }
-    case 'hexagon': {
-      const LEVELS = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5];
-      return wn(buildHexGraticule(size, LEVELS[idx]));
-    }
-    case 'brick': {
-      const latDiv = Math.round(6 + t * 30);
-      return wn(buildBrickGraticule(size, latDiv, latDiv));
-    }
-    case 'diamond': {
-      const latDiv = Math.round(4 + t * 18);
-      return wn(buildDiamondGraticule(size, latDiv, latDiv * 2));
-    }
-    case 'loxodrome': {
-      const count = Math.round(2 + idx * 10 / 9);
-      return wn(buildLoxodromeGraticule(size, count));
-    }
-    case 'voronoi': {
-      const N = Math.round(20 + idx * 31);
-      return wn(buildVoronoiGraticule(size, N));
-    }
-    case 'greatcircle': {
-      const count = Math.round(3 + idx * 7 / 3);
-      return wn(buildGreatCircleFan(size, count));
-    }
-    default: { // 'grid'
-      const latDiv = Math.round(6 + t * 30);
-      return wn(buildGraticule(size, latDiv, latDiv * 2));
-    }
+    case 'triangle': { const L=[0,1,2,2,3,4,4,5,5,6]; return wn(buildTriangleGraticule(size,L[idx])); }
+    case 'hexagon':  { const L=[0,0,1,1,2,3,3,4,4,5]; return wn(buildHexGraticule(size,L[idx])); }
+    case 'brick':    { const d=Math.round(6+t*30); return wn(buildBrickGraticule(size,d,d)); }
+    case 'diamond':  { const d=Math.round(4+t*18); return wn(buildDiamondGraticule(size,d,d*2)); }
+    case 'loxodrome':{ return wn(buildLoxodromeGraticule(size,Math.round(2+idx*10/9))); }
+    case 'voronoi':  { return wn(buildVoronoiGraticule(size,Math.round(20+idx*31))); }
+    case 'greatcircle':{ return wn(buildGreatCircleFan(size,Math.round(3+idx*7/3))); }
+    default:         { const d=Math.round(6+t*30); return wn(buildGraticule(size,d,d*2)); }
   }
 }
 
-// ── Sun light ─────────────────────────────────────────────────────────────────
-// Fixed directional light at world (5,0,0). In a future step this becomes a
-// PointLight at the star body's world position. For now sunDir is constant.
+// ── Sun light (fixed world-space direction — step 2) ──────────────────────────
 
 const sunLight = new THREE.DirectionalLight(0xffffff, 3.0);
 sunLight.position.set(5, 0, 0);
 scene.add(sunLight);
-
-const SUN_DIR = new THREE.Vector3(1, 0, 0); // normalised position of sunLight
+const SUN_DIR = new THREE.Vector3(1, 0, 0);
 
 // ── UI helpers ────────────────────────────────────────────────────────────────
 
@@ -531,10 +401,10 @@ function resetUpload(btnId, clearId, defaultLabel = 'Upload') {
 
 function loadTex(url, onLoad) {
   new THREE.TextureLoader().load(url, tex => {
-    tex.colorSpace  = THREE.LinearSRGBColorSpace;
-    tex.anisotropy  = MAX_ANISOTROPY;
-    tex.minFilter   = THREE.LinearMipmapLinearFilter;
-    tex.magFilter   = THREE.LinearFilter;
+    tex.colorSpace = THREE.LinearSRGBColorSpace;
+    tex.anisotropy = MAX_ANISOTROPY;
+    tex.minFilter  = THREE.LinearMipmapLinearFilter;
+    tex.magFilter  = THREE.LinearFilter;
     tex.needsUpdate = true;
     onLoad(tex);
     URL.revokeObjectURL(url);
@@ -543,37 +413,63 @@ function loadTex(url, onLoad) {
 
 // ── Body class ────────────────────────────────────────────────────────────────
 //
-// Each Body owns its complete Three.js subtree and per-body panel state.
+// Orbit types:
+//   centered   — body sits at parent's origin (no orbit)
+//   circular   — constant-radius circular orbit
+//   elliptical — Keplerian ellipse; eccentricity stretches the shape
+//   binary     — two bodies share a common barycenter
 //
-// Scene graph per body (parent.bodyGroup or scene for root bodies):
-//
-//   [parent]
-//     └─ orbitGroup      ← rotates around parent's Y axis each frame
-//          └─ bodyGroup  ← translated by orbitRadius along X
+// Scene graph:
+//   [parent.bodyGroup or scene]
+//     └─ orbitGroup          ← outer-orbit rotation (circular) or ellipse advance
+//          └─ bodyGroup      ← offset by orbitRadius along X
 //               ├─ tiltGroup → spinGroup → equatorGroup → mesh + wireframe
-//               ├─ atmosphere  (no spin)
-//               └─ rimGlow    (no spin)
+//               ├─ atmosphere
+//               └─ rimGlow
+//
+// Binary restructures bodyGroup as:
+//   bodyGroup (host, position = barycenter offset from parent)
+//     └─ binarySpinGroup ← mutual orbit rotation
+//          ├─ binaryOffsetA (position.x = +sep/2) → host tiltGroup etc.
+//          └─ binaryOffsetB (position.x = −sep/2) → guest tiltGroup etc.
 
 class Body {
   constructor({
-    name             = 'Planet 1',
-    type             = 'planet',   // 'star' | 'planet' | 'moon'
-    parent           = null,       // Body instance, or null for scene root
+    name             = 'Body',
+    type             = 'planet',
+    parent           = null,
     size             = 1.0,
+    orbitType        = 'centered',
     orbitRadius      = 0,
-    orbitSpeed       = 0,          // rad per frame at 60fps baseline
-    orbitInclination = 0,          // degrees — tilt of orbital plane
+    orbitPeriod      = 120,
+    orbitInclination = 0,
+    orbitEccentricity = 0,
   } = {}) {
     this.name             = name;
     this.type             = type;
     this.parent           = parent;
     this.size             = size;
+
+    // ── Orbit state ──────────────────────────────────────────────────────────
+    this.orbitType        = orbitType;
     this.orbitRadius      = orbitRadius;
-    this.orbitSpeed       = orbitSpeed;
+    this.orbitPeriod      = orbitPeriod;   // seconds per full orbit
+    this.orbitInclination = orbitInclination;
+    this.orbitEccentricity = orbitEccentricity;
+    this._orbitAngle      = 0;             // radians, advances each frame
+    this._orbitSpeed      = 0;             // rad per frame at 60fps — computed below
+
+    // ── Binary state ──────────────────────────────────────────────────────────
+    this.binaryPartner     = null;
+    this.binaryIsHost      = false;
+    this._binarySpinGroup  = null;
+    this._binaryOffset     = null;  // this body's offset group within binarySpinGroup
+    this.binarySeparation  = 4;
+    this.binaryPeriod      = 60;    // seconds per mutual orbit
 
     // ── Per-body panel state ─────────────────────────────────────────────────
     this.autoRotate    = true;
-    this.rotateSpeed   = (2 * Math.PI) / (60 * 60); // 60 s per rotation
+    this.rotateSpeed   = (2 * Math.PI) / (60 * 60);
     this.axialTilt     = 0;
     this.equatorTilt   = 0;
     this.tiltLocked    = true;
@@ -584,10 +480,11 @@ class Body {
     this.dayTexName    = null;
     this.nightTexName  = null;
 
-    // ── Scene graph ──────────────────────────────────────────────────────────
+    this._syncOrbitSpeed();
+
+    // ── Scene graph ───────────────────────────────────────────────────────────
     this.orbitGroup = new THREE.Group();
-    if (orbitInclination !== 0)
-      this.orbitGroup.rotation.z = THREE.MathUtils.degToRad(orbitInclination);
+    this.orbitGroup.rotation.z = THREE.MathUtils.degToRad(orbitInclination);
 
     this.bodyGroup = new THREE.Group();
     this.bodyGroup.position.x = orbitRadius;
@@ -600,10 +497,9 @@ class Body {
     this.spinGroup.add(this.equatorGroup);
     this.bodyGroup.add(this.tiltGroup);
 
-    // ── Globe material & mesh ────────────────────────────────────────────────
+    // ── Globe ─────────────────────────────────────────────────────────────────
     this.globeMat = new THREE.ShaderMaterial({
-      vertexShader:   GLOBE_VERT,
-      fragmentShader: GLOBE_FRAG,
+      vertexShader: GLOBE_VERT, fragmentShader: GLOBE_FRAG,
       uniforms: {
         dayTex:         { value: null },
         nightTex:       { value: null },
@@ -623,7 +519,7 @@ class Body {
     this.mesh.visible = false;
     this.equatorGroup.add(this.mesh);
 
-    // ── Graticule / wireframe ────────────────────────────────────────────────
+    // ── Wireframe ─────────────────────────────────────────────────────────────
     this.graticuleMat = new THREE.ShaderMaterial({
       uniforms: {
         lineColor: { value: new THREE.Color(0x2266cc) },
@@ -631,11 +527,8 @@ class Body {
         sunDir:    { value: SUN_DIR.clone() },
         flatLit:   { value: true },
       },
-      vertexShader:   GRAT_VERT,
-      fragmentShader: GRAT_FRAG,
-      transparent: true,
-      depthWrite:  false,
-      depthTest:   false,
+      vertexShader: GRAT_VERT, fragmentShader: GRAT_FRAG,
+      transparent: true, depthWrite: false, depthTest: false,
     });
 
     this.wireframe = new THREE.LineSegments(
@@ -646,71 +539,87 @@ class Body {
     this.wireframe.visible     = true;
     this.equatorGroup.add(this.wireframe);
 
-    // ── Atmosphere ───────────────────────────────────────────────────────────
+    // ── Atmosphere ────────────────────────────────────────────────────────────
     this.atmosphere = new THREE.Mesh(
       new THREE.SphereGeometry(size * 1.055, 64, 64),
-      new THREE.MeshBasicMaterial({
-        color: 0xffffff, transparent: true, opacity: 0.05,
-        side: THREE.FrontSide, depthWrite: false,
-      })
+      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.05, side: THREE.FrontSide, depthWrite: false })
     );
     this.atmosphere.visible = false;
     this.bodyGroup.add(this.atmosphere);
 
-    // ── Rim glow ─────────────────────────────────────────────────────────────
+    // ── Rim glow ──────────────────────────────────────────────────────────────
     this.rimMat = new THREE.ShaderMaterial({
-      uniforms: {
-        glowColor:  { value: new THREE.Color(0xffffff) },
-        viewVector: { value: new THREE.Vector3() },
-      },
-      vertexShader:   RIM_VERT,
-      fragmentShader: RIM_FRAG,
-      side:       THREE.BackSide,
-      blending:   THREE.AdditiveBlending,
-      transparent: true,
-      depthWrite:  false,
+      uniforms: { glowColor: { value: new THREE.Color(0xffffff) }, viewVector: { value: new THREE.Vector3() } },
+      vertexShader: RIM_VERT, fragmentShader: RIM_FRAG,
+      side: THREE.BackSide, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false,
     });
-
-    this.rimGlow = new THREE.Mesh(
-      new THREE.SphereGeometry(size * 1.12, 64, 64),
-      this.rimMat
-    );
+    this.rimGlow = new THREE.Mesh(new THREE.SphereGeometry(size * 1.12, 64, 64), this.rimMat);
     this.rimGlow.visible = false;
     this.bodyGroup.add(this.rimGlow);
 
-    this._wp = new THREE.Vector3(); // reusable — avoids GC in animate loop
+    this._wp = new THREE.Vector3();
 
-    // ── Attach to scene graph ────────────────────────────────────────────────
-    const parentGroup = parent ? parent.bodyGroup : scene;
-    parentGroup.add(this.orbitGroup);
+    // ── Attach ────────────────────────────────────────────────────────────────
+    const pg = parent ? parent.bodyGroup : scene;
+    pg.add(this.orbitGroup);
   }
 
-  // Apply axial + equator tilt to the group hierarchy.
+  _syncOrbitSpeed() {
+    this._orbitSpeed = this.orbitPeriod > 0
+      ? (2 * Math.PI) / (this.orbitPeriod * 60)
+      : 0;
+  }
+
   applyTilts() {
     this.tiltGroup.rotation.z    = THREE.MathUtils.degToRad(this.axialTilt);
     this.equatorGroup.rotation.z = THREE.MathUtils.degToRad(this.equatorTilt - this.axialTilt);
   }
 
-  // Replace wireframe geometry with current style + density.
   rebuildWireframe() {
     this.wireframe.geometry.dispose();
     this.wireframe.geometry = buildWireGeometry(this.size * 1.001, this.wireStyle, this.wireDensity);
   }
 
-  // Called every frame from the animate loop.
   update(dt) {
-    this.orbitGroup.rotation.y += this.orbitSpeed * dt * 60;
+    switch (this.orbitType) {
+      case 'circular':
+        this.orbitGroup.rotation.y += this._orbitSpeed * dt * 60;
+        break;
+
+      case 'elliptical': {
+        this._orbitAngle += this._orbitSpeed * dt * 60;
+        const a = this.orbitRadius;
+        const e = this.orbitEccentricity;
+        const b = a * Math.sqrt(Math.max(0, 1 - e * e));
+        // Place body on ellipse with one focus at parent origin
+        this.bodyGroup.position.x = a * Math.cos(this._orbitAngle) - a * e;
+        this.bodyGroup.position.z = b * Math.sin(this._orbitAngle);
+        break;
+      }
+
+      case 'binary':
+        if (this.binaryIsHost) {
+          // Outer orbit of the barycenter around the parent star
+          this.orbitGroup.rotation.y += this._orbitSpeed * dt * 60;
+          // Mutual binary orbit
+          const binSpeed = (2 * Math.PI) / (this.binaryPeriod * 60);
+          this._binarySpinGroup.rotation.y += binSpeed * dt * 60;
+        }
+        // Guest body: no independent orbit; the host drives everything
+        break;
+
+      // 'centered': body sits at parent origin, no orbit advancement
+    }
 
     if (this.autoRotate)
       this.spinGroup.rotation.y += this.rotateSpeed * dt * 60;
 
     if (this.rimGlow.visible) {
-      this.bodyGroup.getWorldPosition(this._wp);
+      this.rimGlow.getWorldPosition(this._wp);
       this.rimMat.uniforms.viewVector.value.subVectors(camera.position, this._wp);
     }
   }
 
-  // Release GPU resources and detach from parent.
   dispose() {
     this.globeMat.uniforms.dayTex.value?.dispose();
     this.globeMat.uniforms.nightTex.value?.dispose();
@@ -722,9 +631,59 @@ class Body {
     this.wireframe.geometry.dispose();
     this.atmosphere.geometry.dispose();
     this.rimGlow.geometry.dispose();
+
+    if (this.orbitType === 'binary' && !this.binaryIsHost) return; // host removal handles scene detach
     const pg = this.parent ? this.parent.bodyGroup : scene;
     pg.remove(this.orbitGroup);
   }
+}
+
+// ── Binary linking ────────────────────────────────────────────────────────────
+//
+// Makes `host` and `guest` orbit a common barycenter.
+// Host keeps its orbitGroup position (outer orbit); guest's orbitGroup is
+// detached and its internals folded into the host's binarySpinGroup.
+
+function linkBinary(host, guest, separation = 4, period = 60) {
+  const sep = separation;
+
+  // Create spin group inside host's bodyGroup
+  const bsg  = new THREE.Group();
+  const offA = new THREE.Group(); // host side (+x)
+  const offB = new THREE.Group(); // guest side (−x)
+  offA.position.x = +sep / 2;
+  offB.position.x = -sep / 2;
+  bsg.add(offA, offB);
+  host.bodyGroup.add(bsg);
+
+  // Reparent host's internals from bodyGroup → offA
+  // THREE.Object3D.add() auto-detaches from previous parent
+  offA.add(host.tiltGroup, host.atmosphere, host.rimGlow);
+
+  // Detach guest's orbitGroup from scene/parent, reparent guest's internals → offB
+  const guestPG = guest.parent ? guest.parent.bodyGroup : scene;
+  guestPG.remove(guest.orbitGroup);
+  offB.add(guest.tiltGroup, guest.atmosphere, guest.rimGlow);
+
+  // Host bodyGroup now only has bsg; position it at barycenter (center = 0)
+  host.bodyGroup.position.x = host.orbitRadius; // barycenter offset from parent star
+
+  // Record linkage
+  host.orbitType       = 'binary';
+  host.binaryPartner   = guest;
+  host.binaryIsHost    = true;
+  host._binarySpinGroup = bsg;
+  host._binaryOffset   = offA;
+  host.binarySeparation = sep;
+  host.binaryPeriod    = period;
+
+  guest.orbitType       = 'binary';
+  guest.binaryPartner   = host;
+  guest.binaryIsHost    = false;
+  guest._binarySpinGroup = bsg;
+  guest._binaryOffset   = offB;
+  guest.binarySeparation = sep;
+  guest.binaryPeriod    = period;
 }
 
 // ── Bodies list & selection ───────────────────────────────────────────────────
@@ -734,18 +693,35 @@ let selectedBody   = null;
 let isCapturingGif = false;
 let hasBgTex       = false;
 
-function createBody(options) {
-  const b = new Body(options);
+function createBody(opts) {
+  const b = new Body(opts);
   bodies.push(b);
   renderBodyTree();
   return b;
 }
 
-function removeBody(b) {
-  const idx = bodies.indexOf(b);
-  if (idx === -1) return;
-  b.dispose();
-  bodies.splice(idx, 1);
+function removeBody(target) {
+  // Collect target + binary partner (if any) + all descendants
+  const toRemove = new Set([target]);
+  if (target.orbitType === 'binary' && target.binaryPartner)
+    toRemove.add(target.binaryPartner);
+
+  function collectDescendants(b) {
+    for (const other of bodies)
+      if (other.parent === b && !toRemove.has(other)) {
+        toRemove.add(other);
+        collectDescendants(other);
+      }
+  }
+  toRemove.forEach(collectDescendants);
+
+  // Dispose host first so scene graph cleanup is correct, then guests
+  const sorted = [...toRemove].sort((a, b) => (a.binaryIsHost ? -1 : 1));
+  sorted.forEach(b => {
+    b.dispose();
+    bodies.splice(bodies.indexOf(b), 1);
+  });
+
   selectBody(bodies[0] ?? null);
 }
 
@@ -756,11 +732,13 @@ const TYPE_LABEL = { star: 'STAR', planet: 'PLANET', moon: 'MOON' };
 function renderBodyTree() {
   const tree = $('body-tree');
   tree.innerHTML = '';
+
   bodies.forEach((b, i) => {
     const item = document.createElement('div');
-    item.className      = 'body-item' + (b === selectedBody ? ' active' : '');
+    item.className = 'body-item' + (b === selectedBody ? ' active' : '');
     item.dataset.bodyIdx = i;
     if (b.parent) item.style.paddingLeft = '28px';
+    else if (b.orbitType === 'binary' && !b.binaryIsHost) item.style.paddingLeft = '28px';
 
     const badge = document.createElement('span');
     badge.className   = 'body-type-badge';
@@ -770,18 +748,131 @@ function renderBodyTree() {
     nameEl.className   = 'body-item-name';
     nameEl.textContent = b.name;
 
-    item.append(badge, nameEl);
+    const removeBtn = document.createElement('button');
+    removeBtn.className   = 'body-item-remove';
+    removeBtn.textContent = '✕';
+    removeBtn.title       = 'Remove body';
+    removeBtn.addEventListener('click', e => { e.stopPropagation(); removeBody(b); });
+
+    item.append(badge, nameEl, removeBtn);
     item.addEventListener('click', () => selectBody(b));
     tree.appendChild(item);
   });
 }
 
-// Switch the active body and repopulate every panel widget from its state.
+// ── Add-body form ─────────────────────────────────────────────────────────────
+
+function openAddForm() {
+  // Populate parent select
+  const parentSel = $('new-body-parent');
+  parentSel.innerHTML = '<option value="none">None (root)</option>';
+  bodies.forEach((b, i) => {
+    const opt = document.createElement('option');
+    opt.value = i; opt.textContent = b.name;
+    parentSel.appendChild(opt);
+  });
+  if (bodies.length) parentSel.value = '0';
+
+  // Default name
+  $('new-body-name').value = suggestName($('new-body-type').value);
+
+  // Show/hide binary partner row
+  updateAddFormOrbitVisibility();
+
+  $('add-body-form').style.display = '';
+  $('add-body-btn').style.display  = 'none';
+}
+
+function closeAddForm() {
+  $('add-body-form').style.display = 'none';
+  $('add-body-btn').style.display  = '';
+}
+
+function suggestName(type) {
+  const count = bodies.filter(b => b.type === type).length + 1;
+  return { star: 'Star', planet: 'Planet', moon: 'Moon' }[type] + ' ' + count;
+}
+
+function updateAddFormOrbitVisibility() {
+  const orbitType = $('new-body-orbit').value;
+  const isBinary  = orbitType === 'binary';
+  $('new-body-partner-row').style.display = isBinary ? '' : 'none';
+
+  if (isBinary) {
+    const partnerSel = $('new-body-partner');
+    partnerSel.innerHTML = '';
+    bodies.forEach((b, i) => {
+      if (b.orbitType !== 'binary') { // can't link to already-binary body
+        const opt = document.createElement('option');
+        opt.value = i; opt.textContent = b.name;
+        partnerSel.appendChild(opt);
+      }
+    });
+  }
+}
+
+function autoOrbitRadius(parent) {
+  const siblings = bodies.filter(b => b.parent === parent && b.orbitType !== 'centered');
+  if (!siblings.length) return parent ? 3 : 8;
+  return Math.max(...siblings.map(b => b.orbitRadius)) + 5;
+}
+
+$('new-body-type').addEventListener('change', () => {
+  $('new-body-name').value = suggestName($('new-body-type').value);
+  // Stars default to centered
+  const isStar = $('new-body-type').value === 'star';
+  if (isStar) $('new-body-orbit').value = 'centered';
+  else if ($('new-body-orbit').value === 'centered') $('new-body-orbit').value = 'circular';
+  updateAddFormOrbitVisibility();
+});
+
+$('new-body-orbit').addEventListener('change', updateAddFormOrbitVisibility);
+
+$('add-body-btn').addEventListener('click', openAddForm);
+$('cancel-add-body').addEventListener('click', closeAddForm);
+
+$('confirm-add-body').addEventListener('click', () => {
+  const name      = $('new-body-name').value.trim() || 'New Body';
+  const type      = $('new-body-type').value;
+  const orbitType = $('new-body-orbit').value;
+  const parentVal = $('new-body-parent').value;
+  const parent    = parentVal === 'none' ? null : bodies[parseInt(parentVal)];
+
+  if (orbitType === 'binary') {
+    const partnerEl = $('new-body-partner');
+    if (!partnerEl.options.length) { alert('No valid binary partner available.'); return; }
+    const host = bodies[parseInt(partnerEl.value)];
+
+    // Create the guest body as centered first (linkBinary will detach it)
+    const guest = createBody({ name, type, parent: host.parent, orbitType: 'centered' });
+    linkBinary(host, guest, 4, 60);
+    applyGlobeTheme(localStorage.getItem('itschu-theme') || 'dark');
+    closeAddForm();
+    selectBody(guest);
+    return;
+  }
+
+  const orbitRadius = orbitType === 'centered' ? 0 : autoOrbitRadius(parent);
+  const newBody = createBody({ name, type, parent, orbitType, orbitRadius, orbitPeriod: 120 });
+  applyGlobeTheme(localStorage.getItem('itschu-theme') || 'dark');
+  closeAddForm();
+  selectBody(newBody);
+});
+
+// ── Panel population ──────────────────────────────────────────────────────────
+
 function selectBody(b) {
   selectedBody = b;
   renderBodyTree();
   if (b) populatePanel(b);
 }
+
+const ORBIT_HINTS = {
+  centered:   'Body sits at parent center — no orbit.',
+  circular:   'Constant-radius circular path.',
+  elliptical: 'Stretched elliptical path around parent.',
+  binary:     'Binary pair — sharing a common barycenter.',
+};
 
 function populatePanel(body) {
   // ── Textures ───────────────────────────────────────────────────────────────
@@ -790,22 +881,59 @@ function populatePanel(body) {
   if (body.nightTexName) setUploadLoaded('upload-night-btn', 'clear-night-btn', body.nightTexName);
   else                   resetUpload('upload-night-btn', 'clear-night-btn', 'Night Texture');
   $('night-threshold-row').style.display = body.nightTexName ? 'flex' : 'none';
-  const nightThresh = Math.round(body.globeMat.uniforms.nightThreshold.value * 100);
-  $('night-threshold-slider').value = nightThresh;
-  $('night-threshold-num').value    = nightThresh;
+  const nt = Math.round(body.globeMat.uniforms.nightThreshold.value * 100);
+  $('night-threshold-slider').value = nt; $('night-threshold-num').value = nt;
+
+  // ── Orbit ─────────────────────────────────────────────────────────────────
+  const ot = body.orbitType;
+  const orbitTypeEl = $('orbit-type');
+  // Ensure 'binary' option exists in select
+  if (!orbitTypeEl.querySelector('option[value="binary"]')) {
+    const opt = document.createElement('option');
+    opt.value = 'binary'; opt.textContent = 'Binary';
+    orbitTypeEl.appendChild(opt);
+  }
+  orbitTypeEl.value    = ot;
+  orbitTypeEl.disabled = (ot === 'binary');
+  $('orbit-type-hint').textContent = ORBIT_HINTS[ot] ?? '';
+
+  const showParams = (ot !== 'centered');
+  $('orbit-params').style.display          = showParams ? '' : 'none';
+  $('orbit-eccentricity-row').style.display = (ot === 'elliptical') ? '' : 'none';
+  $('orbit-binary-params').style.display    = (ot === 'binary') ? '' : 'none';
+
+  const refBody = (ot === 'binary' && !body.binaryIsHost) ? body.binaryPartner : body;
+  if (showParams) {
+    $('orbit-radius-slider').value      = refBody.orbitRadius;
+    $('orbit-radius-num').value         = refBody.orbitRadius;
+    $('orbit-period-slider').value      = refBody.orbitPeriod;
+    $('orbit-period-num').value         = refBody.orbitPeriod;
+    $('orbit-inclination-slider').value = refBody.orbitInclination;
+    $('orbit-inclination-num').value    = refBody.orbitInclination;
+  }
+  if (ot === 'elliptical') {
+    const ecc = Math.round(body.orbitEccentricity * 99);
+    $('orbit-eccentricity-slider').value = ecc; $('orbit-eccentricity-num').value = ecc;
+  }
+  if (ot === 'binary') {
+    $('orbit-binary-partner-name').textContent = body.binaryPartner?.name ?? '—';
+    const h = body.binaryIsHost ? body : body.binaryPartner;
+    $('orbit-binary-sep-slider').value    = h.binarySeparation;
+    $('orbit-binary-sep-num').value       = h.binarySeparation;
+    $('orbit-binary-period-slider').value = h.binaryPeriod;
+    $('orbit-binary-period-num').value    = h.binaryPeriod;
+    // Binary hosts can still have outer orbit params visible
+    $('orbit-params').style.display = body.binaryIsHost ? '' : 'none';
+  }
 
   // ── Rotation ───────────────────────────────────────────────────────────────
   const speedSec = Math.round((2 * Math.PI) / (body.rotateSpeed * 60));
-  $('speed-slider').value    = speedSec;
-  $('speed-num').value       = speedSec;
+  $('speed-slider').value    = speedSec; $('speed-num').value = speedSec;
   $('rotate-toggle').checked = body.autoRotate;
-
   const tiltMax = body.fullTiltRange ? 360 : 45;
-  $('axial-tilt-slider').max     = tiltMax;
-  $('equator-tilt-slider').max   = tiltMax;
-  $('axial-tilt-slider').value   = body.axialTilt;
+  $('axial-tilt-slider').max     = tiltMax; $('axial-tilt-slider').value   = body.axialTilt;
   $('axial-tilt-num').value      = body.axialTilt;
-  $('equator-tilt-slider').value = body.equatorTilt;
+  $('equator-tilt-slider').max   = tiltMax; $('equator-tilt-slider').value = body.equatorTilt;
   $('equator-tilt-num').value    = body.equatorTilt;
   $('tilt-lock').checked         = body.tiltLocked;
   $('tilt-fullrange').checked    = body.fullTiltRange;
@@ -813,9 +941,8 @@ function populatePanel(body) {
   // ── Lighting ───────────────────────────────────────────────────────────────
   $('daynight-toggle').checked   = body.dayNightCycle;
   $('sun-options').style.display = body.dayNightCycle ? 'block' : 'none';
-  const sunIntSlider = Math.round(body.globeMat.uniforms.sunIntensity.value * 50);
-  $('sun-intensity-slider').value = sunIntSlider;
-  $('sun-intensity-num').value    = sunIntSlider;
+  const si = Math.round(body.globeMat.uniforms.sunIntensity.value * 50);
+  $('sun-intensity-slider').value = si; $('sun-intensity-num').value = si;
   const sc = body.globeMat.uniforms.sunColor.value;
   $('sun-color').value = '#' + new THREE.Color(sc.x, sc.y, sc.z).getHexString();
 
@@ -826,9 +953,8 @@ function populatePanel(body) {
   $('wire-density-num').value   = body.wireDensity;
 
   // ── Experimental ──────────────────────────────────────────────────────────
-  const ambSlider = Math.round(body.globeMat.uniforms.ambientStr.value / 0.6 * 100);
-  $('ambient-slider').value      = ambSlider;
-  $('ambient-num').value         = ambSlider;
+  const amb = Math.round(body.globeMat.uniforms.ambientStr.value / 0.6 * 100);
+  $('ambient-slider').value      = amb; $('ambient-num').value = amb;
   $('atmosphere-toggle').checked = body.atmosphere.visible;
 }
 
@@ -852,36 +978,28 @@ function applyGlobeTheme(name) {
 }
 
 applyGlobeTheme(localStorage.getItem('itschu-theme') || 'dark');
+new MutationObserver(() => applyGlobeTheme(localStorage.getItem('itschu-theme') || 'amber'))
+  .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
-new MutationObserver(() => {
-  applyGlobeTheme(localStorage.getItem('itschu-theme') || 'amber');
-}).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+// ── Default body ──────────────────────────────────────────────────────────────
 
-// ── Initialise default body ───────────────────────────────────────────────────
+selectBody(createBody({ name: 'Planet 1', type: 'planet', orbitType: 'centered' }));
 
-selectBody(createBody({ name: 'Planet 1', type: 'planet' }));
-
-// ── Panel event listeners ─────────────────────────────────────────────────────
-// All listeners read/write `selectedBody`. When selectBody() is called,
-// populatePanel() updates every widget, so these handlers always target the
-// active body with no rebinding needed.
+// ── Panel listeners ───────────────────────────────────────────────────────────
 
 // ── Textures ──────────────────────────────────────────────────────────────────
 
 $('upload-day-btn').addEventListener('click', () => $('day-tex-input').click());
 $('day-tex-input').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
   const b = selectedBody;
   loadTex(URL.createObjectURL(file), tex => {
     b.globeMat.uniforms.dayTex.value?.dispose();
     b.globeMat.uniforms.dayTex.value    = tex;
     b.globeMat.uniforms.hasDayTex.value = true;
-    b.mesh.visible = true;
-    b.dayTexName   = file.name;
+    b.mesh.visible = true; b.dayTexName = file.name;
     setUploadLoaded('upload-day-btn', 'clear-day-btn', file.name);
-    b.wireframe.visible = false;
-    $('wireframe-toggle').checked = false;
+    b.wireframe.visible = false; $('wireframe-toggle').checked = false;
   });
   e.target.value = '';
 });
@@ -890,15 +1008,13 @@ $('clear-day-btn').addEventListener('click', () => {
   b.globeMat.uniforms.dayTex.value?.dispose();
   b.globeMat.uniforms.dayTex.value    = null;
   b.globeMat.uniforms.hasDayTex.value = false;
-  b.mesh.visible = false;
-  b.dayTexName   = null;
+  b.mesh.visible = false; b.dayTexName = null;
   resetUpload('upload-day-btn', 'clear-day-btn', 'Map Texture');
 });
 
 $('upload-night-btn').addEventListener('click', () => $('night-tex-input').click());
 $('night-tex-input').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
   const b = selectedBody;
   loadTex(URL.createObjectURL(file), tex => {
     b.globeMat.uniforms.nightTex.value?.dispose();
@@ -925,16 +1041,12 @@ $('night-threshold-slider').addEventListener('input', e => {
   $('night-threshold-num').value = e.target.value;
 });
 
-// Background texture — scene-level, not per body
 $('upload-bg-btn').addEventListener('click', () => $('bg-tex-input').click());
 $('bg-tex-input').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
   loadTex(URL.createObjectURL(file), tex => {
-    tex.mapping      = THREE.EquirectangularReflectionMapping;
-    scene.background = tex;
-    bgStars.visible  = false;
-    hasBgTex         = true;
+    tex.mapping = THREE.EquirectangularReflectionMapping;
+    scene.background = tex; bgStars.visible = false; hasBgTex = true;
     setUploadLoaded('upload-bg-btn', 'clear-bg-btn', file.name);
   });
   e.target.value = '';
@@ -942,16 +1054,84 @@ $('bg-tex-input').addEventListener('change', e => {
 $('clear-bg-btn').addEventListener('click', () => {
   if (scene.background?.isTexture) scene.background.dispose();
   scene.background = new THREE.Color(0x000000);
-  bgStars.visible  = $('stars-toggle').checked;
-  hasBgTex         = false;
+  bgStars.visible = $('stars-toggle').checked; hasBgTex = false;
   resetUpload('upload-bg-btn', 'clear-bg-btn', 'Background');
+});
+
+// ── Orbit ─────────────────────────────────────────────────────────────────────
+
+$('orbit-type').addEventListener('change', e => {
+  const b = selectedBody, newType = e.target.value;
+  b.orbitType = newType;
+  $('orbit-type-hint').textContent = ORBIT_HINTS[newType] ?? '';
+
+  if (newType === 'centered') {
+    b.bodyGroup.position.set(0, 0, 0);
+  } else if (newType === 'circular') {
+    b.bodyGroup.position.x = b.orbitRadius;
+    b.bodyGroup.position.z = 0;
+    b.orbitGroup.rotation.y = 0;
+  } else if (newType === 'elliptical') {
+    b._orbitAngle = 0;
+    b.orbitGroup.rotation.y = 0;
+  }
+
+  $('orbit-params').style.display           = (newType !== 'centered') ? '' : 'none';
+  $('orbit-eccentricity-row').style.display  = (newType === 'elliptical') ? '' : 'none';
+  $('orbit-binary-params').style.display     = 'none';
+});
+
+$('orbit-radius-slider').addEventListener('input', e => {
+  const b = selectedBody;
+  b.orbitRadius = parseFloat(e.target.value);
+  $('orbit-radius-num').value = e.target.value;
+  if (b.orbitType === 'circular') {
+    b.bodyGroup.position.x = b.orbitRadius;
+    b.bodyGroup.position.z = 0;
+  }
+  if (b.orbitType === 'binary' && b.binaryIsHost)
+    b.bodyGroup.position.x = b.orbitRadius;
+});
+
+$('orbit-period-slider').addEventListener('input', e => {
+  const b = selectedBody;
+  b.orbitPeriod = parseFloat(e.target.value);
+  b._syncOrbitSpeed();
+  $('orbit-period-num').value = e.target.value;
+});
+
+$('orbit-inclination-slider').addEventListener('input', e => {
+  const b = selectedBody;
+  b.orbitInclination = parseFloat(e.target.value);
+  b.orbitGroup.rotation.z = THREE.MathUtils.degToRad(b.orbitInclination);
+  $('orbit-inclination-num').value = e.target.value;
+});
+
+$('orbit-eccentricity-slider').addEventListener('input', e => {
+  selectedBody.orbitEccentricity = e.target.value / 99;
+  $('orbit-eccentricity-num').value = e.target.value;
+});
+
+$('orbit-binary-sep-slider').addEventListener('input', e => {
+  const b   = selectedBody;
+  const sep = parseFloat(e.target.value);
+  $('orbit-binary-sep-num').value = e.target.value;
+  const host = b.binaryIsHost ? b : b.binaryPartner;
+  host.binarySeparation = sep; host.binaryPartner.binarySeparation = sep;
+  host._binaryOffset.position.x         = +sep / 2;
+  host.binaryPartner._binaryOffset.position.x = -sep / 2;
+});
+
+$('orbit-binary-period-slider').addEventListener('input', e => {
+  const b   = selectedBody;
+  const per = parseFloat(e.target.value);
+  $('orbit-binary-period-num').value = e.target.value;
+  b.binaryPeriod = per; b.binaryPartner.binaryPeriod = per;
 });
 
 // ── Rotation ──────────────────────────────────────────────────────────────────
 
-$('rotate-toggle').addEventListener('change', e => {
-  selectedBody.autoRotate = e.target.checked;
-});
+$('rotate-toggle').addEventListener('change', e => { selectedBody.autoRotate = e.target.checked; });
 
 $('speed-slider').addEventListener('input', e => {
   selectedBody.rotateSpeed = (2 * Math.PI) / (e.target.value * 60);
@@ -960,56 +1140,34 @@ $('speed-slider').addEventListener('input', e => {
 
 $('axial-tilt-slider').addEventListener('input', e => {
   const b = selectedBody, deg = parseFloat(e.target.value);
-  b.axialTilt = deg;
-  $('axial-tilt-num').value = deg;
-  if (b.tiltLocked) {
-    b.equatorTilt = deg;
-    $('equator-tilt-slider').value = deg;
-    $('equator-tilt-num').value    = deg;
-  }
+  b.axialTilt = deg; $('axial-tilt-num').value = deg;
+  if (b.tiltLocked) { b.equatorTilt = deg; $('equator-tilt-slider').value = deg; $('equator-tilt-num').value = deg; }
   b.applyTilts();
 });
 
 $('equator-tilt-slider').addEventListener('input', e => {
   const b = selectedBody, deg = parseFloat(e.target.value);
-  b.equatorTilt = deg;
-  $('equator-tilt-num').value = deg;
-  if (b.tiltLocked) {
-    b.axialTilt = deg;
-    $('axial-tilt-slider').value = deg;
-    $('axial-tilt-num').value    = deg;
-  }
+  b.equatorTilt = deg; $('equator-tilt-num').value = deg;
+  if (b.tiltLocked) { b.axialTilt = deg; $('axial-tilt-slider').value = deg; $('axial-tilt-num').value = deg; }
   b.applyTilts();
 });
 
 $('tilt-lock').addEventListener('change', e => {
-  const b = selectedBody;
-  b.tiltLocked = e.target.checked;
+  const b = selectedBody; b.tiltLocked = e.target.checked;
   if (b.tiltLocked) {
-    b.equatorTilt              = b.axialTilt;
-    $('equator-tilt-slider').value = b.axialTilt;
-    $('equator-tilt-num').value    = b.axialTilt;
+    b.equatorTilt = b.axialTilt;
+    $('equator-tilt-slider').value = b.axialTilt; $('equator-tilt-num').value = b.axialTilt;
     b.applyTilts();
   }
 });
 
 $('tilt-fullrange').addEventListener('change', e => {
-  const b = selectedBody;
-  b.fullTiltRange = e.target.checked;
+  const b = selectedBody; b.fullTiltRange = e.target.checked;
   const max = b.fullTiltRange ? 360 : 45;
-  $('axial-tilt-slider').max   = max;
-  $('equator-tilt-slider').max = max;
+  $('axial-tilt-slider').max = $('equator-tilt-slider').max = max;
   if (!b.fullTiltRange) {
-    if (b.axialTilt > 45) {
-      b.axialTilt = 45;
-      $('axial-tilt-slider').value = 45;
-      $('axial-tilt-num').value    = 45;
-    }
-    if (b.equatorTilt > 45) {
-      b.equatorTilt = 45;
-      $('equator-tilt-slider').value = 45;
-      $('equator-tilt-num').value    = 45;
-    }
+    if (b.axialTilt   > 45) { b.axialTilt   = 45; $('axial-tilt-slider').value   = 45; $('axial-tilt-num').value   = 45; }
+    if (b.equatorTilt > 45) { b.equatorTilt = 45; $('equator-tilt-slider').value = 45; $('equator-tilt-num').value = 45; }
     b.applyTilts();
   }
 });
@@ -1017,11 +1175,9 @@ $('tilt-fullrange').addEventListener('change', e => {
 // ── Lighting ──────────────────────────────────────────────────────────────────
 
 $('daynight-toggle').addEventListener('change', e => {
-  const b = selectedBody;
-  b.dayNightCycle = e.target.checked;
-  b.globeMat.uniforms.flatLit.value     = !e.target.checked;
-  b.graticuleMat.uniforms.flatLit.value = !e.target.checked;
-  $('sun-options').style.display        = e.target.checked ? 'block' : 'none';
+  const b = selectedBody; b.dayNightCycle = e.target.checked;
+  b.globeMat.uniforms.flatLit.value = b.graticuleMat.uniforms.flatLit.value = !e.target.checked;
+  $('sun-options').style.display = e.target.checked ? 'block' : 'none';
 });
 
 $('sun-intensity-slider').addEventListener('input', e => {
@@ -1037,15 +1193,8 @@ $('sun-color').addEventListener('input', e => {
 
 // ── Wireframe ─────────────────────────────────────────────────────────────────
 
-$('wireframe-toggle').addEventListener('change', e => {
-  selectedBody.wireframe.visible = e.target.checked;
-});
-
-$('wire-style').addEventListener('change', e => {
-  selectedBody.wireStyle = e.target.value;
-  selectedBody.rebuildWireframe();
-});
-
+$('wireframe-toggle').addEventListener('change', e => { selectedBody.wireframe.visible = e.target.checked; });
+$('wire-style').addEventListener('change', e => { selectedBody.wireStyle = e.target.value; selectedBody.rebuildWireframe(); });
 $('wire-density').addEventListener('input', e => {
   selectedBody.wireDensity = parseInt(e.target.value);
   $('wire-density-num').value = e.target.value;
@@ -1054,15 +1203,10 @@ $('wire-density').addEventListener('input', e => {
 
 // ── Experimental ──────────────────────────────────────────────────────────────
 
-$('stars-toggle').addEventListener('change', e => {
-  bgStars.visible = e.target.checked && !hasBgTex;
-});
-
+$('stars-toggle').addEventListener('change', e => { bgStars.visible = e.target.checked && !hasBgTex; });
 $('atmosphere-toggle').addEventListener('change', e => {
-  selectedBody.atmosphere.visible = e.target.checked;
-  selectedBody.rimGlow.visible    = e.target.checked;
+  selectedBody.atmosphere.visible = selectedBody.rimGlow.visible = e.target.checked;
 });
-
 $('ambient-slider').addEventListener('input', e => {
   selectedBody.globeMat.uniforms.ambientStr.value = (e.target.value / 100) * 0.6;
   $('ambient-num').value = e.target.value;
@@ -1072,10 +1216,7 @@ $('ambient-slider').addEventListener('input', e => {
 
 $('screenshot-btn').addEventListener('click', () => {
   renderer.render(scene, camera);
-  Object.assign(document.createElement('a'), {
-    href:     canvas.toDataURL('image/png'),
-    download: 'system.png',
-  }).click();
+  Object.assign(document.createElement('a'), { href: canvas.toDataURL('image/png'), download: 'system.png' }).click();
 });
 
 $('gif-duration-slider').addEventListener('input', e => { $('gif-duration-num').value = e.target.value; });
@@ -1094,28 +1235,23 @@ async function captureGif() {
   const gifSize      = parseInt($('gif-size-slider').value);
 
   isCapturingGif = true;
-  $('gif-btn').disabled           = true;
+  $('gif-btn').disabled = true;
   $('gif-progress').style.display = 'block';
 
-  // Save each body's rotation state
-  const savedRotY     = bodies.map(b => b.spinGroup.rotation.y);
-  const savedAutoRot  = bodies.map(b => b.autoRotate);
-  const savedDayNight = bodies.map(b => b.dayNightCycle);
+  const savedRotY    = bodies.map(b => b.spinGroup.rotation.y);
+  const savedAutoRot = bodies.map(b => b.autoRotate);
+  const savedDayNight= bodies.map(b => b.dayNightCycle);
   bodies.forEach(b => { b.autoRotate = false; b.dayNightCycle = false; });
 
   const offCanvas = Object.assign(document.createElement('canvas'), { width: gifSize, height: gifSize });
   const offCtx    = offCanvas.getContext('2d');
   const imageDataArr = [];
 
-  // Phase 1: render frames
   for (let i = 0; i < frameCount; i++) {
-    bodies.forEach((b, bi) => {
-      b.spinGroup.rotation.y = savedRotY[bi] + (i / frameCount) * Math.PI * 2;
-    });
+    bodies.forEach((b, bi) => { b.spinGroup.rotation.y = savedRotY[bi] + (i / frameCount) * Math.PI * 2; });
     renderer.render(scene, camera);
     const side = Math.min(canvas.width, canvas.height);
-    const sx   = (canvas.width  - side) / 2;
-    const sy   = (canvas.height - side) / 2;
+    const sx = (canvas.width - side) / 2, sy = (canvas.height - side) / 2;
     offCtx.drawImage(canvas, sx, sy, side, side, 0, 0, gifSize, gifSize);
     imageDataArr.push(offCtx.getImageData(0, 0, gifSize, gifSize));
     $('gif-progress-bar').style.width  = ((i + 1) / frameCount * 40) + '%';
@@ -1123,19 +1259,14 @@ async function captureGif() {
     await new Promise(r => setTimeout(r, 0));
   }
 
-  // Phase 2: composite for palette extraction
   $('gif-progress-text').textContent = 'Building palette…';
   await new Promise(r => setTimeout(r, 0));
 
-  const totalPx   = gifSize * gifSize;
-  const composite = new Uint8ClampedArray(totalPx * 4);
+  const totalPx = gifSize * gifSize, composite = new Uint8ClampedArray(totalPx * 4);
   for (let p = 0; p < totalPx; p++) {
-    const src  = imageDataArr[p % imageDataArr.length].data;
-    const base = p * 4;
-    composite[base]     = src[base];
-    composite[base + 1] = src[base + 1];
-    composite[base + 2] = src[base + 2];
-    composite[base + 3] = src[base + 3];
+    const src = imageDataArr[p % imageDataArr.length].data, base = p * 4;
+    composite[base] = src[base]; composite[base+1] = src[base+1];
+    composite[base+2] = src[base+2]; composite[base+3] = src[base+3];
   }
   offCtx.putImageData(new ImageData(composite, gifSize, gifSize), 0, 0);
 
@@ -1144,110 +1275,83 @@ async function captureGif() {
   await new Promise(r => setTimeout(r, 0));
 
   const globalPalette = await new Promise(resolve => {
-    const palGif = new GIF({
-      workers: 1, quality: 1, width: gifSize, height: gifSize,
-      workerScript: 'vendor/gif.worker.js', globalPalette: true,
-    });
-    palGif.addFrame(offCanvas, { delay: 1, copy: true });
-    palGif.on('finished', () => resolve(palGif.options.globalPalette));
-    palGif.render();
+    const pg = new GIF({ workers:1, quality:1, width:gifSize, height:gifSize, workerScript:'vendor/gif.worker.js', globalPalette:true });
+    pg.addFrame(offCanvas, { delay:1, copy:true });
+    pg.on('finished', () => resolve(pg.options.globalPalette));
+    pg.render();
   });
 
   $('gif-progress-bar').style.width = '50%';
 
-  // Phase 3: encode
-  const gif = new GIF({
-    workers: 4, quality: 1, width: gifSize, height: gifSize,
-    workerScript: 'vendor/gif.worker.js', globalPalette,
-  });
-
+  const gif = new GIF({ workers:4, quality:1, width:gifSize, height:gifSize, workerScript:'vendor/gif.worker.js', globalPalette });
   for (let i = 0; i < imageDataArr.length; i++) {
     offCtx.putImageData(imageDataArr[i], 0, 0);
-    gif.addFrame(offCanvas, { delay, copy: true });
-    $('gif-progress-bar').style.width  = (50 + (i + 1) / frameCount * 5) + '%';
-    $('gif-progress-text').textContent = `Queuing ${i + 1} / ${frameCount}…`;
+    gif.addFrame(offCanvas, { delay, copy:true });
+    $('gif-progress-bar').style.width  = (50 + (i+1) / frameCount * 5) + '%';
+    $('gif-progress-text').textContent = `Queuing ${i+1} / ${frameCount}…`;
     await new Promise(r => setTimeout(r, 0));
   }
 
-  gif.on('progress', p => {
-    $('gif-progress-bar').style.width  = (50 + p * 50) + '%';
-    $('gif-progress-text').textContent = 'Encoding…';
-  });
-
+  gif.on('progress', p => { $('gif-progress-bar').style.width = (50 + p*50) + '%'; $('gif-progress-text').textContent = 'Encoding…'; });
   gif.on('finished', blob => {
-    Object.assign(document.createElement('a'), {
-      href: URL.createObjectURL(blob), download: 'system.gif',
-    }).click();
-
-    bodies.forEach((b, bi) => {
-      b.spinGroup.rotation.y = savedRotY[bi];
-      b.autoRotate    = savedAutoRot[bi];
-      b.dayNightCycle = savedDayNight[bi];
-    });
-    isCapturingGif = false;
-    $('gif-btn').disabled             = false;
-    $('gif-progress').style.display   = 'none';
-    $('gif-progress-bar').style.width = '0%';
+    Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'system.gif' }).click();
+    bodies.forEach((b, bi) => { b.spinGroup.rotation.y = savedRotY[bi]; b.autoRotate = savedAutoRot[bi]; b.dayNightCycle = savedDayNight[bi]; });
+    isCapturingGif = false; $('gif-btn').disabled = false;
+    $('gif-progress').style.display = 'none'; $('gif-progress-bar').style.width = '0%';
   });
-
   gif.render();
 }
 
-// ── Section collapse toggles ──────────────────────────────────────────────────
+// ── Section collapse ──────────────────────────────────────────────────────────
 
 document.querySelectorAll('.collapsible-header').forEach(h => {
-  h.addEventListener('click', () => {
-    h.classList.toggle('open');
-    h.nextElementSibling.classList.toggle('open');
-  });
+  h.addEventListener('click', () => { h.classList.toggle('open'); h.nextElementSibling.classList.toggle('open'); });
 });
 
 // ── Panel toggle ──────────────────────────────────────────────────────────────
 
-$('panel-toggle').addEventListener('click', () => {
-  $('panel').classList.toggle('collapsed');
-  setTimeout(onResize, 300);
-});
+$('panel-toggle').addEventListener('click', () => { $('panel').classList.toggle('collapsed'); setTimeout(onResize, 300); });
 
 // ── Resize ────────────────────────────────────────────────────────────────────
 
 function onResize() {
-  const w = canvas.clientWidth;
-  const h = canvas.clientHeight;
-  if (w === 0 || h === 0) return;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w || !h) return;
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   renderer.setSize(w, h, false);
 }
-
 window.addEventListener('resize', onResize);
 new ResizeObserver(onResize).observe(canvas);
 onResize();
 
-// ── Slider ↔ number-input bidirectional wiring ────────────────────────────────
+// ── Slider ↔ number-input wiring ──────────────────────────────────────────────
 
 function wireSliderNum(sliderId, numId) {
   const s = $(sliderId), n = $(numId);
   n.addEventListener('change', () => {
-    const clamped = Math.min(Math.max(+n.value || 0, +s.min), +s.max);
-    n.value = clamped;
-    s.value = clamped;
-    s.dispatchEvent(new Event('input', { bubbles: true }));
+    const c = Math.min(Math.max(+n.value || 0, +s.min), +s.max);
+    n.value = c; s.value = c; s.dispatchEvent(new Event('input', { bubbles: true }));
   });
-  const obs = new MutationObserver(() => { n.disabled = s.disabled; });
-  obs.observe(s, { attributes: true, attributeFilter: ['disabled'] });
+  new MutationObserver(() => { n.disabled = s.disabled; }).observe(s, { attributes: true, attributeFilter: ['disabled'] });
 }
 
-wireSliderNum('speed-slider',           'speed-num');
-wireSliderNum('axial-tilt-slider',      'axial-tilt-num');
-wireSliderNum('equator-tilt-slider',    'equator-tilt-num');
-wireSliderNum('sun-intensity-slider',   'sun-intensity-num');
-wireSliderNum('ambient-slider',         'ambient-num');
-wireSliderNum('gif-duration-slider',    'gif-duration-num');
-wireSliderNum('gif-fps-slider',         'gif-fps-num');
-wireSliderNum('gif-size-slider',        'gif-size-num');
-wireSliderNum('wire-density',           'wire-density-num');
-wireSliderNum('night-threshold-slider', 'night-threshold-num');
+wireSliderNum('speed-slider',              'speed-num');
+wireSliderNum('axial-tilt-slider',         'axial-tilt-num');
+wireSliderNum('equator-tilt-slider',       'equator-tilt-num');
+wireSliderNum('sun-intensity-slider',      'sun-intensity-num');
+wireSliderNum('ambient-slider',            'ambient-num');
+wireSliderNum('gif-duration-slider',       'gif-duration-num');
+wireSliderNum('gif-fps-slider',            'gif-fps-num');
+wireSliderNum('gif-size-slider',           'gif-size-num');
+wireSliderNum('wire-density',              'wire-density-num');
+wireSliderNum('night-threshold-slider',    'night-threshold-num');
+wireSliderNum('orbit-radius-slider',       'orbit-radius-num');
+wireSliderNum('orbit-period-slider',       'orbit-period-num');
+wireSliderNum('orbit-inclination-slider',  'orbit-inclination-num');
+wireSliderNum('orbit-eccentricity-slider', 'orbit-eccentricity-num');
+wireSliderNum('orbit-binary-sep-slider',   'orbit-binary-sep-num');
+wireSliderNum('orbit-binary-period-slider','orbit-binary-period-num');
 
 // ── Render loop ───────────────────────────────────────────────────────────────
 
@@ -1256,10 +1360,8 @@ const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   if (isCapturingGif) return;
-
   const dt = clock.getDelta();
   for (const b of bodies) b.update(dt);
-
   controls.update();
   renderer.render(scene, camera);
 }
