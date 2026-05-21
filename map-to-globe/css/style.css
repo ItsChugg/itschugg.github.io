@@ -21,27 +21,12 @@ body {
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  position: relative;
 }
 
 #globe-canvas {
   flex: 1;
   display: block;
   min-width: 0;
-}
-
-/* ── Version badge ─────────────────────────────────────────────────────────── */
-
-#version-badge {
-  position: absolute;
-  bottom: 10px;
-  right: 276px; /* clear of the panel */
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--text-faint);
-  letter-spacing: 0.10em;
-  pointer-events: none;
-  opacity: 0.5;
 }
 
 /* ── Panel ─────────────────────────────────────────────────────────────────── */
@@ -423,6 +408,50 @@ select option {
 #panel .opt-upload button:hover {
   opacity: 1;
 }
+
+/* ── Slider number inputs ──────────────────────────────────────────────────── */
+
+.slider-num {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--amber-dim);
+  width: 42px;
+  min-width: 42px;
+  text-align: right;
+  padding: 0 2px;
+  outline: none;
+  flex-shrink: 0;
+  -moz-appearance: textfield;
+}
+
+.slider-num::-webkit-outer-spin-button,
+.slider-num::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+.slider-num:focus {
+  border-bottom-color: var(--amber);
+  color: var(--amber);
+}
+
+.slider-num:disabled { opacity: 0.30; }
+
+/* ── Panel version footer ──────────────────────────────────────────────────── */
+
+#panel-version {
+  font-family: var(--font-mono);
+  font-size: 0.60rem;
+  color: var(--text-faint);
+  letter-spacing: 0.10em;
+  text-align: center;
+  padding: 8px 16px 10px;
+  opacity: 0.45;
+  border-top: var(--border);
+  flex-shrink: 0;
+}
+
+#panel.collapsed #panel-version { display: none; }
 
 /* ── GIF progress ──────────────────────────────────────────────────────────── */
 

@@ -14,7 +14,7 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.NoToneMapping;
-renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -782,7 +782,7 @@ const MAX_ANISOTROPY = renderer.capabilities.getMaxAnisotropy();
 
 function loadTex(url, onLoad) {
   new THREE.TextureLoader().load(url, tex => {
-    tex.colorSpace  = THREE.SRGBColorSpace;
+    tex.colorSpace  = THREE.LinearSRGBColorSpace;
     tex.anisotropy  = MAX_ANISOTROPY;
     tex.minFilter   = THREE.LinearMipmapLinearFilter; // trilinear — best quality
     tex.magFilter   = THREE.LinearFilter;
@@ -804,6 +804,7 @@ $('wire-style').addEventListener('change', e => {
 
 $('wire-density').addEventListener('input', e => {
   currentWireDensity = parseInt(e.target.value);
+  $('wire-density-num').value = e.target.value;
   rebuildWireframe();
 });
 
@@ -896,9 +897,11 @@ $('rotate-toggle').addEventListener('change', e => {
 
 $('speed-slider').addEventListener('input', e => {
   state.rotateSpeed = e.target.value / 1000;
+  $('speed-num').value = e.target.value;
   if (state.sunSpeedLocked) {
     state.sunSpeed              = state.rotateSpeed;
     $('sun-speed-slider').value = e.target.value;
+    $('sun-speed-num').value    = e.target.value;
   }
 });
 
@@ -916,11 +919,11 @@ function applyTilts() {
 $('axial-tilt-slider').addEventListener('input', e => {
   const deg = parseFloat(e.target.value);
   state.axialTilt = deg;
-  $('axial-tilt-value').textContent = deg + '°';
+  $('axial-tilt-num').value = deg;
   if (state.tiltLocked) {
     state.equatorTilt = deg;
-    $('equator-tilt-slider').value         = deg;
-    $('equator-tilt-value').textContent    = deg + '°';
+    $('equator-tilt-slider').value = deg;
+    $('equator-tilt-num').value    = deg;
   }
   applyTilts();
 });
@@ -928,11 +931,11 @@ $('axial-tilt-slider').addEventListener('input', e => {
 $('equator-tilt-slider').addEventListener('input', e => {
   const deg = parseFloat(e.target.value);
   state.equatorTilt = deg;
-  $('equator-tilt-value').textContent = deg + '°';
+  $('equator-tilt-num').value = deg;
   if (state.tiltLocked) {
     state.axialTilt = deg;
-    $('axial-tilt-slider').value        = deg;
-    $('axial-tilt-value').textContent   = deg + '°';
+    $('axial-tilt-slider').value = deg;
+    $('axial-tilt-num').value    = deg;
   }
   applyTilts();
 });
@@ -941,9 +944,9 @@ $('tilt-lock').addEventListener('change', e => {
   state.tiltLocked = e.target.checked;
   if (state.tiltLocked) {
     // Snap equator tilt to match axial tilt when re-locking
-    state.equatorTilt                   = state.axialTilt;
-    $('equator-tilt-slider').value      = state.axialTilt;
-    $('equator-tilt-value').textContent = state.axialTilt + '°';
+    state.equatorTilt              = state.axialTilt;
+    $('equator-tilt-slider').value = state.axialTilt;
+    $('equator-tilt-num').value    = state.axialTilt;
     applyTilts();
   }
 });
@@ -968,13 +971,13 @@ $('tilt-fullrange').addEventListener('change', e => {
   if (!e.target.checked) {
     if (state.axialTilt > 45) {
       state.axialTilt = 45;
-      $('axial-tilt-slider').value      = 45;
-      $('axial-tilt-value').textContent = '45°';
+      $('axial-tilt-slider').value = 45;
+      $('axial-tilt-num').value    = 45;
     }
     if (state.equatorTilt > 45) {
       state.equatorTilt = 45;
-      $('equator-tilt-slider').value      = 45;
-      $('equator-tilt-value').textContent = '45°';
+      $('equator-tilt-slider').value = 45;
+      $('equator-tilt-num').value    = 45;
     }
     applyTilts();
   }
@@ -990,16 +993,19 @@ $('daynight-toggle').addEventListener('change', e => {
 
 $('sun-speed-slider').addEventListener('input', e => {
   if (!state.sunSpeedLocked) state.sunSpeed = e.target.value / 1000;
+  $('sun-speed-num').value = e.target.value;
 });
 
 $('sun-intensity-slider').addEventListener('input', e => {
   sunLight.intensity = e.target.value / 50;
+  $('sun-intensity-num').value = e.target.value;
 });
 
 $('ambient-slider').addEventListener('input', e => {
   const v = e.target.value / 100;
   ambientLight.intensity             = v * 1.5;
   globeMat.uniforms.ambientStr.value = v * 0.6;
+  $('ambient-num').value = e.target.value;
 });
 
 // ── Export ───────────────────────────────────────────────────────────────────
@@ -1013,9 +1019,9 @@ $('screenshot-btn').addEventListener('click', () => {
   a.click();
 });
 
-$('gif-frames-slider').addEventListener('input', e => { $('gif-frames-value').textContent = e.target.value; });
-$('gif-delay-slider').addEventListener('input',  e => { $('gif-delay-value').textContent  = e.target.value + 'ms'; });
-$('gif-size-slider').addEventListener('input',   e => { $('gif-size-value').textContent   = e.target.value + 'px'; });
+$('gif-frames-slider').addEventListener('input', e => { $('gif-frames-num').value = e.target.value; });
+$('gif-delay-slider').addEventListener('input',  e => { $('gif-delay-num').value  = e.target.value; });
+$('gif-size-slider').addEventListener('input',   e => { $('gif-size-num').value   = e.target.value; });
 
 $('gif-btn').addEventListener('click', captureGif);
 
@@ -1116,6 +1122,33 @@ function onResize() {
 window.addEventListener('resize', onResize);
 new ResizeObserver(onResize).observe(canvas);
 onResize();
+
+// ── Slider ↔ number-input bidirectional wiring ────────────────────────────────
+// Typing in the number box clamps to [min,max] then fires the slider's input
+// event so all existing slider logic runs without duplication.
+function wireSliderNum(sliderId, numId) {
+  const s = $(sliderId), n = $(numId);
+  n.addEventListener('change', () => {
+    const clamped = Math.min(Math.max(+n.value || 0, +s.min), +s.max);
+    n.value = clamped;
+    s.value = clamped;
+    s.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  // Also sync on unlock: when slider becomes enabled, re-enable num too
+  const obs = new MutationObserver(() => { n.disabled = s.disabled; });
+  obs.observe(s, { attributes: true, attributeFilter: ['disabled'] });
+}
+
+wireSliderNum('speed-slider',         'speed-num');
+wireSliderNum('axial-tilt-slider',    'axial-tilt-num');
+wireSliderNum('equator-tilt-slider',  'equator-tilt-num');
+wireSliderNum('sun-intensity-slider', 'sun-intensity-num');
+wireSliderNum('sun-speed-slider',     'sun-speed-num');
+wireSliderNum('ambient-slider',       'ambient-num');
+wireSliderNum('gif-frames-slider',    'gif-frames-num');
+wireSliderNum('gif-delay-slider',     'gif-delay-num');
+wireSliderNum('gif-size-slider',      'gif-size-num');
+wireSliderNum('wire-density',         'wire-density-num');
 
 // ── Render loop ──────────────────────────────────────────────────────────────
 

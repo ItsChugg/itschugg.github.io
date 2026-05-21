@@ -37,7 +37,6 @@
 
   <div id="globe-layout">
   <canvas id="globe-canvas"></canvas>
-  <div id="version-badge">v2.0</div>
 
   <div id="panel">
     <div id="panel-header">
@@ -98,16 +97,17 @@
         <div class="control-row">
           <label for="speed-slider">Speed</label>
           <input type="range" id="speed-slider" min="0" max="200" value="2">
+          <input type="number" id="speed-num" class="slider-num" min="0" max="200" value="2">
         </div>
         <div class="control-row">
           <label for="axial-tilt-slider">Axis Tilt</label>
           <input type="range" id="axial-tilt-slider" min="0" max="45" value="0">
-          <span id="axial-tilt-value">0°</span>
+          <input type="number" id="axial-tilt-num" class="slider-num" min="0" max="45" value="0">
         </div>
         <div class="control-row">
           <label for="equator-tilt-slider">Equator Tilt</label>
           <input type="range" id="equator-tilt-slider" min="0" max="45" value="0">
-          <span id="equator-tilt-value">0°</span>
+          <input type="number" id="equator-tilt-num" class="slider-num" min="0" max="45" value="0">
         </div>
         <div class="control-row tilt-lock-row">
           <label for="tilt-lock">Lock Tilts</label>
@@ -124,6 +124,7 @@
         <div class="control-row" id="sun-intensity-row" style="display:none">
           <label for="sun-intensity-slider">Sun Intensity</label>
           <input type="range" id="sun-intensity-slider" min="0" max="100" value="75">
+          <input type="number" id="sun-intensity-num" class="slider-num" min="0" max="100" value="75">
         </div>
       </section>
 
@@ -135,17 +136,17 @@
         <div class="control-row">
           <label for="gif-frames-slider">Frames</label>
           <input type="range" id="gif-frames-slider" min="12" max="120" value="60">
-          <span id="gif-frames-value">60</span>
+          <input type="number" id="gif-frames-num" class="slider-num" min="12" max="120" value="60">
         </div>
         <div class="control-row">
           <label for="gif-delay-slider">Frame Delay</label>
           <input type="range" id="gif-delay-slider" min="16" max="200" value="50">
-          <span id="gif-delay-value">50ms</span>
+          <input type="number" id="gif-delay-num" class="slider-num" min="16" max="200" value="50">
         </div>
         <div class="control-row">
           <label for="gif-size-slider">GIF Size</label>
           <input type="range" id="gif-size-slider" min="200" max="800" step="100" value="500">
-          <span id="gif-size-value">500px</span>
+          <input type="number" id="gif-size-num" class="slider-num" min="200" max="800" step="100" value="500">
         </div>
         <div class="control-row">
           <button id="gif-btn">Export GIF</button>
@@ -176,10 +177,12 @@
           <div class="control-row">
             <label for="sun-speed-slider">Sun Speed</label>
             <input type="range" id="sun-speed-slider" min="0" max="200" value="2" disabled>
+            <input type="number" id="sun-speed-num" class="slider-num" min="0" max="200" value="2" disabled>
           </div>
           <div class="control-row">
             <label for="ambient-slider">Ambient</label>
             <input type="range" id="ambient-slider" min="0" max="100" value="25">
+            <input type="number" id="ambient-num" class="slider-num" min="0" max="100" value="25">
           </div>
           <div class="control-row">
             <label for="wireframe-toggle">Wireframe</label>
@@ -201,16 +204,18 @@
           <div class="control-row">
             <label for="wire-density">Density</label>
             <input type="range" id="wire-density" min="1" max="10" value="5">
+            <input type="number" id="wire-density-num" class="slider-num" min="1" max="10" value="5">
           </div>
         </div>
       </section>
     </div>
+    <div id="panel-version">v1.13</div>
   </div>
 
   </div><!-- #globe-layout -->
 
   <script src="vendor/gif.js"></script>
-  <script type="module" src="js/app.js?v=19"></script>
+  <script type="module" src="js/app.js?v=20"></script>
   <script src="/components/navbar/inject-navbar.js" defer></script>
 </body>
 </html>
