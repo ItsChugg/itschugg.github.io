@@ -522,21 +522,15 @@ input[type="color"]::-moz-color-swatch            { border: none; }
   flex-shrink: 0;
 }
 
-/* ── Body tree remove button ───────────────────────────────────────────────── */
+/* ── Body slot action buttons (edit ✎ / remove ✕) ─────────────────────────── */
 
-.body-item-remove {
-  width: auto !important;
-  padding: 1px 6px !important;
-  font-size: 0.65rem !important;
-  flex-shrink: 0;
-  margin-left: auto;
-  line-height: 1.4;
-  opacity: 0.5;
-  transition: opacity 0.15s, color 0.15s, border-color 0.15s;
+.body-slot .clear-btn {
+  opacity: 0.45;
+  transition: opacity 0.15s, color 0.15s, border-color 0.15s, background 0.15s;
 }
 
-.body-item:hover .body-item-remove,
-.body-item.active .body-item-remove {
+.body-slot:hover .clear-btn,
+.body-select-btn.active ~ .clear-btn {
   opacity: 1;
 }
 

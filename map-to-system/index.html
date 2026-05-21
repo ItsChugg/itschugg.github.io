@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Map to System — itschu.gg</title>
-  <link rel="stylesheet" href="css/style.css?v=5">
+  <link rel="stylesheet" href="css/style.css?v=6">
   <link rel="stylesheet" href="/components/themes/theme.css?v=5">
   <script type="importmap">
   {
@@ -91,6 +91,38 @@
             <div class="control-row">
               <button id="confirm-add-body" class="half-btn">Confirm</button>
               <button id="cancel-add-body" class="half-btn">Cancel</button>
+            </div>
+          </div>
+
+          <div id="edit-body-form" style="display:none">
+            <p class="control-hint" id="edit-body-label" style="margin:4px 0 6px;opacity:1;color:var(--amber)"></p>
+            <div class="control-row">
+              <label for="edit-body-name">Name</label>
+              <input type="text" id="edit-body-name" class="body-text-input">
+            </div>
+            <div class="control-row">
+              <label for="edit-body-type">Type</label>
+              <select id="edit-body-type">
+                <option value="planet">Planet</option>
+                <option value="star">Star</option>
+                <option value="moon">Moon</option>
+              </select>
+            </div>
+            <div class="control-row">
+              <label for="edit-body-parent">Parent</label>
+              <select id="edit-body-parent"></select>
+            </div>
+            <div class="control-row">
+              <label for="edit-body-orbit">Orbit Type</label>
+              <select id="edit-body-orbit">
+                <option value="centered">Centered</option>
+                <option value="circular">Circular</option>
+                <option value="elliptical">Elliptical</option>
+              </select>
+            </div>
+            <div class="control-row">
+              <button id="confirm-edit-body" class="half-btn">Apply</button>
+              <button id="cancel-edit-body" class="half-btn">Cancel</button>
             </div>
           </div>
         </div>
@@ -333,13 +365,13 @@
         </div>
       </section>
     </div>
-    <div id="panel-version">v2.2</div>
+    <div id="panel-version">v2.3</div>
   </div>
 
   </div><!-- #globe-layout -->
 
   <script src="vendor/gif.js"></script>
-  <script type="module" src="js/app.js?v=44"></script>
+  <script type="module" src="js/app.js?v=45"></script>
   <script src="/components/navbar/inject-navbar.js" defer></script>
 </body>
 </html>

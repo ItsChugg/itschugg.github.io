@@ -702,6 +702,7 @@ function linkBinary(host, guest, separation = 4, period = 60) {
 
 const bodies = [];
 let selectedBody   = null;
+let editingBody    = null;
 let isCapturingGif = false;
 let hasBgTex       = false;
 
@@ -756,13 +757,19 @@ function renderBodyTree() {
     btn.innerHTML = '<span class="body-btn-type">' + (TYPE_LABEL[b.type] ?? b.type.toUpperCase()) + '</span> ' + escHtml(b.name);
     btn.addEventListener('click', () => selectBody(b));
 
+    const editBtn = document.createElement('button');
+    editBtn.className   = 'clear-btn';
+    editBtn.textContent = '✎';
+    editBtn.title       = 'Edit body';
+    editBtn.addEventListener('click', e => { e.stopPropagation(); openEditForm(b); });
+
     const removeBtn = document.createElement('button');
     removeBtn.className   = 'clear-btn';
     removeBtn.textContent = '✕';
     removeBtn.title       = 'Remove body';
     removeBtn.addEventListener('click', e => { e.stopPropagation(); removeBody(b); });
 
-    slot.append(btn, removeBtn);
+    slot.append(btn, editBtn, removeBtn);
     tree.appendChild(slot);
   });
 }
@@ -774,6 +781,7 @@ function escHtml(s) {
 // ── Add-body form ─────────────────────────────────────────────────────────────
 
 function openAddForm() {
+  closeEditForm(); // mutually exclusive with edit form
   // Populate parent select
   const parentSel = $('new-body-parent');
   parentSel.innerHTML = '<option value="none">None (root)</option>';
@@ -798,6 +806,107 @@ function closeAddForm() {
   $('add-body-form').style.display = 'none';
   $('add-body-btn').style.display  = '';
 }
+
+// ── Edit-body form ────────────────────────────────────────────────────────────
+
+// Returns true if `node` is a descendant of `ancestor` in the bodies hierarchy
+function isDescendantOf(node, ancestor) {
+  let cur = node.parent;
+  while (cur) {
+    if (cur === ancestor) return true;
+    cur = cur.parent;
+  }
+  return false;
+}
+
+function reparentBody(b, newParent) {
+  const oldPG = b.parent ? b.parent.bodyGroup : scene;
+  oldPG.remove(b.orbitGroup);
+  b.parent = newParent;
+  const newPG = newParent ? newParent.bodyGroup : scene;
+  newPG.add(b.orbitGroup);
+}
+
+function openEditForm(b) {
+  editingBody = b;
+  closeAddForm(); // mutually exclusive with add form
+
+  $('edit-body-label').textContent = 'Editing: ' + b.name;
+  $('edit-body-name').value = b.name;
+  $('edit-body-type').value = b.type;
+
+  // Orbit type (binary bodies can't change type from this form)
+  const isBinary = b.orbitType === 'binary';
+  $('edit-body-orbit').value    = isBinary ? 'binary' : b.orbitType;
+  $('edit-body-orbit').disabled = isBinary;
+  // Ensure binary option exists only while a binary body is selected
+  let binOpt = $('edit-body-orbit').querySelector('option[value="binary"]');
+  if (isBinary && !binOpt) {
+    binOpt = document.createElement('option');
+    binOpt.value = 'binary'; binOpt.textContent = 'Binary';
+    $('edit-body-orbit').appendChild(binOpt);
+  } else if (!isBinary && binOpt) {
+    binOpt.remove();
+  }
+
+  // Parent select — can't set to self, own descendants, or change while binary
+  const parentSel = $('edit-body-parent');
+  parentSel.innerHTML = '<option value="none">None (root)</option>';
+  parentSel.disabled  = isBinary;
+  if (!isBinary) {
+    bodies.forEach((other, i) => {
+      if (other === b || isDescendantOf(other, b)) return; // skip invalid parents
+      const opt = document.createElement('option');
+      opt.value = i; opt.textContent = other.name;
+      parentSel.appendChild(opt);
+    });
+    parentSel.value = b.parent ? String(bodies.indexOf(b.parent)) : 'none';
+  }
+
+  $('edit-body-form').style.display = '';
+}
+
+function closeEditForm() {
+  editingBody = null;
+  $('edit-body-form').style.display = 'none';
+}
+
+$('confirm-edit-body').addEventListener('click', () => {
+  const b = editingBody; if (!b) return;
+
+  const newName = $('edit-body-name').value.trim();
+  if (newName) b.name = newName;
+
+  b.type = $('edit-body-type').value;
+
+  // Apply orbit type change (non-binary only)
+  if (b.orbitType !== 'binary') {
+    const newOrbit = $('edit-body-orbit').value;
+    if (newOrbit !== b.orbitType) {
+      b.orbitType = newOrbit;
+      if (newOrbit === 'centered') {
+        b.bodyGroup.position.set(0, 0, 0);
+      } else if (newOrbit === 'circular') {
+        b.bodyGroup.position.x = b.orbitRadius;
+        b.bodyGroup.position.z = 0;
+        b.orbitGroup.rotation.y = 0;
+      } else if (newOrbit === 'elliptical') {
+        b._orbitAngle = 0;
+        b.orbitGroup.rotation.y = 0;
+      }
+    }
+  }
+
+  // Apply parent change
+  const parentVal  = $('edit-body-parent').value;
+  const newParent  = parentVal === 'none' ? null : bodies[parseInt(parentVal)];
+  if (newParent !== b.parent) reparentBody(b, newParent);
+
+  closeEditForm();
+  selectBody(b); // re-renders tree + refreshes panel
+});
+
+$('cancel-edit-body').addEventListener('click', closeEditForm);
 
 function suggestName(type) {
   const count = bodies.filter(b => b.type === type).length + 1;
@@ -873,6 +982,8 @@ $('confirm-add-body').addEventListener('click', () => {
 // ── Panel population ──────────────────────────────────────────────────────────
 
 function selectBody(b) {
+  // Close edit form if switching to a different body
+  if (editingBody && editingBody !== b) closeEditForm();
   selectedBody = b;
   renderBodyTree();
   if (b) populatePanel(b);
