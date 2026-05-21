@@ -48,7 +48,10 @@ body {
 }
 
 #panel.collapsed {
-  width: 0;
+  width: 38px;
+  background: transparent;
+  border-left: none;
+  box-shadow: none;
 }
 
 #panel-header {
@@ -91,11 +94,6 @@ body {
 #panel.collapsed #panel-header {
   border-bottom: none;
   padding: 8px;
-  /* Float the header outside the collapsed (width:0) panel */
-  position: absolute;
-  right: -38px;
-  width: 38px;
-  background: transparent;
 }
 
 #panel-body {
