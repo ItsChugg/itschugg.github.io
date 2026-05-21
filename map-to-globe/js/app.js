@@ -148,8 +148,13 @@ const FRAG = /* glsl */`
     // Sharp terminator — ~2° twilight zone (like a planet orbiting a distant star)
     float dayMask = smoothstep(-0.02, 0.02, NdotL);
 
-    // Diffuse: day side only, scaled by sun intensity
-    float diffuse = clamp(NdotL * sunIntensity, 0.0, 1.0);
+    // Diffuse: apply sqrt to NdotL before scaling by intensity.
+    // Pure Lambert (linear NdotL) falls off too steeply near the terminator,
+    // making flat-colour map regions appear as harsh visible bands. The sqrt
+    // (gamma ≈ 0.5) keeps mid-tones brighter and produces a much smoother,
+    // more photorealistic falloff across the lit hemisphere.
+    float rawDiffuse = clamp(NdotL, 0.0, 1.0);
+    float diffuse    = clamp(sqrt(rawDiffuse) * sunIntensity, 0.0, 1.0);
 
     // Lit factor: diffuse on day side + tiny atmospheric scatter in twilight zone only.
     // Night side stays pitch black — dayMask = 0 guarantees no ambient leakage.
@@ -192,7 +197,7 @@ const globeMat = new THREE.ShaderMaterial({
   },
 });
 
-const globe = new THREE.Mesh(new THREE.SphereGeometry(R, 128, 128), globeMat);
+const globe = new THREE.Mesh(new THREE.SphereGeometry(R, 256, 256), globeMat);
 globe.visible = false; // hidden until a day texture is loaded
 equatorGroup.add(globe);
 
