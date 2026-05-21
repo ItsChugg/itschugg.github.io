@@ -155,23 +155,19 @@ const FRAG = /* glsl */`
     // Night side stays pitch black — dayMask = 0 guarantees no ambient leakage.
     float lit = diffuse * (1.0 - ambientStr) + ambientStr * dayMask;
 
-    // Blinn-Phong specular — day side only, no highlight on night side
-    vec3  H    = normalize(sunDir + normalize(vViewDir));
-    float spec = pow(max(dot(N, H), 0.0), 64.0) * 0.3 * dayMask * sunIntensity;
-
     if (hasDayTex && hasNightTex) {
       vec3 day   = texture2D(dayTex,   vUv).rgb;
       vec3 night = texture2D(nightTex, vUv).rgb;
       // City lights are self-luminous; they fade at the terminator so they don't
       // compete with the lit day side at dawn/dusk
-      vec3 litDay   = day   * lit * sunColor + vec3(spec) * sunColor;
+      vec3 litDay   = day   * lit * sunColor;
       vec3 litNight = night * (1.0 - dayMask);
       gl_FragColor  = vec4(litDay + litNight, 1.0);
 
     } else if (hasDayTex) {
       vec3 day = texture2D(dayTex, vUv).rgb;
       // No night texture → night side is pitch black
-      gl_FragColor = vec4(day * lit * sunColor + vec3(spec) * sunColor, 1.0);
+      gl_FragColor = vec4(day * lit * sunColor, 1.0);
 
     } else {
       gl_FragColor = vec4(baseColor * lit * sunColor, 1.0);
@@ -187,7 +183,7 @@ const globeMat = new THREE.ShaderMaterial({
     nightTex:    { value: null },
     hasDayTex:   { value: false },
     hasNightTex: { value: false },
-    sunDir:       { value: new THREE.Vector3(0.7, 0.3, 0.6).normalize() },
+    sunDir:       { value: new THREE.Vector3(1, 0, 0) }, // sun directly to the right on equator
     sunColor:     { value: new THREE.Vector3(1, 1, 1) },
     sunIntensity: { value: 1.5 },
     baseColor:    { value: new THREE.Color(0x060618) },
@@ -709,7 +705,7 @@ scene.add(rimGlow);
 // the atmosphere glow mesh if lights: true is ever added.
 
 const sunLight = new THREE.DirectionalLight(0xffffff, 3.0);
-sunLight.position.set(3.5, 1.5, 3.0);
+sunLight.position.set(5, 0, 0); // Y=0 keeps sun on equatorial plane → vertical terminator
 scene.add(sunLight);
 
 // Keep the globe shader's sunDir in sync with the Three.js light
@@ -753,7 +749,7 @@ const state = {
   dayNightCycle:  false,
   sunSpeed:       0.002,   // starts locked to rotateSpeed
   sunSpeedLocked: true,
-  sunAngle:       Math.atan2(sunLight.position.z, sunLight.position.x),
+  sunAngle:       0, // starts at (5, 0, 0) — sun directly to the right
   isCapturingGif: false,
   axialTilt:      0,       // degrees — tilts the spin axis
   equatorTilt:    0,       // degrees — tilts the visible equator independently
@@ -1234,9 +1230,9 @@ function animate() {
   if (state.dayNightCycle) {
     state.sunAngle += state.sunSpeed * dt * 60;
     sunLight.position.set(
-      Math.cos(state.sunAngle) * 3.5,
-      1.5,
-      Math.sin(state.sunAngle) * 3.0,
+      Math.cos(state.sunAngle) * 5,
+      0, // Y=0 keeps sun on equatorial plane → terminator stays vertical
+      Math.sin(state.sunAngle) * 5,
     );
     syncSunDir();
   }
