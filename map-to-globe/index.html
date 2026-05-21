@@ -121,6 +121,16 @@
             <input type="color" id="sun-color" value="#ffffff">
           </div>
           <p class="control-hint">Changes the color of light.</p>
+          <div class="control-row">
+            <label for="sun-speed-lock">Lock to Rotation</label>
+            <input type="checkbox" id="sun-speed-lock" checked>
+          </div>
+          <p class="control-hint">Uncheck to set sun speed independently.</p>
+          <div class="control-row">
+            <label for="sun-speed-slider">Sun Speed</label>
+            <input type="range" id="sun-speed-slider" min="0" max="200" value="2" disabled>
+            <input type="number" id="sun-speed-num" class="slider-num" min="0" max="200" value="2" disabled>
+          </div>
         </div>
       </section>
 
@@ -174,15 +184,6 @@
             <input type="checkbox" id="tilt-fullrange">
           </div>
           <div class="control-row">
-            <label for="sun-speed-lock">Unlock Sun Speed</label>
-            <input type="checkbox" id="sun-speed-lock">
-          </div>
-          <div class="control-row">
-            <label for="sun-speed-slider">Sun Speed</label>
-            <input type="range" id="sun-speed-slider" min="0" max="200" value="2" disabled>
-            <input type="number" id="sun-speed-num" class="slider-num" min="0" max="200" value="2" disabled>
-          </div>
-          <div class="control-row">
             <label for="ambient-slider">Ambient</label>
             <input type="range" id="ambient-slider" min="0" max="100" value="25">
             <input type="number" id="ambient-num" class="slider-num" min="0" max="100" value="25">
@@ -212,13 +213,13 @@
         </div>
       </section>
     </div>
-    <div id="panel-version">v1.32</div>
+    <div id="panel-version">v1.33</div>
   </div>
 
   </div><!-- #globe-layout -->
 
   <script src="vendor/gif.js"></script>
-  <script type="module" src="js/app.js?v=36"></script>
+  <script type="module" src="js/app.js?v=37"></script>
   <script src="/components/navbar/inject-navbar.js" defer></script>
 </body>
 </html>

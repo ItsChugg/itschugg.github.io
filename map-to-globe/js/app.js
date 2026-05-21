@@ -999,13 +999,15 @@ $('tilt-lock').addEventListener('change', e => {
 });
 
 $('sun-speed-lock').addEventListener('change', e => {
-  const unlocked = e.target.checked;
-  state.sunSpeedLocked               = !unlocked;
-  $('sun-speed-slider').disabled     = !unlocked;
-  if (!unlocked) {
+  const locked = e.target.checked;
+  state.sunSpeedLocked           = locked;
+  $('sun-speed-slider').disabled = locked;
+  $('sun-speed-num').disabled    = locked;
+  if (locked) {
     // Re-locking: snap sun speed back to current rotation speed
     state.sunSpeed              = state.rotateSpeed;
     $('sun-speed-slider').value = Math.round(state.rotateSpeed * 1000);
+    $('sun-speed-num').value    = Math.round(state.rotateSpeed * 1000);
   }
 });
 
@@ -1281,7 +1283,10 @@ function animate() {
   }
 
   if (state.dayNightCycle) {
-    state.sunAngle += state.sunSpeed * dt * 60;
+    // Negate so the sun orbits counterclockwise around Y — same direction
+    // as the globe's spinGroup rotation — keeping the terminator stationary
+    // on the surface when sun speed equals rotation speed.
+    state.sunAngle -= state.sunSpeed * dt * 60;
     sunLight.position.set(
       Math.cos(state.sunAngle) * 5,
       0, // Y=0 keeps sun on equatorial plane → terminator stays vertical
