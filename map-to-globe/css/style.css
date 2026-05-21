@@ -21,12 +21,27 @@ body {
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  position: relative;
 }
 
 #globe-canvas {
   flex: 1;
   display: block;
   min-width: 0;
+}
+
+/* ── Version badge ─────────────────────────────────────────────────────────── */
+
+#version-badge {
+  position: absolute;
+  bottom: 10px;
+  right: 276px; /* clear of the panel */
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-faint);
+  letter-spacing: 0.10em;
+  pointer-events: none;
+  opacity: 0.5;
 }
 
 /* ── Panel ─────────────────────────────────────────────────────────────────── */
