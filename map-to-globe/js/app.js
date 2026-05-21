@@ -1069,14 +1069,13 @@ async function captureGif() {
     await new Promise(r => setTimeout(r, 0));
   }
 
-  // ── Phase 2: build round-robin composite for global palette ──────────────
-  // Each pixel in the composite is taken from a *different* frame (cycling
-  // through all frames), so NeuQuant sees real, unblended colours from every
-  // frame without any averaging-induced desaturation.
+  // ── Phase 2: build round-robin composite ─────────────────────────────────
+  // Each pixel is taken raw from a different frame (no blending), so NeuQuant
+  // sees real, unblended colours from every frame without desaturation.
   $('gif-progress-text').textContent = 'Building palette…';
   await new Promise(r => setTimeout(r, 0));
 
-  const totalPx  = gifSize * gifSize;
+  const totalPx   = gifSize * gifSize;
   const composite = new Uint8ClampedArray(totalPx * 4);
   for (let p = 0; p < totalPx; p++) {
     const src  = imageDataArr[p % imageDataArr.length].data;
@@ -1088,25 +1087,44 @@ async function captureGif() {
   }
   offCtx.putImageData(new ImageData(composite, gifSize, gifSize), 0, 0);
 
-  // ── Phase 3: encode ───────────────────────────────────────────────────────
-  const gif = new GIF({
-    workers: 4,
-    quality: 1,          // sample every pixel — best colour fidelity
-    width: gifSize, height: gifSize,
-    workerScript: 'vendor/gif.worker.js',
-    globalPalette: true, // single palette for all frames — eliminates flicker
+  // ── Phase 2b: pre-render composite to extract the global palette array ────
+  // gif.js sets options.globalPalette to the NeuQuant colour table after the
+  // first frame finishes. We run a throwaway 1-frame GIF, capture that array,
+  // then pass it directly to the real GIF — no extra display frame, no loop
+  // flicker.
+  $('gif-progress-bar').style.width  = '42%';
+  $('gif-progress-text').textContent = 'Quantising palette…';
+  await new Promise(r => setTimeout(r, 0));
+
+  const globalPalette = await new Promise(resolve => {
+    const palGif = new GIF({
+      workers: 1,
+      quality: 1,
+      width: gifSize, height: gifSize,
+      workerScript: 'vendor/gif.worker.js',
+      globalPalette: true,
+    });
+    palGif.addFrame(offCanvas, { delay: 1, copy: true });
+    palGif.on('finished', () => resolve(palGif.options.globalPalette));
+    palGif.render();
   });
 
-  // First addFrame establishes the global palette; use the averaged composite
-  // so NeuQuant sees every colour from every frame at once.
-  // A 16ms "palette frame" at the very start is imperceptible at normal speeds.
-  gif.addFrame(offCanvas, { delay: 16, copy: true });
+  $('gif-progress-bar').style.width  = '50%';
+
+  // ── Phase 3: encode — all frames share the pre-built palette ─────────────
+  const gif = new GIF({
+    workers: 4,
+    quality: 1,
+    width: gifSize, height: gifSize,
+    workerScript: 'vendor/gif.worker.js',
+    globalPalette, // array → used directly, no palette-building frame added
+  });
 
   for (let i = 0; i < imageDataArr.length; i++) {
     offCtx.putImageData(imageDataArr[i], 0, 0);
     gif.addFrame(offCanvas, { delay, copy: true });
 
-    $('gif-progress-bar').style.width  = (40 + (i + 1) / frameCount * 10) + '%';
+    $('gif-progress-bar').style.width  = (50 + (i + 1) / frameCount * 5) + '%';
     $('gif-progress-text').textContent = `Queuing ${i + 1} / ${frameCount}…`;
     await new Promise(r => setTimeout(r, 0));
   }
