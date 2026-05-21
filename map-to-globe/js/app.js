@@ -1069,20 +1069,24 @@ async function captureGif() {
     await new Promise(r => setTimeout(r, 0));
   }
 
-  // ── Phase 2: build averaged composite for global palette ──────────────────
-  // Averaging every pixel across all frames gives NeuQuant a single image
-  // that contains every colour present anywhere in the animation, so the
-  // resulting 256-colour palette covers the full visible colour space.
+  // ── Phase 2: build round-robin composite for global palette ──────────────
+  // Each pixel in the composite is taken from a *different* frame (cycling
+  // through all frames), so NeuQuant sees real, unblended colours from every
+  // frame without any averaging-induced desaturation.
   $('gif-progress-text').textContent = 'Building palette…';
   await new Promise(r => setTimeout(r, 0));
 
-  const acc = new Float32Array(gifSize * gifSize * 4);
-  for (const id of imageDataArr) {
-    for (let p = 0; p < acc.length; p++) acc[p] += id.data[p];
+  const totalPx  = gifSize * gifSize;
+  const composite = new Uint8ClampedArray(totalPx * 4);
+  for (let p = 0; p < totalPx; p++) {
+    const src  = imageDataArr[p % imageDataArr.length].data;
+    const base = p * 4;
+    composite[base]     = src[base];
+    composite[base + 1] = src[base + 1];
+    composite[base + 2] = src[base + 2];
+    composite[base + 3] = src[base + 3];
   }
-  const avgPixels = new Uint8ClampedArray(acc.length);
-  for (let p = 0; p < acc.length; p++) avgPixels[p] = acc[p] / frameCount;
-  offCtx.putImageData(new ImageData(avgPixels, gifSize, gifSize), 0, 0);
+  offCtx.putImageData(new ImageData(composite, gifSize, gifSize), 0, 0);
 
   // ── Phase 3: encode ───────────────────────────────────────────────────────
   const gif = new GIF({
