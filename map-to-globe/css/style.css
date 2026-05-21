@@ -47,6 +47,9 @@ body {
 #panel.collapsed {
   width: 38px;
   min-width: 38px;
+  background: transparent;
+  border-left: none;
+  box-shadow: none;
 }
 
 #panel-header {
@@ -72,8 +75,7 @@ body {
 }
 
 #panel.collapsed #panel-header h1 {
-  opacity: 0;
-  width: 0;
+  display: none;
 }
 
 #panel-toggle {
@@ -104,7 +106,8 @@ body {
 
 #panel.collapsed #panel-header {
   justify-content: center;
-  padding: 12px 8px;
+  padding: 8px;
+  border-bottom: none;
 }
 
 #panel-body {
