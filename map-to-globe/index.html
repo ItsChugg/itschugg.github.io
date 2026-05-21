@@ -45,156 +45,164 @@
 
     <div id="panel-body">
       <section>
-        <h2>Textures</h2>
-
-        <div class="upload-slot">
-          <button id="upload-day-btn">Map Texture</button>
-          <button id="clear-day-btn" class="clear-btn" style="display:none">✕</button>
-        </div>
-        <p class="control-hint">Equirectangular projection is preferred.</p>
-
-        <div class="upload-slot upload-slot-opt">
-          <button id="upload-night-btn">Night Texture</button>
-          <button id="clear-night-btn" class="clear-btn" style="display:none">✕</button>
-        </div>
-        <p class="control-hint">Generally used for City Lights.</p>
-        <div class="control-row" id="night-threshold-row" style="display:none">
-          <label for="night-threshold-slider">Light Threshold</label>
-          <input type="range" id="night-threshold-slider" min="0" max="50" step="1" value="5">
-          <input type="number" id="night-threshold-num" class="slider-num" min="0" max="50" step="1" value="5">
-        </div>
-
-        <div class="upload-slot upload-slot-opt">
-          <button id="upload-bg-btn">Background</button>
-          <button id="clear-bg-btn" class="clear-btn" style="display:none">✕</button>
-        </div>
-        <p class="control-hint">Replaces the starry night.</p>
-
-        <input type="file" id="day-tex-input"   accept="image/*">
-        <input type="file" id="night-tex-input" accept="image/*">
-        <input type="file" id="bg-tex-input"    accept="image/*">
-      </section>
-
-      <section>
-        <h2>Rotation</h2>
-        <div class="control-row">
-          <label for="speed-slider">Spin Speed (s)</label>
-          <input type="range" id="speed-slider" min="5" max="300" step="1" value="60">
-          <input type="number" id="speed-num" class="slider-num" min="5" max="300" step="1" value="60">
-        </div>
-        <p class="control-hint">Length of time to finish a rotation.</p>
-        <div class="control-row">
-          <label for="axial-tilt-slider">Axis Tilt</label>
-          <input type="range" id="axial-tilt-slider" min="0" max="45" value="0">
-          <input type="number" id="axial-tilt-num" class="slider-num" min="0" max="45" value="0">
-        </div>
-        <p class="control-hint">Changes angle relative to the sun.</p>
-        <div class="control-row">
-          <label for="equator-tilt-slider">Equator Tilt</label>
-          <input type="range" id="equator-tilt-slider" min="0" max="45" value="0">
-          <input type="number" id="equator-tilt-num" class="slider-num" min="0" max="45" value="0">
-        </div>
-        <p class="control-hint">Changes the direction of rotation.</p>
-        <div class="control-row">
-          <label for="rotate-toggle">Auto Rotate</label>
-          <input type="checkbox" id="rotate-toggle" checked>
-        </div>
-        <p class="control-hint">Toggles planetary rotation.</p>
-        <div class="control-row tilt-lock-row">
-          <label for="tilt-lock">Tilt Lock</label>
-          <input type="checkbox" id="tilt-lock" checked>
-        </div>
-        <p class="control-hint">Toggles the link between tilts.</p>
-        <div class="control-row tilt-lock-row">
-          <label for="tilt-fullrange">Full Tilt Range</label>
-          <input type="checkbox" id="tilt-fullrange">
-        </div>
-      </section>
-
-      <section>
-        <h2>Lighting</h2>
-        <div class="control-row">
-          <label for="daynight-toggle">Day/Night Cycle</label>
-          <input type="checkbox" id="daynight-toggle">
-        </div>
-        <p class="control-hint">Toggles the day/night cycle.</p>
-        <div id="sun-options" style="display:none">
-          <div class="control-row">
-            <label for="sun-intensity-slider">Sun Intensity</label>
-            <input type="range" id="sun-intensity-slider" min="0" max="100" value="75">
-            <input type="number" id="sun-intensity-num" class="slider-num" min="0" max="100" value="75">
+        <h2 class="collapsible-header open">Textures <span class="exp-chevron">▶</span></h2>
+        <div class="collapsible-body open">
+          <div class="upload-slot">
+            <button id="upload-day-btn">Map Texture</button>
+            <button id="clear-day-btn" class="clear-btn" style="display:none">✕</button>
           </div>
-          <p class="control-hint">Changes the Sun's luminosity.</p>
-          <div class="control-row">
-            <label for="sun-color">Sun Color</label>
-            <input type="color" id="sun-color" value="#ffffff">
+          <p class="control-hint">Equirectangular projection is preferred.</p>
+
+          <div class="upload-slot upload-slot-opt">
+            <button id="upload-night-btn">Night Texture</button>
+            <button id="clear-night-btn" class="clear-btn" style="display:none">✕</button>
           </div>
-          <p class="control-hint">Changes the color of light.</p>
+          <p class="control-hint">Generally used for City Lights.</p>
+          <div class="control-row" id="night-threshold-row" style="display:none">
+            <label for="night-threshold-slider">Light Threshold</label>
+            <input type="range" id="night-threshold-slider" min="0" max="50" step="1" value="5">
+            <input type="number" id="night-threshold-num" class="slider-num" min="0" max="50" step="1" value="5">
+          </div>
+
+          <div class="upload-slot upload-slot-opt">
+            <button id="upload-bg-btn">Background</button>
+            <button id="clear-bg-btn" class="clear-btn" style="display:none">✕</button>
+          </div>
+          <p class="control-hint">Replaces the starry night.</p>
+
+          <input type="file" id="day-tex-input"   accept="image/*">
+          <input type="file" id="night-tex-input" accept="image/*">
+          <input type="file" id="bg-tex-input"    accept="image/*">
         </div>
       </section>
 
       <section>
-        <h2>Export</h2>
-        <div class="control-row">
-          <label for="gif-duration-slider">Duration (s)</label>
-          <input type="range" id="gif-duration-slider" min="1" max="12" step="1" value="3">
-          <input type="number" id="gif-duration-num" class="slider-num" min="1" max="12" step="1" value="3">
-        </div>
-        <p class="control-hint">Length of time to finish a rotation.</p>
-        <div class="control-row">
-          <label for="gif-fps-slider">Smoothness</label>
-          <input type="range" id="gif-fps-slider" min="10" max="50" step="1" value="50">
-          <input type="number" id="gif-fps-num" class="slider-num" min="10" max="50" step="1" value="50">
-        </div>
-        <p class="control-hint">How many frames per rotation.</p>
-        <div class="control-row">
-          <label for="gif-size-slider">Resolution</label>
-          <input type="range" id="gif-size-slider" min="200" max="800" step="100" value="800">
-          <input type="number" id="gif-size-num" class="slider-num" min="200" max="800" step="100" value="800">
-        </div>
-        <p class="control-hint">Output size in pixels.</p>
-        <div class="control-row">
-          <button id="gif-btn">Export GIF</button>
-        </div>
-        <div class="control-row">
-          <button id="screenshot-btn">Export Screenshot</button>
-        </div>
-        <div id="gif-progress">
-          <div id="gif-progress-bar"></div>
-          <span id="gif-progress-text">Capturing…</span>
+        <h2 class="collapsible-header open">Rotation <span class="exp-chevron">▶</span></h2>
+        <div class="collapsible-body open">
+          <div class="control-row">
+            <label for="speed-slider">Spin Speed (s)</label>
+            <input type="range" id="speed-slider" min="5" max="300" step="1" value="60">
+            <input type="number" id="speed-num" class="slider-num" min="5" max="300" step="1" value="60">
+          </div>
+          <p class="control-hint">Length of time to finish a rotation.</p>
+          <div class="control-row">
+            <label for="axial-tilt-slider">Axis Tilt</label>
+            <input type="range" id="axial-tilt-slider" min="0" max="45" value="0">
+            <input type="number" id="axial-tilt-num" class="slider-num" min="0" max="45" value="0">
+          </div>
+          <p class="control-hint">Changes angle relative to the sun.</p>
+          <div class="control-row">
+            <label for="equator-tilt-slider">Equator Tilt</label>
+            <input type="range" id="equator-tilt-slider" min="0" max="45" value="0">
+            <input type="number" id="equator-tilt-num" class="slider-num" min="0" max="45" value="0">
+          </div>
+          <p class="control-hint">Changes the direction of rotation.</p>
+          <div class="control-row">
+            <label for="rotate-toggle">Auto Rotate</label>
+            <input type="checkbox" id="rotate-toggle" checked>
+          </div>
+          <p class="control-hint">Toggles planetary rotation.</p>
+          <div class="control-row tilt-lock-row">
+            <label for="tilt-lock">Tilt Lock</label>
+            <input type="checkbox" id="tilt-lock" checked>
+          </div>
+          <p class="control-hint">Toggles the link between tilts.</p>
+          <div class="control-row tilt-lock-row">
+            <label for="tilt-fullrange">Full Tilt Range</label>
+            <input type="checkbox" id="tilt-fullrange">
+          </div>
         </div>
       </section>
+
       <section>
-        <h2>Wireframe</h2>
-        <div class="control-row">
-          <label for="wireframe-toggle">Wireframe</label>
-          <input type="checkbox" id="wireframe-toggle" checked>
-        </div>
-        <div class="control-row" id="wire-style-row">
-          <label for="wire-style">Style</label>
-          <select id="wire-style">
-            <option value="grid">Grid</option>
-            <option value="triangle" selected>Triangle</option>
-            <option value="hexagon">Hexagon</option>
-            <option value="brick">Brick</option>
-            <option value="diamond">Diamond</option>
-            <option value="loxodrome">Loxodrome</option>
-            <option value="voronoi">Voronoi</option>
-            <option value="greatcircle">Great Circles</option>
-          </select>
-        </div>
-        <div class="control-row">
-          <label for="wire-density">Density</label>
-          <input type="range" id="wire-density" min="1" max="10" value="5">
-          <input type="number" id="wire-density-num" class="slider-num" min="1" max="10" value="5">
+        <h2 class="collapsible-header open">Lighting <span class="exp-chevron">▶</span></h2>
+        <div class="collapsible-body open">
+          <div class="control-row">
+            <label for="daynight-toggle">Day/Night Cycle</label>
+            <input type="checkbox" id="daynight-toggle">
+          </div>
+          <p class="control-hint">Toggles the day/night cycle.</p>
+          <div id="sun-options" style="display:none">
+            <div class="control-row">
+              <label for="sun-intensity-slider">Sun Intensity</label>
+              <input type="range" id="sun-intensity-slider" min="0" max="100" value="75">
+              <input type="number" id="sun-intensity-num" class="slider-num" min="0" max="100" value="75">
+            </div>
+            <p class="control-hint">Changes the Sun's luminosity.</p>
+            <div class="control-row">
+              <label for="sun-color">Sun Color</label>
+              <input type="color" id="sun-color" value="#ffffff">
+            </div>
+            <p class="control-hint">Changes the color of light.</p>
+          </div>
         </div>
       </section>
+
+      <section>
+        <h2 class="collapsible-header open">Export <span class="exp-chevron">▶</span></h2>
+        <div class="collapsible-body open">
+          <div class="control-row">
+            <label for="gif-duration-slider">Duration (s)</label>
+            <input type="range" id="gif-duration-slider" min="1" max="12" step="1" value="3">
+            <input type="number" id="gif-duration-num" class="slider-num" min="1" max="12" step="1" value="3">
+          </div>
+          <p class="control-hint">Length of time to finish a rotation.</p>
+          <div class="control-row">
+            <label for="gif-fps-slider">Smoothness</label>
+            <input type="range" id="gif-fps-slider" min="10" max="50" step="1" value="50">
+            <input type="number" id="gif-fps-num" class="slider-num" min="10" max="50" step="1" value="50">
+          </div>
+          <p class="control-hint">How many frames per rotation.</p>
+          <div class="control-row">
+            <label for="gif-size-slider">Resolution</label>
+            <input type="range" id="gif-size-slider" min="200" max="800" step="100" value="800">
+            <input type="number" id="gif-size-num" class="slider-num" min="200" max="800" step="100" value="800">
+          </div>
+          <p class="control-hint">Output size in pixels.</p>
+          <div class="control-row">
+            <button id="gif-btn">Export GIF</button>
+          </div>
+          <div class="control-row">
+            <button id="screenshot-btn">Export Screenshot</button>
+          </div>
+          <div id="gif-progress">
+            <div id="gif-progress-bar"></div>
+            <span id="gif-progress-text">Capturing…</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="collapsible-header open">Wireframe <span class="exp-chevron">▶</span></h2>
+        <div class="collapsible-body open">
+          <div class="control-row">
+            <label for="wireframe-toggle">Wireframe</label>
+            <input type="checkbox" id="wireframe-toggle" checked>
+          </div>
+          <div class="control-row" id="wire-style-row">
+            <label for="wire-style">Style</label>
+            <select id="wire-style">
+              <option value="grid">Grid</option>
+              <option value="triangle" selected>Triangle</option>
+              <option value="hexagon">Hexagon</option>
+              <option value="brick">Brick</option>
+              <option value="diamond">Diamond</option>
+              <option value="loxodrome">Loxodrome</option>
+              <option value="voronoi">Voronoi</option>
+              <option value="greatcircle">Great Circles</option>
+            </select>
+          </div>
+          <div class="control-row">
+            <label for="wire-density">Density</label>
+            <input type="range" id="wire-density" min="1" max="10" value="5">
+            <input type="number" id="wire-density-num" class="slider-num" min="1" max="10" value="5">
+          </div>
+        </div>
+      </section>
+
       <section id="experimental-section">
-        <h2 id="experimental-toggle" class="collapsible-header">
-          Experimental
-          <span class="exp-chevron">▶</span>
-        </h2>
-        <div id="experimental-body" class="collapsible-body">
+        <h2 class="collapsible-header">Experimental <span class="exp-chevron">▶</span></h2>
+        <div class="collapsible-body">
           <div class="control-row">
             <label for="stars-toggle">Stars</label>
             <input type="checkbox" id="stars-toggle" checked>
@@ -211,13 +219,13 @@
         </div>
       </section>
     </div>
-    <div id="panel-version">v1.37</div>
+    <div id="panel-version">v1.38</div>
   </div>
 
   </div><!-- #globe-layout -->
 
   <script src="vendor/gif.js"></script>
-  <script type="module" src="js/app.js?v=40"></script>
+  <script type="module" src="js/app.js?v=41"></script>
   <script src="/components/navbar/inject-navbar.js" defer></script>
 </body>
 </html>

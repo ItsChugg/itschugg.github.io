@@ -1188,11 +1188,13 @@ async function captureGif() {
   gif.render();
 }
 
-// ── Experimental section toggle ──────────────────────────────────────────────
+// ── Section collapse toggles ─────────────────────────────────────────────────
 
-$('experimental-toggle').addEventListener('click', () => {
-  $('experimental-toggle').classList.toggle('open');
-  $('experimental-body').classList.toggle('open');
+document.querySelectorAll('.collapsible-header').forEach(h => {
+  h.addEventListener('click', () => {
+    h.classList.toggle('open');
+    h.nextElementSibling.classList.toggle('open');
+  });
 });
 
 // ── Panel toggle ─────────────────────────────────────────────────────────────
