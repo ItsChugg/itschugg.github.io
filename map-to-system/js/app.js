@@ -766,6 +766,7 @@ let lockedBody     = null;        // body the camera is locked onto
 let isCapturingGif = false;
 let hasBgTex       = false;
 const _lockPos     = new THREE.Vector3();
+const _lockDelta   = new THREE.Vector3();
 
 function createBody(opts) {
   const b = new Body(opts);
@@ -1198,7 +1199,13 @@ new MutationObserver(() => applyGlobeTheme(localStorage.getItem('itschu-theme') 
 // ── Default body ──────────────────────────────────────────────────────────────
 
 selectBody(createBody({ name: 'Planet 1', type: 'planet', orbitType: 'circular', orbitRadius: 5, orbitPeriod: 120 }));
+lockOnto(bodies[0]); // camera locked onto the first body by default
 applyGlobeTheme(localStorage.getItem('itschu-theme') || 'dark');
+
+// ── Star defaults ─────────────────────────────────────────────────────────────
+
+sunGroup.visible = false;           // star hidden until user enables it
+setSunColor('#ffcc44');             // Sol-like golden glow (syncs mesh with picker)
 
 // ── Panel listeners ───────────────────────────────────────────────────────────
 
@@ -1557,7 +1564,8 @@ document.querySelectorAll('.collapsible-header').forEach(h => {
 
 // ── Panel toggle ──────────────────────────────────────────────────────────────
 
-$('panel-toggle').addEventListener('click', () => { $('panel').classList.toggle('collapsed'); setTimeout(onResize, 300); });
+$('panel-toggle').addEventListener('click',       () => { $('panel').classList.toggle('collapsed');       setTimeout(onResize, 300); });
+$('left-panel-toggle').addEventListener('click',  () => { $('left-panel').classList.toggle('collapsed');  setTimeout(onResize, 300); });
 
 // ── Resize ────────────────────────────────────────────────────────────────────
 
@@ -1623,10 +1631,12 @@ function animate() {
     }
     b.update(dt);
   }
-  // Camera lock-on: smoothly track the locked body's world position
+  // Camera lock-on: track the locked body maintaining zoom / view angle
   if (lockedBody) {
     lockedBody.bodyGroup.getWorldPosition(_lockPos);
-    controls.target.lerp(_lockPos, 0.08);
+    _lockDelta.subVectors(_lockPos, controls.target); // delta since last frame
+    controls.target.copy(_lockPos);
+    camera.position.add(_lockDelta);                  // move camera by same delta
   }
   controls.update();
   renderer.render(scene, camera);

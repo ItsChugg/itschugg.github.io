@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Map to System — itschu.gg</title>
-  <link rel="stylesheet" href="css/style.css?v=7">
+  <link rel="stylesheet" href="css/style.css?v=8">
   <link rel="stylesheet" href="/components/themes/theme.css?v=5">
   <script type="importmap">
   {
@@ -39,12 +39,13 @@
   <div id="globe-layout">
   <canvas id="globe-canvas"></canvas>
 
-  <div id="panel">
-    <div id="panel-header">
-      <button id="panel-toggle" title="Collapse panel">◀</button>
+  <!-- ── Left panel: system-level controls ──────────────────────────────── -->
+  <div id="left-panel">
+    <div id="left-panel-header">
+      <button id="left-panel-toggle" title="Collapse panel">▶</button>
     </div>
 
-    <div id="panel-body">
+    <div id="left-panel-body">
       <section>
         <h2 class="collapsible-header open">Bodies <span class="exp-chevron">▶</span></h2>
         <div class="collapsible-body open">
@@ -192,6 +193,54 @@
       </section>
 
       <section>
+        <h2 class="collapsible-header open">Lighting <span class="exp-chevron">▶</span></h2>
+        <div class="collapsible-body open">
+          <div class="control-row">
+            <label for="daynight-toggle">Day/Night Cycle</label>
+            <input type="checkbox" id="daynight-toggle">
+          </div>
+          <p class="control-hint">Toggles the day/night cycle.</p>
+          <div id="sun-options" style="display:none">
+            <div class="control-row">
+              <label for="sun-intensity-slider">Sun Intensity</label>
+              <input type="range" id="sun-intensity-slider" min="0" max="100" value="75">
+              <input type="number" id="sun-intensity-num" class="slider-num" min="0" max="100" value="75">
+            </div>
+            <p class="control-hint">Changes the Sun's luminosity.</p>
+            <div class="control-row">
+              <label for="sun-color">Light Color</label>
+              <input type="color" id="sun-color" value="#ffffff">
+            </div>
+            <p class="control-hint">Tint of light cast on all planets.</p>
+          </div>
+          <div class="control-row" style="margin-top:6px">
+            <label for="sun-visible-toggle">Show Star</label>
+            <input type="checkbox" id="sun-visible-toggle">
+          </div>
+          <p class="control-hint">Toggle the central star's visibility.</p>
+          <div class="control-row">
+            <label for="sun-size-slider">Star Size</label>
+            <input type="range" id="sun-size-slider" min="0.5" max="15" step="0.5" value="4">
+            <input type="number" id="sun-size-num" class="slider-num" min="0.5" max="15" step="0.5" value="4">
+          </div>
+          <div class="control-row">
+            <label for="sun-vis-color">Star Color</label>
+            <input type="color" id="sun-vis-color" value="#ffcc44">
+          </div>
+          <p class="control-hint">Visual color of the star itself.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ── Right panel: local planet controls ─────────────────────────────── -->
+  <div id="panel">
+    <div id="panel-header">
+      <button id="panel-toggle" title="Collapse panel">◀</button>
+    </div>
+
+    <div id="panel-body">
+      <section>
         <h2 class="collapsible-header open">Textures <span class="exp-chevron">▶</span></h2>
         <div class="collapsible-body open">
           <div class="upload-slot">
@@ -258,45 +307,6 @@
             <label for="tilt-fullrange">Full Tilt Range</label>
             <input type="checkbox" id="tilt-fullrange">
           </div>
-        </div>
-      </section>
-
-      <section>
-        <h2 class="collapsible-header open">Lighting <span class="exp-chevron">▶</span></h2>
-        <div class="collapsible-body open">
-          <div class="control-row">
-            <label for="daynight-toggle">Day/Night Cycle</label>
-            <input type="checkbox" id="daynight-toggle">
-          </div>
-          <p class="control-hint">Toggles the day/night cycle.</p>
-          <div id="sun-options" style="display:none">
-            <div class="control-row">
-              <label for="sun-intensity-slider">Sun Intensity</label>
-              <input type="range" id="sun-intensity-slider" min="0" max="100" value="75">
-              <input type="number" id="sun-intensity-num" class="slider-num" min="0" max="100" value="75">
-            </div>
-            <p class="control-hint">Changes the Sun's luminosity.</p>
-            <div class="control-row">
-              <label for="sun-color">Light Color</label>
-              <input type="color" id="sun-color" value="#ffffff">
-            </div>
-            <p class="control-hint">Tint of light cast on all planets.</p>
-          </div>
-          <div class="control-row" style="margin-top:6px">
-            <label for="sun-visible-toggle">Show Star</label>
-            <input type="checkbox" id="sun-visible-toggle" checked>
-          </div>
-          <p class="control-hint">Toggle the central star's visibility.</p>
-          <div class="control-row">
-            <label for="sun-size-slider">Star Size</label>
-            <input type="range" id="sun-size-slider" min="0.5" max="15" step="0.5" value="4">
-            <input type="number" id="sun-size-num" class="slider-num" min="0.5" max="15" step="0.5" value="4">
-          </div>
-          <div class="control-row">
-            <label for="sun-vis-color">Star Color</label>
-            <input type="color" id="sun-vis-color" value="#ffaa44">
-          </div>
-          <p class="control-hint">Visual color of the star itself.</p>
         </div>
       </section>
 
@@ -395,13 +405,13 @@
         </div>
       </section>
     </div>
-    <div id="panel-version">v2.5</div>
+    <div id="panel-version">v2.6</div>
   </div>
 
   </div><!-- #globe-layout -->
 
   <script src="vendor/gif.js"></script>
-  <script type="module" src="js/app.js?v=48"></script>
+  <script type="module" src="js/app.js?v=49"></script>
   <script src="/components/navbar/inject-navbar.js" defer></script>
 </body>
 </html>
