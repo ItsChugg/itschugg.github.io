@@ -78,11 +78,6 @@
       <section>
         <h2>Rotation</h2>
         <div class="control-row">
-          <label for="rotate-toggle">Auto Rotate</label>
-          <input type="checkbox" id="rotate-toggle" checked>
-        </div>
-        <p class="control-hint">Toggles planetary rotation.</p>
-        <div class="control-row">
           <label for="speed-slider">Spin Speed (s)</label>
           <input type="range" id="speed-slider" min="5" max="300" step="1" value="60">
           <input type="number" id="speed-num" class="slider-num" min="5" max="300" step="1" value="60">
@@ -100,11 +95,20 @@
           <input type="number" id="equator-tilt-num" class="slider-num" min="0" max="45" value="0">
         </div>
         <p class="control-hint">Changes the direction of rotation.</p>
+        <div class="control-row">
+          <label for="rotate-toggle">Auto Rotate</label>
+          <input type="checkbox" id="rotate-toggle" checked>
+        </div>
+        <p class="control-hint">Toggles planetary rotation.</p>
         <div class="control-row tilt-lock-row">
-          <label for="tilt-lock">Lock Tilts</label>
+          <label for="tilt-lock">Tilt Lock</label>
           <input type="checkbox" id="tilt-lock" checked>
         </div>
-        <p class="control-hint">Toggles the link between Tilts.</p>
+        <p class="control-hint">Toggles the link between tilts.</p>
+        <div class="control-row tilt-lock-row">
+          <label for="tilt-fullrange">Full Tilt Range</label>
+          <input type="checkbox" id="tilt-fullrange">
+        </div>
       </section>
 
       <section>
@@ -160,6 +164,31 @@
           <span id="gif-progress-text">Capturing…</span>
         </div>
       </section>
+      <section>
+        <h2>Wireframe</h2>
+        <div class="control-row">
+          <label for="wireframe-toggle">Wireframe</label>
+          <input type="checkbox" id="wireframe-toggle" checked>
+        </div>
+        <div class="control-row" id="wire-style-row">
+          <label for="wire-style">Style</label>
+          <select id="wire-style">
+            <option value="grid">Grid</option>
+            <option value="triangle" selected>Triangle</option>
+            <option value="hexagon">Hexagon</option>
+            <option value="brick">Brick</option>
+            <option value="diamond">Diamond</option>
+            <option value="loxodrome">Loxodrome</option>
+            <option value="voronoi">Voronoi</option>
+            <option value="greatcircle">Great Circles</option>
+          </select>
+        </div>
+        <div class="control-row">
+          <label for="wire-density">Density</label>
+          <input type="range" id="wire-density" min="1" max="10" value="5">
+          <input type="number" id="wire-density-num" class="slider-num" min="1" max="10" value="5">
+        </div>
+      </section>
       <section id="experimental-section">
         <h2 id="experimental-toggle" class="collapsible-header">
           Experimental
@@ -175,40 +204,14 @@
             <input type="checkbox" id="atmosphere-toggle">
           </div>
           <div class="control-row">
-            <label for="tilt-fullrange">Full Tilt Range</label>
-            <input type="checkbox" id="tilt-fullrange">
-          </div>
-          <div class="control-row">
             <label for="ambient-slider">Ambient</label>
             <input type="range" id="ambient-slider" min="0" max="100" value="25">
             <input type="number" id="ambient-num" class="slider-num" min="0" max="100" value="25">
           </div>
-          <div class="control-row">
-            <label for="wireframe-toggle">Wireframe</label>
-            <input type="checkbox" id="wireframe-toggle" checked>
-          </div>
-          <div class="control-row" id="wire-style-row">
-            <label for="wire-style">Style</label>
-            <select id="wire-style">
-              <option value="grid">Grid</option>
-              <option value="triangle" selected>Triangle</option>
-              <option value="hexagon">Hexagon</option>
-              <option value="brick">Brick</option>
-              <option value="diamond">Diamond</option>
-              <option value="loxodrome">Loxodrome</option>
-              <option value="voronoi">Voronoi</option>
-              <option value="greatcircle">Great Circles</option>
-            </select>
-          </div>
-          <div class="control-row">
-            <label for="wire-density">Density</label>
-            <input type="range" id="wire-density" min="1" max="10" value="5">
-            <input type="number" id="wire-density-num" class="slider-num" min="1" max="10" value="5">
-          </div>
         </div>
       </section>
     </div>
-    <div id="panel-version">v1.36</div>
+    <div id="panel-version">v1.37</div>
   </div>
 
   </div><!-- #globe-layout -->
