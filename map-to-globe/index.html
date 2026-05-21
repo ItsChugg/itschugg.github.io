@@ -121,10 +121,16 @@
           <label for="daynight-toggle">Day/Night Cycle</label>
           <input type="checkbox" id="daynight-toggle">
         </div>
-        <div class="control-row" id="sun-intensity-row" style="display:none">
-          <label for="sun-intensity-slider">Sun Intensity</label>
-          <input type="range" id="sun-intensity-slider" min="0" max="100" value="75">
-          <input type="number" id="sun-intensity-num" class="slider-num" min="0" max="100" value="75">
+        <div id="sun-options" style="display:none">
+          <div class="control-row">
+            <label for="sun-intensity-slider">Sun Intensity</label>
+            <input type="range" id="sun-intensity-slider" min="0" max="100" value="75">
+            <input type="number" id="sun-intensity-num" class="slider-num" min="0" max="100" value="75">
+          </div>
+          <div class="control-row">
+            <label for="sun-color">Light Color</label>
+            <input type="color" id="sun-color" value="#ffffff">
+          </div>
         </div>
       </section>
 
@@ -212,13 +218,13 @@
         </div>
       </section>
     </div>
-    <div id="panel-version">v1.18</div>
+    <div id="panel-version">v1.19</div>
   </div>
 
   </div><!-- #globe-layout -->
 
   <script src="vendor/gif.js"></script>
-  <script type="module" src="js/app.js?v=25"></script>
+  <script type="module" src="js/app.js?v=26"></script>
   <script src="/components/navbar/inject-navbar.js" defer></script>
 </body>
 </html>

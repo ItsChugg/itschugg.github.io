@@ -349,6 +349,26 @@ select option {
   flex-shrink: 0;
 }
 
+/* ── Color picker ──────────────────────────────────────────────────────────── */
+
+input[type="color"] {
+  appearance: none;
+  background: transparent;
+  border: var(--border);
+  width: 36px;
+  height: 22px;
+  padding: 2px;
+  cursor: pointer;
+  border-radius: 0;
+  flex-shrink: 0;
+}
+
+input[type="color"]:hover { border-color: var(--amber-dim); }
+
+input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+input[type="color"]::-webkit-color-swatch         { border: none; }
+input[type="color"]::-moz-color-swatch            { border: none; }
+
 /* ── Control hints ─────────────────────────────────────────────────────────── */
 
 .control-hint {

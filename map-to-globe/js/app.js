@@ -15,8 +15,6 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.NoToneMapping;
 renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 // ── Scene & Camera ───────────────────────────────────────────────────────────
 
@@ -125,10 +123,12 @@ const FRAG = /* glsl */`
   uniform sampler2D nightTex;
   uniform bool      hasDayTex;
   uniform bool      hasNightTex;
-  uniform vec3      sunDir;        // world-space, toward sun (normalised)
+  uniform vec3      sunDir;         // world-space, toward sun (normalised)
+  uniform vec3      sunColor;       // light source tint (default white)
+  uniform float     sunIntensity;   // light source brightness multiplier
   uniform vec3      baseColor;
-  uniform float     ambientStr;    // 0..1
-  uniform bool      flatLit;       // true when day/night cycle is off
+  uniform float     ambientStr;     // twilight scatter width/intensity 0..1
+  uniform bool      flatLit;        // true when day/night cycle is off
 
   varying vec2  vUv;
   varying vec3  vWorldNormal;
@@ -136,45 +136,45 @@ const FRAG = /* glsl */`
 
   void main() {
     if (flatLit) {
-      // Day/Night cycle off — full even brightness, no directional shading
-      if (hasDayTex) {
-        gl_FragColor = vec4(texture2D(dayTex, vUv).rgb, 1.0);
-      } else {
-        gl_FragColor = vec4(baseColor, 1.0);
-      }
+      gl_FragColor = hasDayTex
+        ? vec4(texture2D(dayTex, vUv).rgb, 1.0)
+        : vec4(baseColor, 1.0);
       return;
     }
 
-    vec3 N      = normalize(vWorldNormal);
+    vec3  N     = normalize(vWorldNormal);
     float NdotL = dot(N, sunDir);
 
-    // ── Diffuse + ambient ──
-    float diffuse = max(NdotL, 0.0);
-    float ambient = ambientStr;
+    // Sharp terminator — ~2° twilight zone (like a planet orbiting a distant star)
+    float dayMask = smoothstep(-0.02, 0.02, NdotL);
 
-    // ── Blinn-Phong specular (only on textured globe) ──
+    // Diffuse: day side only, scaled by sun intensity
+    float diffuse = clamp(NdotL * sunIntensity, 0.0, 1.0);
+
+    // Lit factor: diffuse on day side + tiny atmospheric scatter in twilight zone only.
+    // Night side stays pitch black — dayMask = 0 guarantees no ambient leakage.
+    float lit = diffuse * (1.0 - ambientStr) + ambientStr * dayMask;
+
+    // Blinn-Phong specular — day side only, no highlight on night side
     vec3  H    = normalize(sunDir + normalize(vViewDir));
-    float spec = pow(max(dot(N, H), 0.0), 48.0) * 0.25 * diffuse;
+    float spec = pow(max(dot(N, H), 0.0), 64.0) * 0.3 * dayMask * sunIntensity;
 
     if (hasDayTex && hasNightTex) {
-      // Blend day & night textures across the terminator
-      float dayFactor = smoothstep(-0.12, 0.18, NdotL);
       vec3 day   = texture2D(dayTex,   vUv).rgb;
       vec3 night = texture2D(nightTex, vUv).rgb;
-
-      vec3 litDay   = day   * (diffuse * (1.0 - ambient) + ambient) + vec3(spec);
-      vec3 litNight = night; // night texture is self-luminous (city lights)
-
-      gl_FragColor = vec4(mix(litNight, litDay, dayFactor), 1.0);
+      // City lights are self-luminous; they fade at the terminator so they don't
+      // compete with the lit day side at dawn/dusk
+      vec3 litDay   = day   * lit * sunColor + vec3(spec) * sunColor;
+      vec3 litNight = night * (1.0 - dayMask);
+      gl_FragColor  = vec4(litDay + litNight, 1.0);
 
     } else if (hasDayTex) {
-      // Day texture only — wraps whole globe, standard shading
       vec3 day = texture2D(dayTex, vUv).rgb;
-      gl_FragColor = vec4(day * (diffuse * (1.0 - ambient) + ambient) + vec3(spec), 1.0);
+      // No night texture → night side is pitch black
+      gl_FragColor = vec4(day * lit * sunColor + vec3(spec) * sunColor, 1.0);
 
     } else {
-      // No texture — base colour + shading (wireframe base)
-      gl_FragColor = vec4(baseColor * (diffuse * (1.0 - ambient) + ambient), 1.0);
+      gl_FragColor = vec4(baseColor * lit * sunColor, 1.0);
     }
   }
 `;
@@ -187,10 +187,12 @@ const globeMat = new THREE.ShaderMaterial({
     nightTex:    { value: null },
     hasDayTex:   { value: false },
     hasNightTex: { value: false },
-    sunDir:      { value: new THREE.Vector3(0.7, 0.3, 0.6).normalize() },
-    baseColor:   { value: new THREE.Color(0x060618) },
-    ambientStr:  { value: 0.18 },
-    flatLit:     { value: true },  // off by default until day/night cycle is enabled
+    sunDir:       { value: new THREE.Vector3(0.7, 0.3, 0.6).normalize() },
+    sunColor:     { value: new THREE.Vector3(1, 1, 1) },
+    sunIntensity: { value: 1.5 },
+    baseColor:    { value: new THREE.Color(0x060618) },
+    ambientStr:   { value: 0.18 },
+    flatLit:      { value: true },  // off by default until day/night cycle is enabled
   },
 });
 
@@ -702,14 +704,12 @@ const rimGlow = new THREE.Mesh(new THREE.SphereGeometry(R * 1.12, 64, 64), rimMa
 rimGlow.visible = false; // hidden by default; atmosphere toggle enables it
 scene.add(rimGlow);
 
-// ── Lighting (for atmosphere mesh) ──────────────────────────────────────────
+// ── Sun light (direction only — all meshes use ShaderMaterial, no Three.js lighting) ──
+// Position is only used to derive sunDir for the globe shader and to drive
+// the atmosphere glow mesh if lights: true is ever added.
 
-const ambientLight = new THREE.AmbientLight(0x1a2a55, 0.6);
-scene.add(ambientLight);
-
-const sunLight = new THREE.DirectionalLight(0xfff5e0, 2.0);
+const sunLight = new THREE.DirectionalLight(0xffffff, 3.0);
 sunLight.position.set(3.5, 1.5, 3.0);
-sunLight.castShadow = true;
 scene.add(sunLight);
 
 // Keep the globe shader's sunDir in sync with the Three.js light
@@ -986,9 +986,9 @@ $('tilt-fullrange').addEventListener('change', e => {
 // ── Lighting ─────────────────────────────────────────────────────────────────
 
 $('daynight-toggle').addEventListener('change', e => {
-  state.dayNightCycle                  = e.target.checked;
-  globeMat.uniforms.flatLit.value      = !e.target.checked;
-  $('sun-intensity-row').style.display = e.target.checked ? 'flex' : 'none';
+  state.dayNightCycle             = e.target.checked;
+  globeMat.uniforms.flatLit.value = !e.target.checked;
+  $('sun-options').style.display  = e.target.checked ? 'block' : 'none';
 });
 
 $('sun-speed-slider').addEventListener('input', e => {
@@ -997,13 +997,19 @@ $('sun-speed-slider').addEventListener('input', e => {
 });
 
 $('sun-intensity-slider').addEventListener('input', e => {
-  sunLight.intensity = e.target.value / 50;
+  // Map 0–100 → 0–3.0 sun intensity in the globe shader
+  globeMat.uniforms.sunIntensity.value = e.target.value / 50;
   $('sun-intensity-num').value = e.target.value;
+});
+
+$('sun-color').addEventListener('input', e => {
+  const c = new THREE.Color(e.target.value);
+  globeMat.uniforms.sunColor.value.set(c.r, c.g, c.b);
+  sunLight.color.set(e.target.value);
 });
 
 $('ambient-slider').addEventListener('input', e => {
   const v = e.target.value / 100;
-  ambientLight.intensity             = v * 1.5;
   globeMat.uniforms.ambientStr.value = v * 0.6;
   $('ambient-num').value = e.target.value;
 });
