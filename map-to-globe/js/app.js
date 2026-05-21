@@ -783,7 +783,6 @@ const state = {
   autoRotate:     true,
   rotateSpeed:    (2 * Math.PI) / (60 * 60), // 60 s per rotation (matches Speed slider default)
   dayNightCycle:  false,
-  sunAngle:       0, // starts at (5, 0, 0) — sun directly to the right
   isCapturingGif: false,
   axialTilt:      0,       // degrees — tilts the spin axis
   equatorTilt:    0,       // degrees — tilts the visible equator independently
@@ -1259,18 +1258,6 @@ function animate() {
     spinGroup.rotation.y += state.rotateSpeed * dt * 60;
   }
 
-  if (state.dayNightCycle) {
-    // Negate so the sun orbits counterclockwise around Y — same direction
-    // as the globe's spinGroup rotation — keeping the terminator stationary
-    // on the surface when sun speed equals rotation speed.
-    state.sunAngle -= state.rotateSpeed * dt * 60;
-    sunLight.position.set(
-      Math.cos(state.sunAngle) * 5,
-      0, // Y=0 keeps sun on equatorial plane → terminator stays vertical
-      Math.sin(state.sunAngle) * 5,
-    );
-    syncSunDir();
-  }
 
   rimMat.uniforms.viewVector.value.copy(camera.position);
   controls.update();
