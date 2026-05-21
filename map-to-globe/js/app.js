@@ -135,48 +135,50 @@ const FRAG = /* glsl */`
   varying vec3  vViewDir;
 
   void main() {
+    vec3 color;
+
     if (flatLit) {
-      gl_FragColor = hasDayTex
-        ? vec4(texture2D(dayTex, vUv).rgb, 1.0)
-        : vec4(baseColor, 1.0);
-      return;
-    }
-
-    vec3  N     = normalize(vWorldNormal);
-    float NdotL = dot(N, sunDir);
-
-    // Sharp terminator — ~2° twilight zone (like a planet orbiting a distant star)
-    float dayMask = smoothstep(-0.02, 0.02, NdotL);
-
-    // Diffuse: apply sqrt to NdotL before scaling by intensity.
-    // Pure Lambert (linear NdotL) falls off too steeply near the terminator,
-    // making flat-colour map regions appear as harsh visible bands. The sqrt
-    // (gamma ≈ 0.5) keeps mid-tones brighter and produces a much smoother,
-    // more photorealistic falloff across the lit hemisphere.
-    float rawDiffuse = clamp(NdotL, 0.0, 1.0);
-    float diffuse    = clamp(sqrt(rawDiffuse) * sunIntensity, 0.0, 1.0);
-
-    // Lit factor: diffuse on day side + tiny atmospheric scatter in twilight zone only.
-    // Night side stays pitch black — dayMask = 0 guarantees no ambient leakage.
-    float lit = diffuse * (1.0 - ambientStr) + ambientStr * dayMask;
-
-    if (hasDayTex && hasNightTex) {
-      vec3 day   = texture2D(dayTex,   vUv).rgb;
-      vec3 night = texture2D(nightTex, vUv).rgb;
-      // City lights are self-luminous; they fade at the terminator so they don't
-      // compete with the lit day side at dawn/dusk
-      vec3 litDay   = day   * lit * sunColor;
-      vec3 litNight = night * (1.0 - dayMask);
-      gl_FragColor  = vec4(litDay + litNight, 1.0);
-
-    } else if (hasDayTex) {
-      vec3 day = texture2D(dayTex, vUv).rgb;
-      // No night texture → night side is pitch black
-      gl_FragColor = vec4(day * lit * sunColor, 1.0);
+      color = hasDayTex ? texture2D(dayTex, vUv).rgb : baseColor;
 
     } else {
-      gl_FragColor = vec4(baseColor * lit * sunColor, 1.0);
+      vec3  N     = normalize(vWorldNormal);
+      float NdotL = dot(N, sunDir);
+
+      // Sharp terminator — ~2° twilight zone
+      float dayMask = smoothstep(-0.02, 0.02, NdotL);
+
+      // Linear diffuse — the gamma encoding below handles the perceptual curve
+      float diffuse = clamp(NdotL * sunIntensity, 0.0, 1.0);
+
+      // Lit factor: day-side diffuse + narrow twilight scatter.
+      // Night side is pitch black (dayMask = 0 away from terminator).
+      float lit = diffuse * (1.0 - ambientStr) + ambientStr * dayMask;
+
+      // Gamma-encode the lighting factor (pow ≈ 1/2.2).
+      // The 8-bit framebuffer stores linear values, so dark regions only
+      // get ~25 discrete steps out of 255. Encoding the *lighting* through
+      // a 2.2 power curve spreads those steps across 4× more values,
+      // turning the visible staircase into a smooth gradient.
+      float litDisp = pow(max(lit, 0.0), 1.0 / 2.2);
+
+      if (hasDayTex && hasNightTex) {
+        vec3 day   = texture2D(dayTex,   vUv).rgb;
+        vec3 night = texture2D(nightTex, vUv).rgb;
+        color = day * litDisp * sunColor + night * (1.0 - dayMask);
+
+      } else if (hasDayTex) {
+        color = texture2D(dayTex, vUv).rgb * litDisp * sunColor;
+
+      } else {
+        color = baseColor * litDisp * sunColor;
+      }
     }
+
+    // Ordered dithering — interleaved gradient noise, ±½ of an 8-bit step.
+    // Breaks up any remaining quantisation banding into imperceptible grain
+    // without changing the overall appearance.
+    float dither = (fract(dot(gl_FragCoord.xy, vec2(0.75487766, 0.56984029))) - 0.5) / 255.0;
+    gl_FragColor = vec4(clamp(color + dither, 0.0, 1.0), 1.0);
   }
 `;
 
