@@ -56,16 +56,14 @@
       <section>
         <h2>Textures</h2>
 
-        <div class="control-row">
-          <label>Map Texture</label>
-          <button id="upload-day-btn" class="upload-btn">Upload</button>
+        <div class="upload-slot">
+          <button id="upload-day-btn">Map Texture</button>
           <button id="clear-day-btn" class="clear-btn" style="display:none">✕</button>
         </div>
         <p class="control-hint">Equirectangular projection is preferred.</p>
 
-        <div class="control-row tex-opt-row">
-          <label>Night Texture</label>
-          <button id="upload-night-btn" class="upload-btn">Upload</button>
+        <div class="upload-slot upload-slot-opt">
+          <button id="upload-night-btn">Night Texture</button>
           <button id="clear-night-btn" class="clear-btn" style="display:none">✕</button>
         </div>
         <p class="control-hint">Generally used for City Lights.</p>
@@ -75,9 +73,8 @@
           <input type="number" id="night-threshold-num" class="slider-num" min="0" max="50" step="1" value="5">
         </div>
 
-        <div class="control-row tex-opt-row">
-          <label>Background</label>
-          <button id="upload-bg-btn" class="upload-btn">Upload</button>
+        <div class="upload-slot upload-slot-opt">
+          <button id="upload-bg-btn">Background</button>
           <button id="clear-bg-btn" class="clear-btn" style="display:none">✕</button>
         </div>
         <p class="control-hint">Replaces the starry night.</p>
@@ -220,13 +217,13 @@
         </div>
       </section>
     </div>
-    <div id="panel-version">v1.27</div>
+    <div id="panel-version">v1.28</div>
   </div>
 
   </div><!-- #globe-layout -->
 
   <script src="vendor/gif.js"></script>
-  <script type="module" src="js/app.js?v=34"></script>
+  <script type="module" src="js/app.js?v=35"></script>
   <script src="/components/navbar/inject-navbar.js" defer></script>
 </body>
 </html>

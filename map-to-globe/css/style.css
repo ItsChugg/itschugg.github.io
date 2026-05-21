@@ -269,25 +269,32 @@ input[type="range"]::-moz-range-thumb {
   display: none;
 }
 
-/* ── Upload buttons (inside a standard control-row) ───────────────────────── */
+/* ── Upload slots ──────────────────────────────────────────────────────────── */
 
-#panel .upload-btn {
+.upload-slot {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+/* Upload button fills available space */
+#panel .upload-slot button:first-child {
+  flex: 1;
   width: auto;
-  max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  flex-shrink: 0;
+  min-width: 0;
 }
 
-/* Optional texture rows — dimmed like the tilt-lock row */
-.tex-opt-row {
-  opacity: 0.65;
-  transition: opacity 0.15s;
+/* Optional slots — dimmer, brighten on hover */
+#panel .upload-slot-opt button:first-child {
+  font-size: 0.50rem;
+  padding: 4px 8px;
+  opacity: 0.60;
 }
 
-.tex-opt-row:hover,
-.tex-opt-row:focus-within {
+#panel .upload-slot-opt button:first-child:hover {
   opacity: 1;
 }
 

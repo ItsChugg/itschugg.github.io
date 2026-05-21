@@ -884,7 +884,7 @@ $('clear-day-btn').addEventListener('click', () => {
   globeMat.uniforms.dayTex.value    = null;
   globeMat.uniforms.hasDayTex.value = false;
   globe.visible = false;
-  resetUpload('upload-day-btn', 'clear-day-btn');
+  resetUpload('upload-day-btn', 'clear-day-btn', 'Map Texture');
 });
 
 // Night texture
@@ -905,7 +905,7 @@ $('clear-night-btn').addEventListener('click', () => {
   if (globeMat.uniforms.nightTex.value) globeMat.uniforms.nightTex.value.dispose();
   globeMat.uniforms.nightTex.value    = null;
   globeMat.uniforms.hasNightTex.value = false;
-  resetUpload('upload-night-btn', 'clear-night-btn');
+  resetUpload('upload-night-btn', 'clear-night-btn', 'Night Texture');
   $('night-threshold-row').style.display = 'none';
 });
 
@@ -933,7 +933,7 @@ $('clear-bg-btn').addEventListener('click', () => {
   scene.background = new THREE.Color(0x000000);
   stars.visible    = $('stars-toggle').checked;
   state.hasBgTex   = false;
-  resetUpload('upload-bg-btn', 'clear-bg-btn');
+  resetUpload('upload-bg-btn', 'clear-bg-btn', 'Background');
 });
 
 // ── Rotation ─────────────────────────────────────────────────────────────────
