@@ -442,11 +442,10 @@ select option {
 #panel-version {
   font-family: var(--font-mono);
   font-size: 0.60rem;
-  color: var(--text-faint);
+  color: var(--text-muted);
   letter-spacing: 0.10em;
   text-align: center;
   padding: 8px 16px 10px;
-  opacity: 0.75;
   border-top: var(--border);
   flex-shrink: 0;
 }
