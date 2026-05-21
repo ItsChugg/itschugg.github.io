@@ -349,6 +349,17 @@ select option {
   flex-shrink: 0;
 }
 
+/* ── Control hints ─────────────────────────────────────────────────────────── */
+
+.control-hint {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-faint);
+  line-height: 1.4;
+  margin: -3px 0 8px;
+  opacity: 0.75;
+}
+
 /* ── Tilt lock row ─────────────────────────────────────────────────────────── */
 
 .tilt-lock-row {

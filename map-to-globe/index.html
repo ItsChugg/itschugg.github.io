@@ -134,20 +134,23 @@
           <button id="screenshot-btn">Save Screenshot</button>
         </div>
         <div class="control-row">
-          <label for="gif-frames-slider">° / Frame</label>
-          <input type="range" id="gif-frames-slider" min="1" max="30" step="1" value="6">
-          <input type="number" id="gif-frames-num" class="slider-num" min="1" max="30" step="1" value="6">
+          <label for="gif-duration-slider">Duration (s)</label>
+          <input type="range" id="gif-duration-slider" min="1" max="12" step="1" value="3">
+          <input type="number" id="gif-duration-num" class="slider-num" min="1" max="12" step="1" value="3">
         </div>
+        <p class="control-hint">Seconds per full rotation. Faster auto-rotate = shorter loop.</p>
         <div class="control-row">
-          <label for="gif-delay-slider">FPS</label>
-          <input type="range" id="gif-delay-slider" min="10" max="50" step="1" value="20">
-          <input type="number" id="gif-delay-num" class="slider-num" min="10" max="50" step="1" value="20">
+          <label for="gif-fps-slider">Smoothness</label>
+          <input type="range" id="gif-fps-slider" min="10" max="50" step="1" value="20">
+          <input type="number" id="gif-fps-num" class="slider-num" min="10" max="50" step="1" value="20">
         </div>
+        <p class="control-hint">Frames per second. Higher = smoother but larger file.</p>
         <div class="control-row">
-          <label for="gif-size-slider">GIF Size</label>
+          <label for="gif-size-slider">Resolution</label>
           <input type="range" id="gif-size-slider" min="200" max="800" step="100" value="500">
           <input type="number" id="gif-size-num" class="slider-num" min="200" max="800" step="100" value="500">
         </div>
+        <p class="control-hint">Output size in pixels. Larger = sharper, bigger file.</p>
         <div class="control-row">
           <button id="gif-btn">Export GIF</button>
         </div>
@@ -209,13 +212,13 @@
         </div>
       </section>
     </div>
-    <div id="panel-version">v1.17</div>
+    <div id="panel-version">v1.18</div>
   </div>
 
   </div><!-- #globe-layout -->
 
   <script src="vendor/gif.js"></script>
-  <script type="module" src="js/app.js?v=24"></script>
+  <script type="module" src="js/app.js?v=25"></script>
   <script src="/components/navbar/inject-navbar.js" defer></script>
 </body>
 </html>

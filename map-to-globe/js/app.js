@@ -1019,9 +1019,9 @@ $('screenshot-btn').addEventListener('click', () => {
   a.click();
 });
 
-$('gif-frames-slider').addEventListener('input', e => { $('gif-frames-num').value = e.target.value; });
-$('gif-delay-slider').addEventListener('input',  e => { $('gif-delay-num').value  = e.target.value; });
-$('gif-size-slider').addEventListener('input',   e => { $('gif-size-num').value   = e.target.value; });
+$('gif-duration-slider').addEventListener('input', e => { $('gif-duration-num').value = e.target.value; });
+$('gif-fps-slider').addEventListener('input',     e => { $('gif-fps-num').value     = e.target.value; });
+$('gif-size-slider').addEventListener('input',    e => { $('gif-size-num').value    = e.target.value; });
 
 $('gif-btn').addEventListener('click', captureGif);
 
@@ -1032,11 +1032,11 @@ async function captureGif() {
     return;
   }
 
-  const degPerFrame = parseInt($('gif-frames-slider').value);
-  const frameCount  = Math.ceil(360 / degPerFrame);
-  const fps         = parseInt($('gif-delay-slider').value);
-  const delay       = Math.round(1000 / fps);
-  const gifSize     = parseInt($('gif-size-slider').value);
+  const loopDuration = parseInt($('gif-duration-slider').value); // seconds
+  const fps          = parseInt($('gif-fps-slider').value);
+  const frameCount   = Math.ceil(loopDuration * fps);
+  const delay        = Math.round(1000 / fps);
+  const gifSize      = parseInt($('gif-size-slider').value);
 
   state.isCapturingGif = true;
   $('gif-btn').disabled = true;
@@ -1206,8 +1206,8 @@ wireSliderNum('equator-tilt-slider',  'equator-tilt-num');
 wireSliderNum('sun-intensity-slider', 'sun-intensity-num');
 wireSliderNum('sun-speed-slider',     'sun-speed-num');
 wireSliderNum('ambient-slider',       'ambient-num');
-wireSliderNum('gif-frames-slider',    'gif-frames-num');
-wireSliderNum('gif-delay-slider',     'gif-delay-num');
+wireSliderNum('gif-duration-slider',  'gif-duration-num');
+wireSliderNum('gif-fps-slider',       'gif-fps-num');
 wireSliderNum('gif-size-slider',      'gif-size-num');
 wireSliderNum('wire-density',         'wire-density-num');
 
