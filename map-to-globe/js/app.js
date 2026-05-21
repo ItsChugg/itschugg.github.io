@@ -577,10 +577,16 @@ const graticuleMat = new THREE.ShaderMaterial({
       // Front hemisphere: full brightness. Back hemisphere: ~40%.
       float t          = clamp(vFacing * 0.5 + 0.5, 0.0, 1.0);
       float brightness = mix(0.40, 1.0, t);
-      // Fade lines to black on the night side so they don't bleed through
-      // as faint bands across the dark globe.
-      float nightFade  = flatLit ? 1.0 : smoothstep(-0.05, 0.05, vNdotL);
-      gl_FragColor = vec4(lineColor * brightness, opacity * nightFade);
+
+      // In flat-lit mode the dim back-hemisphere lines are a nice depth cue.
+      // In day/night mode they must be hidden — depthTest is off so they would
+      // project straight through the opaque globe as visible bands on the dark side.
+      float backFade  = flatLit ? 1.0 : max(sign(vFacing), 0.0);
+
+      // Also fade lines to black on the night side.
+      float nightFade = flatLit ? 1.0 : smoothstep(-0.05, 0.05, vNdotL);
+
+      gl_FragColor = vec4(lineColor * brightness, opacity * backFade * nightFade);
     }
   `,
   transparent: true,
