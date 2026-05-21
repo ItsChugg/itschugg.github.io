@@ -255,6 +255,12 @@ input[type="range"]::-moz-range-thumb {
   cursor: not-allowed;
 }
 
+#panel button.btn-active {
+  color: var(--amber);
+  border-color: var(--amber-dim);
+  background: var(--amber-faint);
+}
+
 /* ── File inputs (hidden) ──────────────────────────────────────────────────── */
 
 #day-tex-input,

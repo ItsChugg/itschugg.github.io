@@ -94,30 +94,32 @@ function rebuildStarField(count) {
 }
 
 // ── Sun visual ────────────────────────────────────────────────────────────────
-// The sun is a constant at the origin — the system's central star.
-// Its position drives physically correct day/night shading per body.
+// The sun sits at a distant position — the system's central star.
+// Its world position drives physically correct day/night shading per body.
 
+const SUN_WORLD_POS = new THREE.Vector3(80, 0, 0);
 const sunGroup = new THREE.Group();
 
 const sunCoreMesh = new THREE.Mesh(
-  new THREE.SphereGeometry(1.5, 32, 32),
+  new THREE.SphereGeometry(4, 32, 32),
   new THREE.MeshBasicMaterial({ color: 0xffffff, depthWrite: false })
 );
 const sunGlow1 = new THREE.Mesh(
-  new THREE.SphereGeometry(2.1, 32, 32),
+  new THREE.SphereGeometry(5.6, 32, 32),
   new THREE.MeshBasicMaterial({
     color: 0xffcc44, transparent: true, opacity: 0.45,
     side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false,
   })
 );
 const sunGlow2 = new THREE.Mesh(
-  new THREE.SphereGeometry(3.5, 32, 32),
+  new THREE.SphereGeometry(9.2, 32, 32),
   new THREE.MeshBasicMaterial({
     color: 0xff8800, transparent: true, opacity: 0.18,
     side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false,
   })
 );
 sunGroup.add(sunCoreMesh, sunGlow1, sunGlow2);
+sunGroup.position.copy(SUN_WORLD_POS);
 scene.add(sunGroup);
 
 function setSunSize(s) {
@@ -759,8 +761,10 @@ function linkBinary(host, guest, separation = 4, period = 60) {
 const bodies = [];
 let selectedBody   = null;
 let editingBody    = null;
+let lockedBody     = null;        // body the camera is locked onto
 let isCapturingGif = false;
 let hasBgTex       = false;
+const _lockPos     = new THREE.Vector3();
 
 function createBody(opts) {
   const b = new Body(opts);
@@ -790,6 +794,9 @@ function removeBody(target) {
     b.dispose();
     bodies.splice(bodies.indexOf(b), 1);
   });
+
+  // Clear camera lock if the locked body was removed
+  if (lockedBody && toRemove.has(lockedBody)) unlockCamera();
 
   selectBody(bodies[0] ?? null);
 }
@@ -832,6 +839,27 @@ function renderBodyTree() {
 
 function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Camera lock-on ────────────────────────────────────────────────────────────
+
+function refreshLockBtn() {
+  const btn = $('lock-camera-btn');
+  if (!btn) return;
+  const isLocked = lockedBody !== null;
+  btn.disabled = !selectedBody;
+  btn.textContent = isLocked ? '⊙ Unlock Camera' : '⊙ Lock Camera';
+  btn.classList.toggle('btn-active', isLocked);
+}
+
+function lockOnto(b) {
+  lockedBody = b;
+  refreshLockBtn();
+}
+
+function unlockCamera() {
+  lockedBody = null;
+  refreshLockBtn();
 }
 
 // ── Add-body form ─────────────────────────────────────────────────────────────
@@ -1006,6 +1034,10 @@ $('new-body-orbit').addEventListener('change', updateAddFormOrbitVisibility);
 
 $('add-body-btn').addEventListener('click', openAddForm);
 $('cancel-add-body').addEventListener('click', closeAddForm);
+$('lock-camera-btn').addEventListener('click', () => {
+  if (lockedBody) unlockCamera();
+  else if (selectedBody) lockOnto(selectedBody);
+});
 
 $('confirm-add-body').addEventListener('click', () => {
   const name      = $('new-body-name').value.trim() || 'New Body';
@@ -1042,6 +1074,7 @@ function selectBody(b) {
   if (editingBody && editingBody !== b) closeEditForm();
   selectedBody = b;
   renderBodyTree();
+  refreshLockBtn();
   if (b) populatePanel(b);
 }
 
@@ -1580,14 +1613,19 @@ function animate() {
   const dt = clock.getDelta();
   for (const b of bodies) {
     // Compute physically correct sun direction from this body's world position
-    // toward the sun at origin (0,0,0). Only needed when day/night is active.
+    // toward the distant sun. Only needed when day/night is active.
     if (!b.globeMat.uniforms.flatLit.value) {
       b.bodyGroup.getWorldPosition(_sunDirTmp);
-      _sunDirTmp.negate().normalize(); // direction: body → sun at origin
+      _sunDirTmp.subVectors(SUN_WORLD_POS, _sunDirTmp).normalize();
       b.globeMat.uniforms.sunDir.value.copy(_sunDirTmp);
       b.graticuleMat.uniforms.sunDir.value.copy(_sunDirTmp);
     }
     b.update(dt);
+  }
+  // Camera lock-on: smoothly track the locked body's world position
+  if (lockedBody) {
+    lockedBody.bodyGroup.getWorldPosition(_lockPos);
+    controls.target.lerp(_lockPos, 0.08);
   }
   controls.update();
   renderer.render(scene, camera);
