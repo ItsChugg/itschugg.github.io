@@ -547,31 +547,40 @@ const graticuleMat = new THREE.ShaderMaterial({
   uniforms: {
     lineColor: { value: new THREE.Color(0x2266cc) },
     opacity:   { value: 0.55 },
+    sunDir:    { value: new THREE.Vector3(1, 0, 0) },
+    flatLit:   { value: true },
   },
   vertexShader: /* glsl */`
+    uniform vec3 sunDir;
     varying float vFacing;
+    varying float vNdotL;
     void main() {
       vec3 worldPos    = (modelMatrix * vec4(position, 1.0)).xyz;
       vec3 worldNormal = normalize(mat3(modelMatrix) * normal);
       vFacing = dot(worldNormal, normalize(cameraPosition - worldPos));
+      vNdotL  = dot(worldNormal, sunDir);
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
   `,
   fragmentShader: /* glsl */`
     uniform vec3  lineColor;
     uniform float opacity;
+    uniform bool  flatLit;
     varying float vFacing;
+    varying float vNdotL;
     void main() {
-      // Front hemisphere: full brightness. Back hemisphere: ~40% — clearly
-      // visible but distinctly darker. Transition is gentle around the silhouette.
-      float t = clamp(vFacing * 0.5 + 0.5, 0.0, 1.0); // [-1,1] → [0,1]
+      // Front hemisphere: full brightness. Back hemisphere: ~40%.
+      float t          = clamp(vFacing * 0.5 + 0.5, 0.0, 1.0);
       float brightness = mix(0.40, 1.0, t);
-      gl_FragColor = vec4(lineColor * brightness, opacity);
+      // Fade lines to black on the night side so they don't bleed through
+      // as faint bands across the dark globe.
+      float nightFade  = flatLit ? 1.0 : smoothstep(-0.05, 0.05, vNdotL);
+      gl_FragColor = vec4(lineColor * brightness, opacity * nightFade);
     }
   `,
   transparent: true,
   depthWrite:  false,
-  depthTest:   false, // let renderOrder + brightness shader handle visual depth
+  depthTest:   false,
 });
 
 function withNormals(geo) { return addSphereNormals(geo); }
@@ -708,9 +717,11 @@ const sunLight = new THREE.DirectionalLight(0xffffff, 3.0);
 sunLight.position.set(5, 0, 0); // Y=0 keeps sun on equatorial plane → vertical terminator
 scene.add(sunLight);
 
-// Keep the globe shader's sunDir in sync with the Three.js light
+// Keep globe + graticule shaders' sunDir in sync with the Three.js light
 function syncSunDir() {
-  globeMat.uniforms.sunDir.value.copy(sunLight.position).normalize();
+  const dir = new THREE.Vector3().copy(sunLight.position).normalize();
+  globeMat.uniforms.sunDir.value.copy(dir);
+  graticuleMat.uniforms.sunDir.value.copy(dir);
 }
 syncSunDir();
 
@@ -982,9 +993,10 @@ $('tilt-fullrange').addEventListener('change', e => {
 // ── Lighting ─────────────────────────────────────────────────────────────────
 
 $('daynight-toggle').addEventListener('change', e => {
-  state.dayNightCycle             = e.target.checked;
-  globeMat.uniforms.flatLit.value = !e.target.checked;
-  $('sun-options').style.display  = e.target.checked ? 'block' : 'none';
+  state.dayNightCycle                  = e.target.checked;
+  globeMat.uniforms.flatLit.value      = !e.target.checked;
+  graticuleMat.uniforms.flatLit.value  = !e.target.checked;
+  $('sun-options').style.display       = e.target.checked ? 'block' : 'none';
 });
 
 $('sun-speed-slider').addEventListener('input', e => {

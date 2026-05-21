@@ -121,24 +121,24 @@
           <label for="daynight-toggle">Day/Night Cycle</label>
           <input type="checkbox" id="daynight-toggle">
         </div>
+        <p class="control-hint">Toggles the day/night cycle.</p>
         <div id="sun-options" style="display:none">
           <div class="control-row">
             <label for="sun-intensity-slider">Sun Intensity</label>
             <input type="range" id="sun-intensity-slider" min="0" max="100" value="75">
             <input type="number" id="sun-intensity-num" class="slider-num" min="0" max="100" value="75">
           </div>
+          <p class="control-hint">Changes the Sun's luminosity.</p>
           <div class="control-row">
-            <label for="sun-color">Light Color</label>
+            <label for="sun-color">Sun Color</label>
             <input type="color" id="sun-color" value="#ffffff">
           </div>
+          <p class="control-hint">Changes the color of light.</p>
         </div>
       </section>
 
       <section>
         <h2>Export</h2>
-        <div class="control-row">
-          <button id="screenshot-btn">Save Screenshot</button>
-        </div>
         <div class="control-row">
           <label for="gif-duration-slider">Duration (s)</label>
           <input type="range" id="gif-duration-slider" min="1" max="12" step="1" value="3">
@@ -159,6 +159,9 @@
         <p class="control-hint">Output size in pixels.</p>
         <div class="control-row">
           <button id="gif-btn">Export GIF</button>
+        </div>
+        <div class="control-row">
+          <button id="screenshot-btn">Export Screenshot</button>
         </div>
         <div id="gif-progress">
           <div id="gif-progress-bar"></div>
@@ -218,13 +221,13 @@
         </div>
       </section>
     </div>
-    <div id="panel-version">v1.20</div>
+    <div id="panel-version">v1.21</div>
   </div>
 
   </div><!-- #globe-layout -->
 
   <script src="vendor/gif.js"></script>
-  <script type="module" src="js/app.js?v=27"></script>
+  <script type="module" src="js/app.js?v=28"></script>
   <script src="/components/navbar/inject-navbar.js" defer></script>
 </body>
 </html>
