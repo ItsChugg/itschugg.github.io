@@ -580,7 +580,7 @@ class Body {
       uniforms: {
         lineColor: { value: new THREE.Color(0x2266cc) },
         opacity:   { value: 0.55 },
-        sunDir:    { value: SUN_DIR.clone() },
+        sunDir:    { value: new THREE.Vector3(1, 0, 0) },
         flatLit:   { value: true },
       },
       vertexShader: GRAT_VERT, fragmentShader: GRAT_FRAG,
