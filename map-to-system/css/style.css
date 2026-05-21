@@ -446,6 +446,53 @@ input[type="color"]::-moz-color-swatch            { border: none; }
 
 #panel.collapsed #panel-version { display: none; }
 
+/* ── Body tree ─────────────────────────────────────────────────────────────── */
+
+.body-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  margin-bottom: 3px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.body-item:hover {
+  border-color: var(--amber-dim);
+  background: var(--bg-hover);
+}
+
+.body-item.active {
+  border-color: var(--amber-dim);
+  background: var(--amber-faint);
+}
+
+.body-type-badge {
+  font-family: var(--font-head);
+  font-size: 0.46rem;
+  letter-spacing: 0.10em;
+  color: var(--text-faint);
+  border: 1px solid var(--amber-dim);
+  padding: 1px 4px;
+  flex-shrink: 0;
+}
+
+.body-item.active .body-type-badge {
+  color: var(--amber);
+}
+
+.body-item-name {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.body-item.active .body-item-name {
+  color: var(--amber);
+}
+
 /* ── GIF progress ──────────────────────────────────────────────────────────── */
 
 #gif-progress {
