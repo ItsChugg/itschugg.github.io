@@ -44,7 +44,7 @@ function buildStarGeo(count) {
     pos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
     pos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
     pos[i*3+2] = r * Math.cos(phi);
-    sizes[i] = 0.4 + Math.random() * 1.6; // relative size multiplier (0.4–2.0)
+    sizes[i] = 0.8 + Math.random() * 1.2; // relative size multiplier (0.8–2.0, min avoids sub-pixel flicker)
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -61,20 +61,21 @@ const starMat = new THREE.ShaderMaterial({
     attribute float size;
     uniform float baseSize;
     void main() {
-      gl_PointSize = size * baseSize;
+      // max(3.0) prevents sub-pixel points from flickering as the camera moves
+      gl_PointSize = max(3.0, size * baseSize);
       gl_Position  = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
   `,
   fragmentShader: `
     uniform vec3 starColor;
     void main() {
+      // Gaussian soft falloff — no hard edge, no binary pop at pixel boundaries
       vec2  uv = gl_PointCoord - 0.5;
-      float d  = length(uv) * 2.0;
-      if (d > 1.0) discard;
-      float core = pow(max(0.0, 1.0 - d * 2.5), 3.0);
-      float halo = pow(1.0 - d, 2.0) * 0.35;
-      float b    = clamp(core + halo, 0.0, 1.0);
-      gl_FragColor = vec4(starColor * b + vec3(b * 0.25), b);
+      float d2 = dot(uv, uv) * 4.0;        // 0 at centre, 1 at sprite edge
+      float b  = exp(-d2 * 2.8);            // smooth gaussian
+      float wb = b * 0.18;                  // faint white bloom on top
+      if (b < 0.004) discard;               // skip truly invisible fragments
+      gl_FragColor = vec4(starColor * b + vec3(wb), b);
     }
   `,
   transparent: true,
