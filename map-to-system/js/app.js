@@ -30,6 +30,7 @@ controls.dampingFactor = 0.06;
 controls.minDistance   = 1.0;
 controls.maxDistance   = 200;
 controls.autoRotate    = false;
+controls.mouseButtons  = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
 
 // ── Background stars ─────────────────────────────────────────────────────────
 
@@ -93,48 +94,92 @@ function rebuildStarField(count) {
   scene.add(bgStars);
 }
 
-// ── Sun visual ────────────────────────────────────────────────────────────────
-// The sun sits at a distant position — the system's central star.
-// Its world position drives physically correct day/night shading per body.
+// ── Star system ───────────────────────────────────────────────────────────────
+// Stars sit at the scene origin (barycenter). Symmetric offsets within sunGroup
+// keep the centroid at (0,0,0) so day/night shading is always correct.
 
-const SUN_WORLD_POS   = new THREE.Vector3(80, 0, 0);
-const globalLightColor = new THREE.Color(1, 1, 1); // color of light cast on all bodies
+const globalLightColor   = new THREE.Color(1, 1, 1); // color of light cast on all bodies
+let   globalDayNight     = false;
+let   globalSunIntensity = 1.5;
+
+// sunGroup is the rotatable container for all stars; lives at scene origin
 const sunGroup = new THREE.Group();
-
-const sunCoreMesh = new THREE.Mesh(
-  new THREE.SphereGeometry(4, 32, 32),
-  new THREE.MeshBasicMaterial({ color: 0xffffff, depthWrite: false })
-);
-const sunGlow1 = new THREE.Mesh(
-  new THREE.SphereGeometry(5.6, 32, 32),
-  new THREE.MeshBasicMaterial({
-    color: 0xffcc44, transparent: true, opacity: 0.45,
-    side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false,
-  })
-);
-const sunGlow2 = new THREE.Mesh(
-  new THREE.SphereGeometry(9.2, 32, 32),
-  new THREE.MeshBasicMaterial({
-    color: 0xff8800, transparent: true, opacity: 0.18,
-    side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false,
-  })
-);
-sunGroup.add(sunCoreMesh, sunGlow1, sunGlow2);
-sunGroup.position.copy(SUN_WORLD_POS);
 scene.add(sunGroup);
 
-function setSunSize(s) {
-  sunCoreMesh.geometry.dispose(); sunCoreMesh.geometry = new THREE.SphereGeometry(s,       32, 32);
-  sunGlow1.geometry.dispose();    sunGlow1.geometry    = new THREE.SphereGeometry(s * 1.4, 32, 32);
-  sunGlow2.geometry.dispose();    sunGlow2.geometry    = new THREE.SphereGeometry(s * 2.3, 32, 32);
+function makeStar(size, colorHex) {
+  const c    = new THREE.Color(colorHex);
+  const core = new THREE.Mesh(
+    new THREE.SphereGeometry(size, 32, 32),
+    new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 1, 1).lerp(c, 0.35), depthWrite: false })
+  );
+  const glow1 = new THREE.Mesh(
+    new THREE.SphereGeometry(size * 1.4, 32, 32),
+    new THREE.MeshBasicMaterial({ color: c.clone(), transparent: true, opacity: 0.45,
+      side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false })
+  );
+  const glow2 = new THREE.Mesh(
+    new THREE.SphereGeometry(size * 2.3, 32, 32),
+    new THREE.MeshBasicMaterial({ color: c.clone().multiplyScalar(0.65), transparent: true, opacity: 0.18,
+      side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false })
+  );
+  const group = new THREE.Group();
+  group.add(core, glow1, glow2);
+  return { group, core, glow1, glow2, size, colorHex };
 }
 
-function setSunColor(hex) {
-  const c = new THREE.Color(hex);
-  sunCoreMesh.material.color.copy(new THREE.Color(1, 1, 1).lerp(c, 0.35));
-  sunGlow1.material.color.copy(c);
-  sunGlow2.material.color.copy(c.clone().multiplyScalar(0.65));
+// Three pre-built star slots; extras start invisible
+const STAR_INIT = [
+  { size: 4, color: '#ffcc44' },
+  { size: 3, color: '#ffcc44' },
+  { size: 3, color: '#ffcc44' },
+];
+const stars = STAR_INIT.map(({ size, color }) => {
+  const s = makeStar(size, color);
+  sunGroup.add(s.group);
+  return s;
+});
+stars[1].group.visible = false;
+stars[2].group.visible = false;
+sunGroup.visible = false; // hidden until user enables
+
+let starCount      = 1;
+let starSeparation = 5;
+
+function getStarOffsets(count, sep) {
+  if (count === 1) return [[0, 0, 0]];
+  if (count === 2) return [[-sep / 2, 0, 0], [sep / 2, 0, 0]];
+  const r = sep / Math.sqrt(3);
+  return [
+    [0, 0, -r],
+    [r * Math.sin((2 * Math.PI) / 3), 0, r * Math.cos((2 * Math.PI) / 3)],
+    [r * Math.sin((4 * Math.PI) / 3), 0, r * Math.cos((4 * Math.PI) / 3)],
+  ];
 }
+
+function applyStarLayout() {
+  const offsets = getStarOffsets(starCount, starSeparation);
+  for (let i = 0; i < 3; i++) {
+    stars[i].group.visible = i < starCount;
+    if (i < starCount) stars[i].group.position.set(...offsets[i]);
+  }
+}
+
+function setStarSize(idx, s) {
+  stars[idx].size = s;
+  stars[idx].core.geometry.dispose();  stars[idx].core.geometry  = new THREE.SphereGeometry(s,       32, 32);
+  stars[idx].glow1.geometry.dispose(); stars[idx].glow1.geometry = new THREE.SphereGeometry(s * 1.4, 32, 32);
+  stars[idx].glow2.geometry.dispose(); stars[idx].glow2.geometry = new THREE.SphereGeometry(s * 2.3, 32, 32);
+}
+
+function setStarColor(idx, hex) {
+  stars[idx].colorHex = hex;
+  const c = new THREE.Color(hex);
+  stars[idx].core.material.color.copy(new THREE.Color(1, 1, 1).lerp(c, 0.35));
+  stars[idx].glow1.material.color.copy(c.clone());
+  stars[idx].glow2.material.color.copy(c.clone().multiplyScalar(0.65));
+}
+
+applyStarLayout(); // set positions for initial count=1
 
 // ── Shader source strings ─────────────────────────────────────────────────────
 
@@ -533,7 +578,6 @@ class Body {
     this.equatorTilt   = 0;
     this.tiltLocked    = true;
     this.fullTiltRange = false;
-    this.dayNightCycle = false;
     this.wireStyle     = 'triangle';
     this.wireDensity   = 5;
     this.dayTexName    = null;
@@ -566,10 +610,10 @@ class Body {
         hasNightTex:    { value: false },
         sunDir:         { value: new THREE.Vector3(1, 0, 0) },
         sunColor:       { value: new THREE.Vector3(globalLightColor.r, globalLightColor.g, globalLightColor.b) },
-        sunIntensity:   { value: 1.5 },
+        sunIntensity:   { value: globalSunIntensity },
         baseColor:      { value: new THREE.Color(0x060618) },
         ambientStr:     { value: 0.18 },
-        flatLit:        { value: true },
+        flatLit:        { value: !globalDayNight },
         nightThreshold: { value: 0.05 },
       },
     });
@@ -584,7 +628,7 @@ class Body {
         lineColor: { value: new THREE.Color(0x2266cc) },
         opacity:   { value: 0.55 },
         sunDir:    { value: new THREE.Vector3(1, 0, 0) },
-        flatLit:   { value: true },
+        flatLit:   { value: !globalDayNight },
       },
       vertexShader: GRAT_VERT, fragmentShader: GRAT_FRAG,
       transparent: true, depthWrite: false, depthTest: false,
@@ -1156,10 +1200,6 @@ function populatePanel(body) {
   $('tilt-fullrange').checked    = body.fullTiltRange;
 
   // ── Lighting ───────────────────────────────────────────────────────────────
-  $('daynight-toggle').checked   = body.dayNightCycle;
-  $('sun-options').style.display = body.dayNightCycle ? 'block' : 'none';
-  const si = Math.round(body.globeMat.uniforms.sunIntensity.value * 50);
-  $('sun-intensity-slider').value = si; $('sun-intensity-num').value = si;
   $('sun-color').value = '#' + globalLightColor.getHexString();
 
   // ── Wireframe ─────────────────────────────────────────────────────────────
@@ -1202,10 +1242,7 @@ selectBody(createBody({ name: 'Planet 1', type: 'planet', orbitType: 'circular',
 lockOnto(bodies[0]); // camera locked onto the first body by default
 applyGlobeTheme(localStorage.getItem('itschu-theme') || 'dark');
 
-// ── Star defaults ─────────────────────────────────────────────────────────────
-
-sunGroup.visible = false;           // star hidden until user enables it
-setSunColor('#ffcc44');             // Sol-like golden glow (syncs mesh with picker)
+// (star is hidden by default; colors already set via makeStar in STAR_INIT)
 
 // ── Panel listeners ───────────────────────────────────────────────────────────
 
@@ -1404,14 +1441,18 @@ $('tilt-fullrange').addEventListener('change', e => {
 // ── Lighting ──────────────────────────────────────────────────────────────────
 
 $('daynight-toggle').addEventListener('change', e => {
-  const b = selectedBody; b.dayNightCycle = e.target.checked;
-  b.globeMat.uniforms.flatLit.value = b.graticuleMat.uniforms.flatLit.value = !e.target.checked;
-  $('sun-options').style.display = e.target.checked ? 'block' : 'none';
+  globalDayNight = e.target.checked;
+  $('sun-options').style.display = globalDayNight ? '' : 'none';
+  for (const b of bodies) {
+    b.globeMat.uniforms.flatLit.value      = !globalDayNight;
+    b.graticuleMat.uniforms.flatLit.value  = !globalDayNight;
+  }
 });
 
 $('sun-intensity-slider').addEventListener('input', e => {
-  selectedBody.globeMat.uniforms.sunIntensity.value = e.target.value / 50;
+  globalSunIntensity = e.target.value / 50;
   $('sun-intensity-num').value = e.target.value;
+  for (const b of bodies) b.globeMat.uniforms.sunIntensity.value = globalSunIntensity;
 });
 
 $('sun-color').addEventListener('input', e => {
@@ -1420,16 +1461,45 @@ $('sun-color').addEventListener('input', e => {
     b.globeMat.uniforms.sunColor.value.set(globalLightColor.r, globalLightColor.g, globalLightColor.b);
 });
 
-// ── Sun visual controls ────────────────────────────────────────────────────────
+// ── Star system controls ──────────────────────────────────────────────────────
 
 $('sun-visible-toggle').addEventListener('change', e => { sunGroup.visible = e.target.checked; });
 
-$('sun-size-slider').addEventListener('input', e => {
-  setSunSize(parseFloat(e.target.value));
-  $('sun-size-num').value = e.target.value;
+function setStarCount(n) {
+  starCount = n;
+  [1, 2, 3].forEach(i => $(`star-count-${i}`).classList.toggle('btn-active', i === n));
+  $('star-sep-row').style.display   = n > 1 ? '' : 'none';
+  $('star-sep-hint').style.display  = n > 1 ? '' : 'none';
+  $('star2-controls').style.display = n >= 2 ? '' : 'none';
+  $('star3-controls').style.display = n >= 3 ? '' : 'none';
+  applyStarLayout();
+}
+
+$('star-count-1').addEventListener('click', () => setStarCount(1));
+$('star-count-2').addEventListener('click', () => setStarCount(2));
+$('star-count-3').addEventListener('click', () => setStarCount(3));
+
+$('star-sep-slider').addEventListener('input', e => {
+  starSeparation = parseFloat(e.target.value);
+  $('star-sep-num').value = e.target.value;
+  applyStarLayout();
 });
 
-$('sun-vis-color').addEventListener('input', e => setSunColor(e.target.value));
+['x', 'y', 'z'].forEach(axis => {
+  $(`star-rot-${axis}-slider`).addEventListener('input', e => {
+    sunGroup.rotation[axis] = THREE.MathUtils.degToRad(parseFloat(e.target.value));
+    $(`star-rot-${axis}-num`).value = e.target.value;
+  });
+});
+
+[0, 1, 2].forEach(i => {
+  const n = i + 1;
+  $(`star${n}-size-slider`).addEventListener('input', e => {
+    setStarSize(i, parseFloat(e.target.value));
+    $(`star${n}-size-num`).value = e.target.value;
+  });
+  $(`star${n}-color`).addEventListener('input', e => setStarColor(i, e.target.value));
+});
 
 // ── Wireframe ─────────────────────────────────────────────────────────────────
 
@@ -1494,8 +1564,7 @@ async function captureGif() {
 
   const savedRotY    = bodies.map(b => b.spinGroup.rotation.y);
   const savedAutoRot = bodies.map(b => b.autoRotate);
-  const savedDayNight= bodies.map(b => b.dayNightCycle);
-  bodies.forEach(b => { b.autoRotate = false; b.dayNightCycle = false; });
+  bodies.forEach(b => { b.autoRotate = false; });
 
   const offCanvas = Object.assign(document.createElement('canvas'), { width: gifSize, height: gifSize });
   const offCtx    = offCanvas.getContext('2d');
@@ -1549,7 +1618,7 @@ async function captureGif() {
   gif.on('progress', p => { $('gif-progress-bar').style.width = (50 + p*50) + '%'; $('gif-progress-text').textContent = 'Encoding…'; });
   gif.on('finished', blob => {
     Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'system.gif' }).click();
-    bodies.forEach((b, bi) => { b.spinGroup.rotation.y = savedRotY[bi]; b.autoRotate = savedAutoRot[bi]; b.dayNightCycle = savedDayNight[bi]; });
+    bodies.forEach((b, bi) => { b.spinGroup.rotation.y = savedRotY[bi]; b.autoRotate = savedAutoRot[bi]; });
     isCapturingGif = false; $('gif-btn').disabled = false;
     $('gif-progress').style.display = 'none'; $('gif-progress-bar').style.width = '0%';
   });
@@ -1608,9 +1677,15 @@ wireSliderNum('orbit-inclination-slider',  'orbit-inclination-num');
 wireSliderNum('orbit-eccentricity-slider', 'orbit-eccentricity-num');
 wireSliderNum('orbit-binary-sep-slider',   'orbit-binary-sep-num');
 wireSliderNum('orbit-binary-period-slider','orbit-binary-period-num');
-wireSliderNum('sun-size-slider',           'sun-size-num');
 wireSliderNum('star-count-slider',         'star-count-num');
 wireSliderNum('star-size-slider',          'star-size-num');
+wireSliderNum('star-sep-slider',           'star-sep-num');
+wireSliderNum('star-rot-x-slider',         'star-rot-x-num');
+wireSliderNum('star-rot-y-slider',         'star-rot-y-num');
+wireSliderNum('star-rot-z-slider',         'star-rot-z-num');
+wireSliderNum('star1-size-slider',         'star1-size-num');
+wireSliderNum('star2-size-slider',         'star2-size-num');
+wireSliderNum('star3-size-slider',         'star3-size-num');
 
 // ── Render loop ───────────────────────────────────────────────────────────────
 
@@ -1621,11 +1696,10 @@ function animate() {
   if (isCapturingGif) return;
   const dt = clock.getDelta();
   for (const b of bodies) {
-    // Compute physically correct sun direction from this body's world position
-    // toward the distant sun. Only needed when day/night is active.
+    // Sun direction: from body's world position toward origin (star barycenter).
     if (!b.globeMat.uniforms.flatLit.value) {
       b.bodyGroup.getWorldPosition(_sunDirTmp);
-      _sunDirTmp.subVectors(SUN_WORLD_POS, _sunDirTmp).normalize();
+      _sunDirTmp.negate().normalize();
       b.globeMat.uniforms.sunDir.value.copy(_sunDirTmp);
       b.graticuleMat.uniforms.sunDir.value.copy(_sunDirTmp);
     }

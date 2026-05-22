@@ -199,35 +199,92 @@
             <label for="daynight-toggle">Day/Night Cycle</label>
             <input type="checkbox" id="daynight-toggle">
           </div>
-          <p class="control-hint">Toggles the day/night cycle.</p>
+          <p class="control-hint">Global — applies to all bodies.</p>
           <div id="sun-options" style="display:none">
             <div class="control-row">
-              <label for="sun-intensity-slider">Sun Intensity</label>
+              <label for="sun-intensity-slider">Intensity</label>
               <input type="range" id="sun-intensity-slider" min="0" max="100" value="75">
               <input type="number" id="sun-intensity-num" class="slider-num" min="0" max="100" value="75">
             </div>
-            <p class="control-hint">Changes the Sun's luminosity.</p>
+            <p class="control-hint">Luminosity of light on all bodies.</p>
             <div class="control-row">
               <label for="sun-color">Light Color</label>
               <input type="color" id="sun-color" value="#ffffff">
             </div>
             <p class="control-hint">Tint of light cast on all planets.</p>
           </div>
+
           <div class="control-row" style="margin-top:6px">
-            <label for="sun-visible-toggle">Show Star</label>
+            <label for="sun-visible-toggle">Show Stars</label>
             <input type="checkbox" id="sun-visible-toggle">
           </div>
-          <p class="control-hint">Toggle the central star's visibility.</p>
+          <p class="control-hint">Toggle the central star(s).</p>
+
           <div class="control-row">
-            <label for="sun-size-slider">Star Size</label>
-            <input type="range" id="sun-size-slider" min="0.5" max="15" step="0.5" value="4">
-            <input type="number" id="sun-size-num" class="slider-num" min="0.5" max="15" step="0.5" value="4">
+            <label>Star Count</label>
+            <div style="display:flex;gap:4px;flex:1">
+              <button id="star-count-1" class="half-btn btn-active">1</button>
+              <button id="star-count-2" class="half-btn">2</button>
+              <button id="star-count-3" class="half-btn">3</button>
+            </div>
+          </div>
+          <div class="control-row" id="star-sep-row" style="display:none">
+            <label for="star-sep-slider">Separation</label>
+            <input type="range" id="star-sep-slider" min="1" max="20" step="0.5" value="5">
+            <input type="number" id="star-sep-num" class="slider-num" min="1" max="20" step="0.5" value="5">
+          </div>
+          <p class="control-hint" id="star-sep-hint" style="display:none">Distance between stars.</p>
+
+          <div class="control-row">
+            <label for="star-rot-x-slider">Rotation X</label>
+            <input type="range" id="star-rot-x-slider" min="-180" max="180" step="1" value="0">
+            <input type="number" id="star-rot-x-num" class="slider-num" min="-180" max="180" step="1" value="0">
           </div>
           <div class="control-row">
-            <label for="sun-vis-color">Star Color</label>
-            <input type="color" id="sun-vis-color" value="#ffcc44">
+            <label for="star-rot-y-slider">Rotation Y</label>
+            <input type="range" id="star-rot-y-slider" min="-180" max="180" step="1" value="0">
+            <input type="number" id="star-rot-y-num" class="slider-num" min="-180" max="180" step="1" value="0">
           </div>
-          <p class="control-hint">Visual color of the star itself.</p>
+          <div class="control-row">
+            <label for="star-rot-z-slider">Rotation Z</label>
+            <input type="range" id="star-rot-z-slider" min="-180" max="180" step="1" value="0">
+            <input type="number" id="star-rot-z-num" class="slider-num" min="-180" max="180" step="1" value="0">
+          </div>
+          <p class="control-hint">Orientation of the star group.</p>
+
+          <div class="control-row">
+            <label for="star1-size-slider">Star 1 Size</label>
+            <input type="range" id="star1-size-slider" min="0.5" max="15" step="0.5" value="4">
+            <input type="number" id="star1-size-num" class="slider-num" min="0.5" max="15" step="0.5" value="4">
+          </div>
+          <div class="control-row">
+            <label for="star1-color">Star 1 Color</label>
+            <input type="color" id="star1-color" value="#ffcc44">
+          </div>
+
+          <div id="star2-controls" style="display:none">
+            <div class="control-row">
+              <label for="star2-size-slider">Star 2 Size</label>
+              <input type="range" id="star2-size-slider" min="0.5" max="15" step="0.5" value="3">
+              <input type="number" id="star2-size-num" class="slider-num" min="0.5" max="15" step="0.5" value="3">
+            </div>
+            <div class="control-row">
+              <label for="star2-color">Star 2 Color</label>
+              <input type="color" id="star2-color" value="#ffcc44">
+            </div>
+          </div>
+
+          <div id="star3-controls" style="display:none">
+            <div class="control-row">
+              <label for="star3-size-slider">Star 3 Size</label>
+              <input type="range" id="star3-size-slider" min="0.5" max="15" step="0.5" value="3">
+              <input type="number" id="star3-size-num" class="slider-num" min="0.5" max="15" step="0.5" value="3">
+            </div>
+            <div class="control-row">
+              <label for="star3-color">Star 3 Color</label>
+              <input type="color" id="star3-color" value="#ffcc44">
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -405,13 +462,13 @@
         </div>
       </section>
     </div>
-    <div id="panel-version">v2.6</div>
+    <div id="panel-version">v2.7</div>
   </div>
 
   </div><!-- #globe-layout -->
 
   <script src="vendor/gif.js"></script>
-  <script type="module" src="js/app.js?v=49"></script>
+  <script type="module" src="js/app.js?v=50"></script>
   <script src="/components/navbar/inject-navbar.js" defer></script>
 </body>
 </html>
