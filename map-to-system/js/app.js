@@ -143,7 +143,7 @@ stars[2].group.visible = false;
 sunGroup.visible = false; // hidden until user enables
 
 let starCount      = 1;
-let starSeparation = 5;
+let starSeparation = 15;
 
 function getStarOffsets(count, sep) {
   if (count === 1) return [[0, 0, 0]];
@@ -1238,7 +1238,7 @@ new MutationObserver(() => applyGlobeTheme(localStorage.getItem('itschu-theme') 
 
 // ── Default body ──────────────────────────────────────────────────────────────
 
-selectBody(createBody({ name: 'Planet 1', type: 'planet', orbitType: 'circular', orbitRadius: 5, orbitPeriod: 120 }));
+selectBody(createBody({ name: 'Planet 1', type: 'planet', orbitType: 'circular', orbitRadius: 40, orbitPeriod: 120 }));
 lockOnto(bodies[0]); // camera locked onto the first body by default
 applyGlobeTheme(localStorage.getItem('itschu-theme') || 'dark');
 
