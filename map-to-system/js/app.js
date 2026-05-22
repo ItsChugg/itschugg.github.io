@@ -149,12 +149,13 @@ let starSeparation = 15;
 function getStarOffsets(count, sep) {
   if (count === 1) return [[0, 0, 0]];
   if (count === 2) return [[-sep / 2, 0, 0], [sep / 2, 0, 0]];
+  // Equilateral triangle — circumradius = sep/√3, angles 0°/120°/240°
+  // Centroid of all three points is exactly (0, 0, 0)
   const r = sep / Math.sqrt(3);
-  return [
-    [0, 0, -r],
-    [r * Math.sin((2 * Math.PI) / 3), 0, r * Math.cos((2 * Math.PI) / 3)],
-    [r * Math.sin((4 * Math.PI) / 3), 0, r * Math.cos((4 * Math.PI) / 3)],
-  ];
+  return [0, 1, 2].map(i => {
+    const a = (i * 2 * Math.PI) / 3;
+    return [r * Math.cos(a), 0, r * Math.sin(a)];
+  });
 }
 
 function applyStarLayout() {
@@ -1714,6 +1715,8 @@ function animate() {
     camera.position.add(_lockDelta);                  // move camera by same delta
   }
   controls.update();
+  // Keep background stars centred on the camera so they never appear to move
+  bgStars.position.copy(camera.position);
   renderer.render(scene, camera);
 }
 
