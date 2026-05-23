@@ -102,6 +102,8 @@ function rebuildStarField(count) {
 const globalLightColor   = new THREE.Color(1, 1, 1); // color of light cast on all bodies
 let   globalDayNight     = false;
 let   globalSunIntensity = 1.5;
+let   globalTimeWarp     = 1.0;
+let   globalShowTrails   = false;
 
 // sunGroup is the rotatable container for all stars; lives at scene origin
 const sunGroup = new THREE.Group();
@@ -585,6 +587,17 @@ class Body {
     this.dayTexName    = null;
     this.nightTexName  = null;
 
+    // ── Ring state ───────────────────────────────────────────────────────────
+    this.ringEnabled     = false;
+    this.ringInnerRadius = 1.5;
+    this.ringOuterRadius = 2.5;
+    this.ringTilt        = 0;      // degrees, extra tilt beyond equatorial plane
+    this.ringOpacity     = 0.6;
+    this.ringColor       = '#aaaaaa';
+
+    // ── Trail state ──────────────────────────────────────────────────────────
+    this.trailLine = null;
+
     this._syncOrbitSpeed();
 
     // ── Scene graph ───────────────────────────────────────────────────────────
@@ -664,15 +677,95 @@ class Body {
 
     this._wp = new THREE.Vector3();
 
+    // ── Ring mesh ─────────────────────────────────────────────────────────────
+    // RingGeometry lies in XY plane, so rotate -PI/2 around X to lay it flat in XZ
+    this.ringMesh = new THREE.Mesh(
+      new THREE.RingGeometry(this.ringInnerRadius, this.ringOuterRadius, 128),
+      new THREE.MeshBasicMaterial({
+        color: new THREE.Color(this.ringColor),
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: this.ringOpacity,
+        depthWrite: false,
+      })
+    );
+    this.ringMesh.rotation.x = -Math.PI / 2; // lay flat in XZ plane
+    this.ringMesh.visible = false;
+    this.bodyGroup.add(this.ringMesh);
+
     // ── Attach ────────────────────────────────────────────────────────────────
     const pg = parent ? parent.bodyGroup : scene;
     pg.add(this.orbitGroup);
+
+    // Build initial trail (after orbitGroup is attached so parent chain is set)
+    this._buildTrail();
   }
 
   _syncOrbitSpeed() {
     this._orbitSpeed = this.orbitPeriod > 0
       ? (2 * Math.PI) / (this.orbitPeriod * 60)
       : 0;
+  }
+
+  // ── Trail ─────────────────────────────────────────────────────────────────
+  // Draws the static orbit path line in the parent's local space.
+  _buildTrail() {
+    // Remove old trail
+    if (this.trailLine) {
+      const pg = this.parent ? this.parent.bodyGroup : scene;
+      pg.remove(this.trailLine);
+      this.trailLine.geometry.dispose();
+      this.trailLine.material.dispose();
+      this.trailLine = null;
+    }
+
+    if (this.orbitType === 'centered' || this.orbitRadius <= 0) return;
+
+    const N = 128;
+    const points = [];
+
+    if (this.orbitType === 'circular' || this.orbitType === 'binary') {
+      for (let i = 0; i <= N; i++) {
+        const a = (i / N) * Math.PI * 2;
+        points.push(new THREE.Vector3(
+          this.orbitRadius * Math.cos(a), 0, this.orbitRadius * Math.sin(a)
+        ));
+      }
+    } else if (this.orbitType === 'elliptical') {
+      const a = this.orbitRadius;
+      const e = this.orbitEccentricity;
+      const b = a * Math.sqrt(Math.max(0, 1 - e * e));
+      for (let i = 0; i <= N; i++) {
+        const angle = (i / N) * Math.PI * 2;
+        points.push(new THREE.Vector3(
+          a * Math.cos(angle) - a * e, 0, b * Math.sin(angle)
+        ));
+      }
+    }
+
+    if (points.length === 0) return;
+
+    const geo = new THREE.BufferGeometry().setFromPoints(points);
+    const mat = new THREE.LineBasicMaterial({
+      color: 0x334455,
+      transparent: true,
+      opacity: 0.5,
+      depthWrite: false,
+    });
+    this.trailLine = new THREE.Line(geo, mat);
+    this.trailLine.rotation.z = THREE.MathUtils.degToRad(this.orbitInclination);
+    this.trailLine.visible = globalShowTrails;
+
+    const pg = this.parent ? this.parent.bodyGroup : scene;
+    pg.add(this.trailLine);
+  }
+
+  // ── Ring ──────────────────────────────────────────────────────────────────
+  _applyRingGeometry() {
+    this.ringMesh.geometry.dispose();
+    this.ringMesh.geometry = new THREE.RingGeometry(
+      this.ringInnerRadius, this.ringOuterRadius, 128
+    );
   }
 
   applyTilts() {
@@ -698,13 +791,15 @@ class Body {
   }
 
   update(dt) {
+    const wdt = dt * globalTimeWarp; // scaled delta for orbital motion + rotation
+
     switch (this.orbitType) {
       case 'circular':
-        this.orbitGroup.rotation.y += this._orbitSpeed * dt * 60;
+        this.orbitGroup.rotation.y += this._orbitSpeed * wdt * 60;
         break;
 
       case 'elliptical': {
-        this._orbitAngle += this._orbitSpeed * dt * 60;
+        this._orbitAngle += this._orbitSpeed * wdt * 60;
         const a = this.orbitRadius;
         const e = this.orbitEccentricity;
         const b = a * Math.sqrt(Math.max(0, 1 - e * e));
@@ -717,10 +812,10 @@ class Body {
       case 'binary':
         if (this.binaryIsHost) {
           // Outer orbit of the barycenter around the parent star
-          this.orbitGroup.rotation.y += this._orbitSpeed * dt * 60;
+          this.orbitGroup.rotation.y += this._orbitSpeed * wdt * 60;
           // Mutual binary orbit
           const binSpeed = (2 * Math.PI) / (this.binaryPeriod * 60);
-          this._binarySpinGroup.rotation.y += binSpeed * dt * 60;
+          this._binarySpinGroup.rotation.y += binSpeed * wdt * 60;
         }
         // Guest body: no independent orbit; the host drives everything
         break;
@@ -729,7 +824,7 @@ class Body {
     }
 
     if (this.autoRotate)
-      this.spinGroup.rotation.y += this.rotateSpeed * dt * 60;
+      this.spinGroup.rotation.y += this.rotateSpeed * wdt * 60;
 
     if (this.rimGlow.visible) {
       this.rimGlow.getWorldPosition(this._wp);
@@ -743,15 +838,24 @@ class Body {
     this.globeMat.dispose();
     this.graticuleMat.dispose();
     this.rimMat.dispose();
+    this.ringMesh.material.dispose();
     this.atmosphere.material.dispose();
     this.mesh.geometry.dispose();
     this.wireframe.geometry.dispose();
     this.atmosphere.geometry.dispose();
     this.rimGlow.geometry.dispose();
+    this.ringMesh.geometry.dispose();
+
+    if (this.trailLine) {
+      this.trailLine.geometry.dispose();
+      this.trailLine.material.dispose();
+      // trail is removed with orbitGroup's parent below
+    }
 
     if (this.orbitType === 'binary' && !this.binaryIsHost) return; // host removal handles scene detach
     const pg = this.parent ? this.parent.bodyGroup : scene;
     pg.remove(this.orbitGroup);
+    if (this.trailLine) pg.remove(this.trailLine);
   }
 }
 
@@ -902,11 +1006,13 @@ function refreshLockBtn() {
 
 function lockOnto(b) {
   lockedBody = b;
+  controls.enablePan = false;
   refreshLockBtn();
 }
 
 function unlockCamera() {
   lockedBody = null;
+  controls.enablePan = true;
   refreshLockBtn();
 }
 
@@ -1210,6 +1316,19 @@ function populatePanel(body) {
   $('wire-density').value       = body.wireDensity;
   $('wire-density-num').value   = body.wireDensity;
 
+  // ── Rings ─────────────────────────────────────────────────────────────────
+  $('ring-enabled').checked            = body.ringEnabled;
+  $('ring-params').style.display       = body.ringEnabled ? '' : 'none';
+  $('ring-inner-slider').value         = body.ringInnerRadius;
+  $('ring-inner-num').value            = body.ringInnerRadius;
+  $('ring-outer-slider').value         = body.ringOuterRadius;
+  $('ring-outer-num').value            = body.ringOuterRadius;
+  $('ring-tilt-slider').value          = body.ringTilt;
+  $('ring-tilt-num').value             = body.ringTilt;
+  $('ring-opacity-slider').value       = Math.round(body.ringOpacity * 100);
+  $('ring-opacity-num').value          = Math.round(body.ringOpacity * 100);
+  $('ring-color').value                = body.ringColor;
+
   // ── Experimental ──────────────────────────────────────────────────────────
   const amb = Math.round(body.globeMat.uniforms.ambientStr.value / 0.6 * 100);
   $('ambient-slider').value      = amb; $('ambient-num').value = amb;
@@ -1328,6 +1447,22 @@ $('body-size-slider').addEventListener('input', e => {
 
 // ── Orbit ─────────────────────────────────────────────────────────────────────
 
+$('time-warp-slider').addEventListener('input', e => {
+  globalTimeWarp = parseFloat(e.target.value);
+  $('time-warp-num').value = globalTimeWarp;
+});
+$('time-warp-num').addEventListener('input', e => {
+  globalTimeWarp = parseFloat(e.target.value);
+  $('time-warp-slider').value = globalTimeWarp;
+});
+
+$('show-trails-toggle').addEventListener('change', e => {
+  globalShowTrails = e.target.checked;
+  for (const b of bodies) {
+    if (b.trailLine) b.trailLine.visible = globalShowTrails;
+  }
+});
+
 $('orbit-type').addEventListener('change', e => {
   const b = selectedBody, newType = e.target.value;
   b.orbitType = newType;
@@ -1347,6 +1482,7 @@ $('orbit-type').addEventListener('change', e => {
   $('orbit-params').style.display           = (newType !== 'centered') ? '' : 'none';
   $('orbit-eccentricity-row').style.display  = (newType === 'elliptical') ? '' : 'none';
   $('orbit-binary-params').style.display     = 'none';
+  b._buildTrail();
 });
 
 $('orbit-radius-slider').addEventListener('input', e => {
@@ -1359,6 +1495,7 @@ $('orbit-radius-slider').addEventListener('input', e => {
   }
   if (b.orbitType === 'binary' && b.binaryIsHost)
     b.bodyGroup.position.x = b.orbitRadius;
+  b._buildTrail();
 });
 
 $('orbit-period-slider').addEventListener('input', e => {
@@ -1373,11 +1510,14 @@ $('orbit-inclination-slider').addEventListener('input', e => {
   b.orbitInclination = parseFloat(e.target.value);
   b.orbitGroup.rotation.z = THREE.MathUtils.degToRad(b.orbitInclination);
   $('orbit-inclination-num').value = e.target.value;
+  b._buildTrail();
 });
 
 $('orbit-eccentricity-slider').addEventListener('input', e => {
-  selectedBody.orbitEccentricity = e.target.value / 99;
+  const b = selectedBody;
+  b.orbitEccentricity = e.target.value / 99;
   $('orbit-eccentricity-num').value = e.target.value;
+  b._buildTrail();
 });
 
 $('orbit-binary-sep-slider').addEventListener('input', e => {
@@ -1472,8 +1612,10 @@ function setStarCount(n) {
   [1, 2, 3].forEach(i => $(`star-count-${i}`).classList.toggle('btn-active', i === n));
   $('star-sep-row').style.display   = n > 1 ? '' : 'none';
   $('star-sep-hint').style.display  = n > 1 ? '' : 'none';
-  $('star2-controls').style.display = n >= 2 ? '' : 'none';
-  $('star3-controls').style.display = n >= 3 ? '' : 'none';
+  $('star2-size-row').style.display = n >= 2 ? '' : 'none';
+  $('star3-size-row').style.display = n >= 3 ? '' : 'none';
+  $('star2-color').style.display    = n >= 2 ? '' : 'none';
+  $('star3-color').style.display    = n >= 3 ? '' : 'none';
   applyStarLayout();
 }
 
@@ -1501,6 +1643,73 @@ $('star-sep-slider').addEventListener('input', e => {
     $(`star${n}-size-num`).value = e.target.value;
   });
   $(`star${n}-color`).addEventListener('input', e => setStarColor(i, e.target.value));
+});
+
+// ── Rings ─────────────────────────────────────────────────────────────────────
+
+$('ring-enabled').addEventListener('change', e => {
+  const b = selectedBody;
+  b.ringEnabled = e.target.checked;
+  b.ringMesh.visible = b.ringEnabled;
+  $('ring-params').style.display = b.ringEnabled ? '' : 'none';
+});
+
+$('ring-inner-slider').addEventListener('input', e => {
+  const b = selectedBody;
+  b.ringInnerRadius = parseFloat(e.target.value);
+  $('ring-inner-num').value = e.target.value;
+  b._applyRingGeometry();
+});
+$('ring-inner-num').addEventListener('input', e => {
+  const b = selectedBody;
+  b.ringInnerRadius = parseFloat(e.target.value);
+  $('ring-inner-slider').value = e.target.value;
+  b._applyRingGeometry();
+});
+
+$('ring-outer-slider').addEventListener('input', e => {
+  const b = selectedBody;
+  b.ringOuterRadius = parseFloat(e.target.value);
+  $('ring-outer-num').value = e.target.value;
+  b._applyRingGeometry();
+});
+$('ring-outer-num').addEventListener('input', e => {
+  const b = selectedBody;
+  b.ringOuterRadius = parseFloat(e.target.value);
+  $('ring-outer-slider').value = e.target.value;
+  b._applyRingGeometry();
+});
+
+$('ring-tilt-slider').addEventListener('input', e => {
+  const b = selectedBody;
+  b.ringTilt = parseFloat(e.target.value);
+  $('ring-tilt-num').value = e.target.value;
+  b.ringMesh.rotation.x = -Math.PI / 2 + THREE.MathUtils.degToRad(b.ringTilt);
+});
+$('ring-tilt-num').addEventListener('input', e => {
+  const b = selectedBody;
+  b.ringTilt = parseFloat(e.target.value);
+  $('ring-tilt-slider').value = e.target.value;
+  b.ringMesh.rotation.x = -Math.PI / 2 + THREE.MathUtils.degToRad(b.ringTilt);
+});
+
+$('ring-opacity-slider').addEventListener('input', e => {
+  const b = selectedBody;
+  b.ringOpacity = e.target.value / 100;
+  $('ring-opacity-num').value = e.target.value;
+  b.ringMesh.material.opacity = b.ringOpacity;
+});
+$('ring-opacity-num').addEventListener('input', e => {
+  const b = selectedBody;
+  b.ringOpacity = e.target.value / 100;
+  $('ring-opacity-slider').value = e.target.value;
+  b.ringMesh.material.opacity = b.ringOpacity;
+});
+
+$('ring-color').addEventListener('input', e => {
+  const b = selectedBody;
+  b.ringColor = e.target.value;
+  b.ringMesh.material.color.set(e.target.value);
 });
 
 // ── Wireframe ─────────────────────────────────────────────────────────────────
@@ -1688,6 +1897,11 @@ wireSliderNum('star-rot-z-slider',         'star-rot-z-num');
 wireSliderNum('star1-size-slider',         'star1-size-num');
 wireSliderNum('star2-size-slider',         'star2-size-num');
 wireSliderNum('star3-size-slider',         'star3-size-num');
+wireSliderNum('time-warp-slider',          'time-warp-num');
+wireSliderNum('ring-inner-slider',         'ring-inner-num');
+wireSliderNum('ring-outer-slider',         'ring-outer-num');
+wireSliderNum('ring-tilt-slider',          'ring-tilt-num');
+wireSliderNum('ring-opacity-slider',       'ring-opacity-num');
 
 // ── Render loop ───────────────────────────────────────────────────────────────
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Map to System — itschu.gg</title>
-  <link rel="stylesheet" href="css/style.css?v=8">
+  <link rel="stylesheet" href="css/style.css?v=10">
   <link rel="stylesheet" href="/components/themes/theme.css?v=5">
   <script type="importmap">
   {
@@ -134,6 +134,17 @@
         <h2 class="collapsible-header open">Orbit <span class="exp-chevron">▶</span></h2>
         <div class="collapsible-body open">
           <div class="control-row">
+            <label for="time-warp-slider">Speed</label>
+            <input type="range" id="time-warp-slider" min="0" max="5" step="0.1" value="1">
+            <input type="number" id="time-warp-num" class="slider-num" min="0" max="5" step="0.1" value="1">
+          </div>
+          <p class="control-hint">Simulation speed — 0 = paused, 1× = normal, 5× = fast.</p>
+          <div class="control-row">
+            <label for="show-trails-toggle">Show Trails</label>
+            <input type="checkbox" id="show-trails-toggle">
+          </div>
+          <p class="control-hint">Draw the orbital path of each body.</p>
+          <div class="control-row">
             <label for="orbit-type">Type</label>
             <select id="orbit-type">
               <option value="centered">Centered</option>
@@ -252,37 +263,29 @@
           </div>
           <p class="control-hint">Orientation of the star group.</p>
 
-          <div class="control-row">
+          <!-- Sizes grouped together -->
+          <div class="control-row" id="star1-size-row">
             <label for="star1-size-slider">Star α Size</label>
             <input type="range" id="star1-size-slider" min="0.5" max="15" step="0.5" value="4">
             <input type="number" id="star1-size-num" class="slider-num" min="0.5" max="15" step="0.5" value="4">
           </div>
+          <div class="control-row" id="star2-size-row" style="display:none">
+            <label for="star2-size-slider">Star β Size</label>
+            <input type="range" id="star2-size-slider" min="0.5" max="15" step="0.5" value="3">
+            <input type="number" id="star2-size-num" class="slider-num" min="0.5" max="15" step="0.5" value="3">
+          </div>
+          <div class="control-row" id="star3-size-row" style="display:none">
+            <label for="star3-size-slider">Star γ Size</label>
+            <input type="range" id="star3-size-slider" min="0.5" max="15" step="0.5" value="3">
+            <input type="number" id="star3-size-num" class="slider-num" min="0.5" max="15" step="0.5" value="3">
+          </div>
+          <!-- Colors all in one row -->
           <div class="control-row">
-            <label for="star1-color">Star α Color</label>
-            <input type="color" id="star1-color" value="#ffcc44">
-          </div>
-
-          <div id="star2-controls" style="display:none">
-            <div class="control-row">
-              <label for="star2-size-slider">Star β Size</label>
-              <input type="range" id="star2-size-slider" min="0.5" max="15" step="0.5" value="3">
-              <input type="number" id="star2-size-num" class="slider-num" min="0.5" max="15" step="0.5" value="3">
-            </div>
-            <div class="control-row">
-              <label for="star2-color">Star β Color</label>
-              <input type="color" id="star2-color" value="#ffcc44">
-            </div>
-          </div>
-
-          <div id="star3-controls" style="display:none">
-            <div class="control-row">
-              <label for="star3-size-slider">Star γ Size</label>
-              <input type="range" id="star3-size-slider" min="0.5" max="15" step="0.5" value="3">
-              <input type="number" id="star3-size-num" class="slider-num" min="0.5" max="15" step="0.5" value="3">
-            </div>
-            <div class="control-row">
-              <label for="star3-color">Star γ Color</label>
-              <input type="color" id="star3-color" value="#ffcc44">
+            <label>Colors</label>
+            <div style="display:flex;gap:6px;flex:1;align-items:center">
+              <input type="color" id="star1-color" value="#ffcc44" title="Star α">
+              <input type="color" id="star2-color" value="#ffcc44" title="Star β" style="display:none">
+              <input type="color" id="star3-color" value="#ffcc44" title="Star γ" style="display:none">
             </div>
           </div>
         </div>
@@ -402,6 +405,44 @@
       </section>
 
       <section>
+        <h2 class="collapsible-header open">Rings <span class="exp-chevron">▶</span></h2>
+        <div class="collapsible-body open">
+          <div class="control-row">
+            <label for="ring-enabled">Enable</label>
+            <input type="checkbox" id="ring-enabled">
+          </div>
+          <div id="ring-params" style="display:none">
+            <div class="control-row">
+              <label for="ring-inner-slider">Inner</label>
+              <input type="range" id="ring-inner-slider" min="0.5" max="10" step="0.1" value="1.5">
+              <input type="number" id="ring-inner-num" class="slider-num" min="0.5" max="10" step="0.1" value="1.5">
+            </div>
+            <p class="control-hint">Inner edge radius.</p>
+            <div class="control-row">
+              <label for="ring-outer-slider">Outer</label>
+              <input type="range" id="ring-outer-slider" min="1" max="15" step="0.1" value="2.5">
+              <input type="number" id="ring-outer-num" class="slider-num" min="1" max="15" step="0.1" value="2.5">
+            </div>
+            <p class="control-hint">Outer edge radius.</p>
+            <div class="control-row">
+              <label for="ring-tilt-slider">Tilt</label>
+              <input type="range" id="ring-tilt-slider" min="-90" max="90" step="1" value="0">
+              <input type="number" id="ring-tilt-num" class="slider-num" min="-90" max="90" step="1" value="0">
+            </div>
+            <div class="control-row">
+              <label for="ring-opacity-slider">Opacity</label>
+              <input type="range" id="ring-opacity-slider" min="0" max="100" step="1" value="60">
+              <input type="number" id="ring-opacity-num" class="slider-num" min="0" max="100" step="1" value="60">
+            </div>
+            <div class="control-row">
+              <label for="ring-color">Color</label>
+              <input type="color" id="ring-color" value="#aaaaaa">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
         <h2 class="collapsible-header open">Wireframe <span class="exp-chevron">▶</span></h2>
         <div class="collapsible-body open">
           <div class="control-row">
@@ -468,7 +509,7 @@
   </div><!-- #globe-layout -->
 
   <script src="vendor/gif.js"></script>
-  <script type="module" src="js/app.js?v=53"></script>
+  <script type="module" src="js/app.js?v=55"></script>
   <script src="/components/navbar/inject-navbar.js" defer></script>
 </body>
 </html>
