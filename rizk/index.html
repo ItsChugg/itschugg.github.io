@@ -1,61 +1,137 @@
 <!doctype html>
 <html>
-    <head>
-        <meta charset="utf-8"/>
-        <title>Rizk</title>
-        <script>
-            // Stub out the Facebook ExternalInterface bridge the SWF calls on startup.
-            // Without these the Flash crashes before the splash screen renders.
-            window.P3_FB_Init        = function() { return '{"status":"not_authorized"}'; };
-            window.P3_FB_Login       = function() { return '{"status":"not_authorized"}'; };
-            window.P3_FB_Logout      = function() { return '{}'; };
-            window.P3_FB_GetStatus   = function() { return '{"status":"not_authorized"}'; };
-            window.P3_FB_GetUserInfo = function() { return null; };
-            window.P3_FB_PostToWall  = function() { return '{}'; };
-            window.P3_FB_IsLoggedIn  = function() { return false; };
-            window.p3_fb_init        = window.P3_FB_Init;
-            window.p3_fb_login       = window.P3_FB_Login;
-            window.p3_fb_logout      = window.P3_FB_Logout;
-            window.p3_fb_getStatus   = window.P3_FB_GetStatus;
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Rizk — Science Museum</title>
+    <script>
+      // Stub out the Facebook ExternalInterface bridge the SWF calls on startup.
+      // Without these the Flash crashes before the splash screen renders.
+      window.P3_FB_Init        = function() { return '{"status":"not_authorized"}'; };
+      window.P3_FB_Login       = function() { return '{"status":"not_authorized"}'; };
+      window.P3_FB_Logout      = function() { return '{}'; };
+      window.P3_FB_GetStatus   = function() { return '{"status":"not_authorized"}'; };
+      window.P3_FB_GetUserInfo = function() { return null; };
+      window.P3_FB_PostToWall  = function() { return '{}'; };
+      window.P3_FB_IsLoggedIn  = function() { return false; };
+      window.p3_fb_init        = window.P3_FB_Init;
+      window.p3_fb_login       = window.P3_FB_Login;
+      window.p3_fb_logout      = window.P3_FB_Logout;
+      window.p3_fb_getStatus   = window.P3_FB_GetStatus;
 
-            window.RufflePlayer = window.RufflePlayer || {};
-            window.RufflePlayer.config = {
-                autoplay: "on",
-                unmuteOverlay: "hidden",
-                allowScriptAccess: true
-            };
-        </script>
-        <script src="ruffle/ruffle.js"></script>
-        <style>
-            html, body {
-                width: 100%;
-                height: 100%;
-                margin: 0;
-                padding: 0;
-                background: #000;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                overflow: hidden;
-            }
-            #game {
-                width: 100%;
-                height: 100%;
-            }
-        </style>
-    </head>
-    <body>
-        <div id="game"></div>
-        <script>
-            window.addEventListener("load", async function () {
-                var ruffle = window.RufflePlayer.sources[window.RufflePlayer.newestName];
-                var player = ruffle.createPlayer();
-                var container = document.getElementById("game");
-                container.appendChild(player);
-                player.style.width  = "100%";
-                player.style.height = "100%";
-                await player.load({ url: "SMGame.swf", scale: "showAll" });
-            });
-        </script>
-    </body>
+      window.RufflePlayer = window.RufflePlayer || {};
+      window.RufflePlayer.config = {
+        autoplay: "on",
+        unmuteOverlay: "hidden",
+        allowScriptAccess: true
+      };
+    </script>
+    <script src="ruffle/ruffle.js"></script>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      html, body {
+        min-height: 100%;
+        background: #0a0700;
+        color: rgba(255,176,0,0.75);
+        font-family: 'Share Tech Mono', 'Courier New', monospace;
+        font-size: 13px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 12px 0 16px;
+      }
+
+      /* ── Disclaimer ── */
+      #disclaimer {
+        width: 760px;
+        max-width: calc(100vw - 24px);
+        padding: 10px 16px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(255,176,0,0.25);
+        background: rgba(18,12,0,0.85);
+        line-height: 1.7;
+        text-align: center;
+      }
+      #disclaimer a {
+        color: rgba(255,176,0,0.9);
+        text-decoration: underline;
+      }
+      #disclaimer a:hover { color: #ffb000; }
+      #disclaimer strong { color: rgba(255,176,0,0.9); }
+
+      /* ── Game ── */
+      #game-wrap {
+        width: 760px;
+        height: 570px;
+        max-width: calc(100vw - 24px);
+        background: #000;
+        flex-shrink: 0;
+      }
+      #game {
+        width: 100%;
+        height: 100%;
+      }
+
+      /* ── Download footer ── */
+      #download {
+        width: 760px;
+        max-width: calc(100vw - 24px);
+        padding: 10px 16px;
+        margin-top: 12px;
+        border: 1px solid rgba(255,176,0,0.25);
+        background: rgba(18,12,0,0.85);
+        text-align: center;
+      }
+      #download a {
+        color: rgba(255,176,0,0.9);
+        text-decoration: none;
+        border: 1px solid rgba(255,176,0,0.35);
+        padding: 5px 16px;
+        display: inline-block;
+        transition: border-color 0.15s, color 0.15s;
+      }
+      #download a:hover {
+        color: #ffb000;
+        border-color: rgba(255,176,0,0.75);
+      }
+      #download p {
+        margin-top: 7px;
+        font-size: 11px;
+        color: rgba(255,176,0,0.4);
+      }
+    </style>
+  </head>
+  <body>
+
+    <div id="disclaimer">
+      <strong>Rizk</strong> is a game by the
+      <a href="https://www.sciencemuseum.org.uk/" target="_blank" rel="noopener">Science Museum, London</a>,
+      developed by <a href="https://www.gogonative.com/" target="_blank" rel="noopener">GoGoNative</a>.
+      I do not own this game — it was preserved here after going offline so it remains playable.
+      All rights belong to their respective owners.
+    </div>
+
+    <div id="game-wrap">
+      <div id="game"></div>
+    </div>
+
+    <div id="download">
+      <a href="rizk-game.zip" download>⬇ Download rizk-game.zip</a>
+      <p>Self-contained offline version — includes Ruffle, all 15 levels, and a local launch script.</p>
+    </div>
+
+    <script>
+      window.addEventListener("load", async function () {
+        var ruffle = window.RufflePlayer.sources[window.RufflePlayer.newestName];
+        var player = ruffle.createPlayer();
+        var container = document.getElementById("game");
+        container.appendChild(player);
+        player.style.width  = "100%";
+        player.style.height = "100%";
+        await player.load({ url: "SMGame.swf", scale: "showAll" });
+      });
+    </script>
+
+  </body>
 </html>
