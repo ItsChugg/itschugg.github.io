@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<DATA>
+	
+	<!-- THIS DATA WILL BE EMBEDDED IN THE SEEDED VERSION -->
+
+	<LEVELS>
+		<LEVEL>assets/xml/levels/level01.xml</LEVEL>
+		<LEVEL>assets/xml/levels/level02.xml</LEVEL>
+		<LEVEL>assets/xml/levels/level03.xml</LEVEL>
+		<LEVEL>assets/xml/levels/level04.xml</LEVEL>
+		<LEVEL>assets/xml/levels/level05.xml</LEVEL>
+		<LEVEL>assets/xml/levels/level06.xml</LEVEL>
+		<LEVEL>assets/xml/levels/level07.xml</LEVEL>
+		<LEVEL>assets/xml/levels/level08.xml</LEVEL>
+		<LEVEL>assets/xml/levels/level09.xml</LEVEL>
+		<LEVEL>assets/xml/levels/level10.xml</LEVEL>
+		<LEVEL>assets/xml/levels/level11.xml</LEVEL>
+		<LEVEL>assets/xml/levels/level12.xml</LEVEL>
+		<LEVEL>assets/xml/levels/level13.xml</LEVEL>
+		<LEVEL>assets/xml/levels/level14.xml</LEVEL>
+		<LEVEL>assets/xml/levels/level15.xml</LEVEL>
+	</LEVELS>
+
+</DATA>

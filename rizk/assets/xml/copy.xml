@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<DATA>
+	
+	<!-- THIS DATA WILL BE EMBEDDED IN THE SEEDED VERSION -->
+		
+	<COPY>
+			<!-- SPLASH SCREEN -->
+			<BTN_PLAY>		<![CDATA[Play Game]]></BTN_PLAY>
+			<BTN_SCORES>	<![CDATA[High Scores]]></BTN_SCORES>
+			<BTN_HELP>		<![CDATA[Instructions]]></BTN_HELP>
+			<BTN_HOME>		<![CDATA[Back to Home]]></BTN_HOME>
+			<BTN_TUTORIAL>	<![CDATA[Watch tutorial]]></BTN_TUTORIAL>
+			<BTN_SOUND_OFF>	<![CDATA[Sound Off]]></BTN_SOUND_OFF>
+			<BTN_SOUND_ON>	<![CDATA[Sound On]]></BTN_SOUND_ON>
+			<BTN_CREDITS>	<![CDATA[Credits]]></BTN_CREDITS>
+			
+
+			
+			<!-- SCREEN TITLES -->
+			<TITLE_HELP>	<![CDATA[Instructions]]></TITLE_HELP>
+			<TITLE_SELECT>	<![CDATA[Level Select]]></TITLE_SELECT>
+			<TITLE_END_WIN>	<![CDATA[Complete]]></TITLE_END_WIN>
+			<TITLE_END_LOSE><![CDATA[Fail]]></TITLE_END_LOSE>
+			<TITLE_GAME_WIN><![CDATA[Congratulations]]></TITLE_GAME_WIN>
+			<TITLE_SCORES>	<![CDATA[Scores]]></TITLE_SCORES>
+			
+			<!-- SPLASH SCREEN -->
+
+			<MENU>
+				<FACEBOOK_PRE><![CDATA[Connect with Facebook to see your friends’ scores and the global high score chart]]></FACEBOOK_PRE>
+				<FACEBOOK_CONNECTING><![CDATA[Facebook logging in...]]></FACEBOOK_CONNECTING>
+				<FACEBOOK_CONNECTED><![CDATA[Connected to Facebook.]]></FACEBOOK_CONNECTED>
+				<FACEBOOK_FAILED><![CDATA[Couldn't connect to Facebook, resetting]]></FACEBOOK_FAILED>
+				<FACEBOOK_LOGOUT><![CDATA[Click to logout]]></FACEBOOK_LOGOUT>
+				<!-- LEVEL END/SCORE SCREEN -->
+				<YOUR_PERFORMANCE><![CDATA[Your level performance]]></YOUR_PERFORMANCE>
+				<BONUS_DEFENDER_DEPLOY><![CDATA[Defenders deployed]]></BONUS_DEFENDER_DEPLOY>
+				<BONUS_COLLECTOR_DEPLOY><![CDATA[Collectors deployed]]></BONUS_COLLECTOR_DEPLOY>
+				<BONUS_SPORES_BLOCKED><![CDATA[Spores blocked]]></BONUS_SPORES_BLOCKED>
+				<BONUS_WEALTH>		<![CDATA[Coins remaining]]></BONUS_WEALTH>
+				<BONUS_COMPLETION>	<![CDATA[Completion bonus]]></BONUS_COMPLETION>
+				<BONUS_TOTAL>		<![CDATA[Total Bonuses]]></BONUS_TOTAL>
+				
+				<PENALTY_DEFENDER_WASTED><![CDATA[Defenders unused]]></PENALTY_DEFENDER_WASTED>
+				<PENALTY_COLLECTOR_WASTED><![CDATA[Collectors unused]]></PENALTY_COLLECTOR_WASTED>
+				<PENALTY_DAMAGE>		<![CDATA[Plant damage]]></PENALTY_DAMAGE>
+				<PENALTY_TOTAL>			<![CDATA[Total penalties]]></PENALTY_TOTAL>
+				
+				<SCORE_TOTAL>		<![CDATA[Your level score]]></SCORE_TOTAL>
+				<CONTINUE>			<![CDATA[Continue]]></CONTINUE>
+				<REPLAY>			<![CDATA[Replay]]></REPLAY>
+				
+				<!-- HIGHSCORE SCREEN -->
+				<FRIENDS_LEVEL_SCORES>	<![CDATA[Friend's level scores]]></FRIENDS_LEVEL_SCORES>
+				<SHARE_YOUR_SCORE>		<![CDATA[Share your score]]></SHARE_YOUR_SCORE>
+				<CONNTECT_CTA><![CDATA[Connect with facebook to share scores.]]></CONNTECT_CTA>
+				<CONNTECT_WARNING><![CDATA[Go back to the splash page to connect to Facebook]]></CONNTECT_WARNING>				
+				<FRIENDS_SCORES> <![CDATA[Friends']]> </FRIENDS_SCORES>
+				<GLOBAL_SCORES> <![CDATA[Global]]> </GLOBAL_SCORES>
+				<UNRANKED><![CDATA[Unranked]]></UNRANKED>
+				<YOUR_SCORE><![CDATA[Your score]]></YOUR_SCORE>
+				<LEVEL><![CDATA[Level]]></LEVEL>
+				<BTN_FRIENDS><![CDATA[Friends]]></BTN_FRIENDS>
+				<BTN_GLOBAL><![CDATA[Global]]></BTN_GLOBAL>
+				<SHARE_MY_SCORE>		<![CDATA[Share my score!]]></SHARE_MY_SCORE>
+				<!-- LEVEL SELECT SCREEN -->
+				<LEVEL_TEXT><![CDATA[Collect resources to grow your Plant, watch out for the Threats, and make sure to manage the risk involved.]]></LEVEL_TEXT>
+				<CONNECT_FOR_SCORES><![CDATA[Connect with facebook to see scores.]]> </CONNECT_FOR_SCORES>
+				<PLAY_ON_SM>	<![CDATA[Play loads more levels, save your scores, challenge your friends and find out more about Climate Science at sciencemuseum.org.uk/rizk]]></PLAY_ON_SM>
+			</MENU>
+			
+			<!-- END SCREEN -->
+			<END_HEAD><![CDATA[Congratulations!]]></END_HEAD>
+			<END_BODY><![CDATA[You've completed Rizk.
+You've grown all your Plants, survived the threats and managed the risks! 
+Play many more levels at ScienceMuseum.org.uk/rizk]]></END_BODY>
+
+			<NEWSFEEDS>
+			<!-- APPEAR IN NEWSFEED ITEM AT BOTTOM LEFT DURING THE GAME. new NEWSFEED copy supplied 15 nov -->
+				<NEWSFEED_DEFENDER_DIE>		<![CDATA[Defender overwhelmed!]]></NEWSFEED_DEFENDER_DIE>
+				<NEWSFEED_COLLECTOR_DIE>	<![CDATA[Collector overwhelmed!]]></NEWSFEED_COLLECTOR_DIE>
+				<NEWSFEED_RESOURCE_EMPTY>	<![CDATA[Resource depleted]]></NEWSFEED_RESOURCE_EMPTY>				
+				<NEWSFEED_THREAT_AWAKE>		<![CDATA[Threat awoken!]]></NEWSFEED_THREAT_AWAKE>
+				<NEWSFEED_PLANT_LOW>		<![CDATA[Plant health low!]]></NEWSFEED_PLANT_LOW>
+				<NEWSFEED_PLANT_MED>		<![CDATA[Plant health medium]]></NEWSFEED_PLANT_MED>
+				<NEWSFEED_COLLECTOR_IDLE>	<![CDATA[Unused Collector]]></NEWSFEED_COLLECTOR_IDLE>
+				
+				<NEWSFEED_BELOW_100_COINS>		<![CDATA[Low coins]]></NEWSFEED_BELOW_100_COINS>				
+				<NEWSFEED_NO_CASH_2_SPAWN>		<![CDATA[Not enough coins available]]></NEWSFEED_NO_CASH_2_SPAWN>				
+				
+				<NEWSFEED_AT_START>					<![CDATA[Start collecting resources to grow your Plant]]></NEWSFEED_AT_START>
+				<NEWSFEED_AT_START_2>				<![CDATA[Place a Collector in a highlighted area]]></NEWSFEED_AT_START_2>
+				<NEWSFEED_SPORES_FIRST_RELEASED>	<![CDATA[Place a Defender to protect your Plant from Spores]]></NEWSFEED_SPORES_FIRST_RELEASED>
+				<NEWSFEED_3_SECONDS_INACTIVITY>		<![CDATA[Collect resources to grow your Plant]]></NEWSFEED_3_SECONDS_INACTIVITY>
+				<NEWSFEED_NO_COINS_FOR_TIME>		<![CDATA[Trade in Collectors or Defenders to gain more coins]]></NEWSFEED_NO_COINS_FOR_TIME>
+				
+				<!--
+				<NEWSFEED_COLLECTOR_BUILDING>	<![CDATA[Collector still growing]]></NEWSFEED_COLLECTOR_BUILDING>
+				<NEWSFEED_DEFENDER_BUILDING>	<![CDATA[Defender still growing]]></NEWSFEED_DEFENDER_BUILDING>				
+				-->
+				
+				<!-- OLD 
+				<NEWSFEED><![CDATA[You are running out of money]]></NEWSFEED>
+				<NEWSFEED><![CDATA[You have no money left]]></NEWSFEED>
+				<NEWSFEED><![CDATA[You Plant is degenerating. Collect Energy quickly]]></NEWSFEED>
+				<NEWSFEED><![CDATA[Plant health is critically low]]></NEWSFEED>
+				
+				<NEWSFEED><![CDATA[An energy source has run out]]></NEWSFEED>
+				<NEWSFEED><![CDATA[Your Plant has achieved 10% growth]]></NEWSFEED>
+				<NEWSFEED><![CDATA[Your Plant has achieved 20% growth]]></NEWSFEED>
+				<NEWSFEED><![CDATA[Your Plant has achieved 30% growth]]></NEWSFEED>
+				<NEWSFEED><![CDATA[Your Plant has achieved 40% growth]]></NEWSFEED>
+				<NEWSFEED><![CDATA[Your Plant has achieved 50% growth]]></NEWSFEED>
+				<NEWSFEED><![CDATA[Your Plant has achieved 60% growth]]></NEWSFEED>
+				<NEWSFEED><![CDATA[Your Plant has achieved 70% growth]]></NEWSFEED>
+				<NEWSFEED><![CDATA[Your Plant has achieved 80% growth]]></NEWSFEED>
+				<NEWSFEED><![CDATA[Your Plant has achieved 90% growth]]></NEWSFEED>
+				<NEWSFEED><![CDATA[Your Plant has achieved 100% growth]]></NEWSFEED>
+				-->
+			</NEWSFEEDS>
+			
+			<TUTORIALS>
+			<!-- APPEAR IN POP-UPS DURING THE GAME. Contains SM edits delivered on 22 Oct 2010 -->
+			    <!-- ACTIVATION: appears if the player has not started collecting enersgy after 60 seconds -->
+				<TUTORIAL ID ="0"><![CDATA[You need to collect energy to grow your plant by placing Collectors at the right location near their energy resource.]]></TUTORIAL>
+				<!-- ACTIVATION: appears when a user first activates the Collector menu -->
+				<TUTORIAL ID ="1"><![CDATA[Each type of Collector can only gather a specific type of energy resource for your plant.]]></TUTORIAL>
+				<!-- ACTIVATION: appears when a user first activates the Defender menu -->
+				<TUTORIAL ID ="2"><![CDATA[Use Defenders to protect your plant from spores. Each type of Defender has different abilities. Use them wisely.]]></TUTORIAL>
+				<!-- ACTIVATION: appears when the user rolls over the Risk Number -->
+				<TUTORIAL ID ="3"><![CDATA[This Risk Number indicates the total potential for damage to your Plant. As more Threats awaken it will rise.]]></TUTORIAL>
+				<!-- ACTIVATION: appears when the user rolls over the Risk map button in early levels -->
+				<TUTORIAL ID ="4"><![CDATA[Use the Risk Map to get a good overview of the Threats you face on each level. Notice the relationship between threats and the Risk Number. Differences in their Likelihood and Severity will require different strategies to win.]]></TUTORIAL>
+				<!-- ACTIVATION: appears when the user rolls over an active Threat. If this conflilcts with the risk number rollover then put this in the TIPS section -->
+				<TUTORIAL ID ="5"><![CDATA[You cannot attack Threats but you can reduce the likelihood of it releasing spores by not collecting bad energy near it.]]></TUTORIAL>
+				<!-- ACTIVATION: appears when the user rolls over a dormant Threat. If this conflilcts with the risk number rollover then put this in the TIPS section-->
+				<TUTORIAL ID ="6"><![CDATA[This threat is not active but could awaken depending on your activity. It’s lights indicate the likelihood of it releasing Spores.]]></TUTORIAL>
+			</TUTORIALS>
+			
+			<TIP><![CDATA[Tip: ]]></TIP>
+			<TIPS_LOSE>
+			<!-- INTER-LEVEL TIPS APPEARING ON END-LEVEL SCREEN. Contains SM edits 03 Dec 2010 -->
+				<TIP><![CDATA[Buying and positioning Defenders strategically can stop Spores reaching your Plant.]]></TIP>
+				<TIP><![CDATA[To keep risk low, try not to increase the likelihood of Threats releasing Spores.]]></TIP>
+				<TIP><![CDATA[The larger the Threat, the more Spores it can release at any one time, so the greater its severity.]]></TIP>
+				<TIP><![CDATA[Continuing to collect resources can increase the likelihood of Spores being released.]]></TIP>
+				<TIP><![CDATA[To reduce the risk to your Plant you can reduce the likelihood of Spores being released.]]></TIP>
+				<TIP><![CDATA[Upgrading your Collector or Defender is cheaper than buying another.]]></TIP>
+				<TIP><![CDATA[Repairing damaged Collectors and Defenders is cheaper than buying another.]]></TIP>
+			</TIPS_LOSE>
+			<TIPS_WIN>
+				<!-- SCORE SCREEN messages about risk management and how this links to both the game and the real world. Contains SM edits 03 Dec 2010 -->
+				<TIP><![CDATA[In both Rizk and the real world, risk needs to be managed to avoid damaging consequences.]]></TIP>
+				<TIP><![CDATA[Risk can be calculated by multiplying likelihood and severity.]]></TIP>
+				<TIP><![CDATA[You can monitor and understand severity in order to minimise risk.]]></TIP>
+				<TIP><![CDATA[This game is about 'risk management' which can be applied to many areas of life including climate change.]]></TIP>
+				<TIP><![CDATA[Risk management involves identifying areas of high risk and taking steps to reduce their likelihood and/or severity.]]></TIP>				
+				<TIP><![CDATA[Decision makers identify and rank risks to produce a ‘risk register’ so they can prioritise actions to minimise risk.]]></TIP>
+				<TIP><![CDATA[In both Rizk and the real world, decision makers have limited budgets which they must spend wisely.]]></TIP>
+				<TIP><![CDATA[Decision makers can reduce the risk of climate change impacts by reducing their likelihood and severity.]]></TIP>
+				<TIP><![CDATA[In both Rizk and the real world managing risk is made difficult by uncertainty and cost.]]></TIP>
+				<TIP><![CDATA[Given limited knowledge and budgets, decision makers must assess how to deal with the different risks they face.]]></TIP>
+				<TIP><![CDATA[Understanding severity and likelihood of events can help decision makers plan and prepare for the future.]]></TIP>
+				<TIP><![CDATA[The risk of climate change impacts can be reduced by cutting greenhouse gas emissions.]]></TIP>
+			</TIPS_WIN>
+			
+			<PERFORMANCE>
+				<LEVEL><![CDATA[Woeful]]></LEVEL>
+				<LEVEL><![CDATA[Poor]]></LEVEL>
+				<LEVEL><![CDATA[Average]]></LEVEL>
+				<LEVEL><![CDATA[Great]]></LEVEL>
+				<LEVEL><![CDATA[Amazing]]></LEVEL>
+			</PERFORMANCE>
+			
+			<CONTEXT_MENU>
+				<DEFENDER_1>	<![CDATA[Bleep]]></DEFENDER_1>
+				<DEFENDER_2>	<![CDATA[Beat]]></DEFENDER_2>
+				<DEFENDER_3>	<![CDATA[Block]]></DEFENDER_3>
+				<COLLECTOR_1>	<![CDATA[Slurper]]></COLLECTOR_1>
+				<COLLECTOR_2>	<![CDATA[Catcher]]></COLLECTOR_2>
+				<COLLECTOR_3>	<![CDATA[Breezer]]></COLLECTOR_3>				
+				<RISK_MAP>		<![CDATA[Risk map]]></RISK_MAP>
+				<HOME>			<![CDATA[Jump to plant]]></HOME>
+				<ZOOM_IN>		<![CDATA[Zoom in]]></ZOOM_IN>
+				<ZOOM_OUT>		<![CDATA[Zoom out]]></ZOOM_OUT>
+				<CLOSE>			<![CDATA[Close]]></CLOSE>				
+				<REPAIR>		<![CDATA[Repair]]></REPAIR>
+				<UPGRADE>		<![CDATA[Upgrade]]></UPGRADE>
+				<SELL>			<![CDATA[Trade in]]></SELL>	
+				<MAX>			<![CDATA[Max]]></MAX>				
+			</CONTEXT_MENU>
+			
+			<GAME_UI>
+				<PLANT_GROWTH>	<![CDATA[PLANT GROWTH]]></PLANT_GROWTH>
+				<PLANT_HEALTH>	<![CDATA[PLANT HEALTH]]></PLANT_HEALTH>
+				<TOTAL_COINS>	<![CDATA[TOTAL COINS]]></TOTAL_COINS>
+				<TOTAL_RISK>	<![CDATA[TOTAL RISK]]></TOTAL_RISK>	
+				<PAUSED>		<![CDATA[PAUSED]]></PAUSED>	
+				<QUIT_CONFIRM>	<![CDATA[Are you sure you want to quit this level?]]></QUIT_CONFIRM>				
+				<SUCCESS_POPUP_HEAD> <![CDATA[Well done!]]></SUCCESS_POPUP_HEAD>
+				<SUCCESS_POPUP> <![CDATA[You’ve successfully grown your Plant to full size.]]></SUCCESS_POPUP>
+				<FAIL_POPUP_HEAD>	<![CDATA[Failed!]]></FAIL_POPUP_HEAD>
+				<FAIL_POPUP>	<![CDATA[You didn’t manage your risk: your Plant suffered the consequences.]]></FAIL_POPUP>
+				<YES>			<![CDATA[YES]]></YES>	
+				<NO>			<![CDATA[NO]]></NO>	
+				<DEFENDERS>		<![CDATA[Defenders]]></DEFENDERS>	
+				<COLLECTORS>	<![CDATA[Collectors]]></COLLECTORS>	
+				<CLOSE>			<![CDATA[CLOSE]]></CLOSE>
+				<LOADING>		<![CDATA[LOADING]]></LOADING>
+				<RESUME>		<![CDATA[RESUME]]></RESUME>
+				<CONTINUE>		<![CDATA[CONTINUE]]></CONTINUE>
+				<LEVEL>			<![CDATA[Level]]></LEVEL>
+				<PLAY>			<![CDATA[Play]]></PLAY>
+				
+				<TIP_QUIT>		<![CDATA[Quit]]>	</TIP_QUIT>
+				<TIP_HELP>		<![CDATA[Help]]>	</TIP_HELP>
+				<TIP_PAUSE>		<![CDATA[Pause]]>	</TIP_PAUSE>
+				<TIP_MUTE>		<![CDATA[Mute]]>	</TIP_MUTE>
+			</GAME_UI>
+			
+			<RISK_MAP>
+				<TOP_LINE><![CDATA[Risk is calculated by multiplying the severity and likelihood of something happening. <br><br><br>Roll over a ‘Threat’ to see its severity and likelihood. Use this info to help manage risk.]]></TOP_LINE>
+				<MORE><![CDATA[The likelihood value refers to: how likely it is a Threat will release Spores. <br><br><br>The severity value refers to: the amount of Spores a Threat could release.<br><br><br>Your Total Risk is the sum of all the risk.]]></MORE>
+			</RISK_MAP>
+	</COPY>
+</DATA>

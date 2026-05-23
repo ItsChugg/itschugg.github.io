@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<DATA>
+	
+	<SCORES>
+		<MULTIPLIERS>
+			<COLLECTOR_DEP>		500 </COLLECTOR_DEP>
+			<DEFENDER_DEP>		500 </DEFENDER_DEP>
+			<WEALTH>			25 </WEALTH>
+			<COLLECTOR_WASTE>	1000 </COLLECTOR_WASTE>
+			<DEFENDER_WASTE>	1000 </DEFENDER_WASTE>
+			<DAMAGE>			100 </DAMAGE>
+		</MULTIPLIERS>
+		<COMPLETE_BONUSES>
+			<BONUS>1000</BONUS>
+			<BONUS>5000</BONUS>
+			<BONUS>10000</BONUS>
+			<BONUS>15000</BONUS>
+			<BONUS>20000</BONUS>
+			<BONUS>25000</BONUS>
+			<BONUS>30000</BONUS>
+			<BONUS>35000</BONUS>
+			<BONUS>40000</BONUS>
+			<BONUS>45000</BONUS>
+			<BONUS>50000</BONUS>
+			<BONUS>60000</BONUS>
+			<BONUS>70000</BONUS>
+			<BONUS>80000</BONUS>
+			<BONUS>100000</BONUS>
+		</COMPLETE_BONUSES>
+		<MEDALS>
+			<!--Percentage of 'permitted' plant damage for each medal -->
+			<GOLD>10</GOLD>
+			<SILVER>30</SILVER>
+			<BRONZE>60</BRONZE>
+		</MEDALS>
+	</SCORES>
+	
+	<CAMERA>
+		<CAMERA_ZOOM_1>				0.3	</CAMERA_ZOOM_1>
+		<CAMERA_ZOOM_2>				0.5	</CAMERA_ZOOM_2>
+		<CAMERA_SCROLL_SPEED>		10	</CAMERA_SCROLL_SPEED>
+		<CAMERA_SCROLL_MULTIPLYER>	4	</CAMERA_SCROLL_MULTIPLYER>
+		<CAMERA_DEADSPACE>			220	</CAMERA_DEADSPACE><!-- -->
+			
+		<CAMER_PARALLAX_STARS>		0.05</CAMER_PARALLAX_STARS>	<!-- Stars-->
+		<CAMER_PARALLAX_P_SMALL>	0	</CAMER_PARALLAX_P_SMALL>	<!-- Small planet -->
+		<CAMER_PARALLAX_P_MED>		0	</CAMER_PARALLAX_P_MED>	<!-- Medium planet-->
+		<CAMER_PARALLAX_P_LARGE>	0.01</CAMER_PARALLAX_P_LARGE>	<!-- Biggest planet-->
+		<CAMER_PARALLAX_MOUNTAINS>	0.33</CAMER_PARALLAX_MOUNTAINS>	<!-- Mountains -->
+	</CAMERA>
+	
+	
+	<GAMEPLAY>
+		<TILE_VALUE_OIL>		10	</TILE_VALUE_OIL> <!-- The Amount of OIL per Tile (square foot) Bigger number = more oil per pool, slower draining. -->
+		<TILE_VALUE_DRIP>		5	</TILE_VALUE_DRIP>		
+		<DRIP_CYCLE>			2	</DRIP_CYCLE>
+		<!--<DRIP_VALUE>			0.5</DRIP_VALUE> -->
+		<DRIP_VALUE>			2	</DRIP_VALUE>
+		<NEWS_TIME>				3	</NEWS_TIME>
+		<INACTIVE_TIME>			5	</INACTIVE_TIME>
+	</GAMEPLAY>
+	
+	<REMOTING>
+		<DATABASE_URL>http://10.140.5.146</DATABASE_URL>
+	</REMOTING>
+	
+	<FACEBOOK_WALL>
+		<title>I just played Rizk</title>
+		<message>I scored %s on level %l</message>
+		<name>Rizk</name>
+		<caption>...the latest game from the Science Museum</caption>
+		<description>In a world not too different from our own, a Plant needs resources to grow. But collecting these resources can increase the risk posed to the Plant's wellbeing. Can you manage the risks, weigh up the costs and grow the Plant? Find out in Rizk, the latest game from the Science Museum that explores risk and its relation to our climate.</description>
+		<image_src>http://www.gogonative.com/images/posts/fb_thumb_levelup.png</image_src>
+		<image_href>http://www.nmsi.ac.uk/rizktest/rizk/html/index.html</image_href>
+		<action_link>Play Game</action_link>
+		<action_link_href>http://www.nmsi.ac.uk/rizktest/rizk/html/index.html</action_link_href> 
+	</FACEBOOK_WALL>
+	
+</DATA>

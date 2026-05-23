@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<DATA>
+	
+	<!-- THIS DATA WILL BE EMBEDDED IN THE SEEDED VERSION -->
+	
+	<GLOBALS>			
+		<HITS_PER_SHIELD>		3	</HITS_PER_SHIELD>
+		<PIPELINE_SPEED>		0.8	</PIPELINE_SPEED>
+		<TREE_HIT_SIZE>			90	</TREE_HIT_SIZE>
+		<TREE_HIT_SCALE_X>		1.0	</TREE_HIT_SCALE_X>
+		<TREE_HIT_SCALE_Y>		1.0	</TREE_HIT_SCALE_Y>
+		<PLANT_1_HIT_SCALE_X>	0.85</PLANT_1_HIT_SCALE_X>
+		<PLANT_1_HIT_SCALE_Y>	1.25</PLANT_1_HIT_SCALE_Y>
+		<PLANT_2_HIT_SCALE_X>	0.89</PLANT_2_HIT_SCALE_X>
+		<PLANT_2_HIT_SCALE_Y>	1.05</PLANT_2_HIT_SCALE_Y>
+		<PLANT_3_HIT_SCALE_X>	1.05</PLANT_3_HIT_SCALE_X>
+		<PLANT_3_HIT_SCALE_Y>	1.26</PLANT_3_HIT_SCALE_Y>
+		<UPGRADE_TIME>			10	</UPGRADE_TIME>
+		<INVICIBLE_TIME>		2	</INVICIBLE_TIME>
+	</GLOBALS>
+	
+		
+	<ENTITIES>	
+		
+		<!-- 
+		<ENTITY>
+			<TYPE>
+		</ENTITY>
+		-->				
+		
+		<!-----------------------------------------------------------------------------
+		// DEFENDERS
+		//----------------------------------------------------------------------------->	
+		
+		<!-- ALL ROUNDER - SOLDIER - BLEEP -->	
+		<ENTITY>			
+			<BASETYPE>			DEFENDER</BASETYPE>
+			<TYPE>				DEFENDER_1_SOLDIER</TYPE>
+			<ISGOOD>			true</ISGOOD>
+			<!-- COSTS - INITIAL AND UPGRADES -->			
+			<COST_1>			50</COST_1>
+			<COST_2>			30</COST_2>
+			<COST_3>			40</COST_3>
+			<COST_4>			50</COST_4>
+			<!-- TRADE-IN RETURN - INITIAL AND UPGRADES -->
+			<SELL_1>			40</SELL_1>
+			<SELL_2>			60</SELL_2>
+			<SELL_3>			100</SELL_3>
+			<SELL_4>			150</SELL_4>
+			<!-- MOVEMENT SPEED -->		
+			<SPEED>				10</SPEED>
+			<!-- UNIT SIZE - FOR COLLISIONS -->
+			<RANGE_BASE>		50</RANGE_BASE>
+			<!-- SHIELD RANGES -->
+			<RANGE_INNER>		120</RANGE_INNER>
+			<RANGE_OUTER_1>		280</RANGE_OUTER_1>	
+			<RANGE_OUTER_2>		340</RANGE_OUTER_2>	
+			<RANGE_OUTER_3>		400</RANGE_OUTER_3>	
+			<RANGE_OUTER_4>		460</RANGE_OUTER_4>	
+			<!-- SHIELD RINGS - INITIAL AND UPGRADES -->
+			<RINGS_1>			3</RINGS_1>
+			<RINGS_2>			4</RINGS_2>
+			<RINGS_3>			5</RINGS_3>
+			<RINGS_4>			6</RINGS_4>
+			<!-- HEAL COSTS - INITIAL AND UPGRADES -->
+			<HEAL_1>			20</HEAL_1>
+			<HEAL_2>			30</HEAL_2>
+			<HEAL_3>			40</HEAL_3>	
+			<HEAL_4>			50</HEAL_4>
+			
+			<!-- THIS IS NOT NEEDED -->
+			<GROWTH_TIME>		5</GROWTH_TIME>	
+			<HIT_POWER>			1</HIT_POWER>
+		</ENTITY>
+		
+		
+		
+		
+		
+		
+		<!-- FAST LIGHT - ARCHER - BEAT -->	
+		<ENTITY>
+			<BASETYPE>			DEFENDER</BASETYPE>
+			<TYPE>				DEFENDER_2_ARCHER</TYPE>
+			<ISGOOD>			true</ISGOOD>
+			<!-- COSTS - INITIAL AND UPGRADES -->
+			<COST_1>			70</COST_1>
+			<COST_2>			40</COST_2>
+			<COST_3>			50</COST_3>
+			<COST_4>			60</COST_4>
+			<!-- TRADE-IN RETURN - INITIAL AND UPGRADES -->
+			<SELL_1>			60</SELL_1>
+			<SELL_2>			100</SELL_2>
+			<SELL_3>			150</SELL_3>
+			<SELL_4>			210</SELL_4>
+			<!-- MOVEMENT SPEED -->		
+			<SPEED>				10</SPEED>
+			<!-- UNIT SIZE - FOR COLLISIONS -->
+			<RANGE_BASE>		45</RANGE_BASE>
+			<!-- SHIELD RANGES -->
+			<RANGE_INNER>		300</RANGE_INNER>
+			<RANGE_OUTER_1>		500</RANGE_OUTER_1>
+			<RANGE_OUTER_2>		600</RANGE_OUTER_2>
+			<RANGE_OUTER_3>		700</RANGE_OUTER_3>
+			<RANGE_OUTER_4>		800</RANGE_OUTER_4>
+			<!-- SHIELD RINGS - INITIAL AND UPGRADES -->
+			<RINGS_1>			2</RINGS_1>
+			<RINGS_2>			3</RINGS_2>
+			<RINGS_3>			4</RINGS_3>
+			<RINGS_4>			5</RINGS_4>
+			<!-- HEAL COSTS - INITIAL AND UPGRADES -->
+			<HEAL_1>			20</HEAL_1>
+			<HEAL_2>			30</HEAL_2>
+			<HEAL_3>			40</HEAL_3>
+			<HEAL_4>			50</HEAL_4>
+			
+			<!-- THIS IS NOT NEEDED -->
+			<GROWTH_TIME>		3</GROWTH_TIME>	
+			<HIT_POWER>			1</HIT_POWER>
+		</ENTITY>
+		
+		
+		
+		
+		
+		
+		
+		
+		<!-- STRONG SLOW - TANK - BLOCK -->	
+		<ENTITY>
+			<BASETYPE>			DEFENDER</BASETYPE>
+			<TYPE>				DEFENDER_3_TANK</TYPE>
+			<ISGOOD>			true</ISGOOD>	
+			<!-- COSTS - INITIAL AND UPGRADES -->			
+			<COST_1>			140</COST_1>
+			<COST_2>			70</COST_2>
+			<COST_3>			80</COST_3>
+			<COST_4>			90</COST_4>
+			<!-- TRADE-IN RETURN - INITIAL AND UPGRADES -->
+			<SELL_1>			130</SELL_1>
+			<SELL_2>			200</SELL_2>
+			<SELL_3>			280</SELL_3>
+			<SELL_4>			370</SELL_4>
+			<!-- MOVEMENT SPEED -->		
+			<SPEED>				10</SPEED>
+			<!-- UNIT SIZE - FOR COLLISIONS -->		
+			<RANGE_BASE>		70</RANGE_BASE>
+			<!-- SHIELD RANGES -->
+			<RANGE_INNER>		220</RANGE_INNER>
+			<RANGE_OUTER_1>		380</RANGE_OUTER_1>	
+			<RANGE_OUTER_2>		460</RANGE_OUTER_2>	
+			<RANGE_OUTER_3>		540</RANGE_OUTER_3>	
+			<RANGE_OUTER_4>		620</RANGE_OUTER_4>	
+			<!-- SHIELD RINGS - INITIAL AND UPGRADES -->
+			<RINGS_1>			5</RINGS_1>
+			<RINGS_2>			7</RINGS_2>
+			<RINGS_3>			9</RINGS_3>
+			<RINGS_4>			12</RINGS_4>
+			<!-- HEAL COSTS - INITIAL AND UPGRADES -->
+			<HEAL_1>			50</HEAL_1>
+			<HEAL_2>			70</HEAL_2>
+			<HEAL_3>			90</HEAL_3>	
+			<HEAL_4>			110</HEAL_4>
+			
+			<!-- THIS IS NOT NEEDED -->
+			<GROWTH_TIME>		10</GROWTH_TIME>	
+			<HIT_POWER>			1</HIT_POWER>	
+		</ENTITY>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<!-----------------------------------------------------------------------------
+		// COLLECTORS
+		//----------------------------------------------------------------------------->
+		
+		<!-- DIGGER - SLURPER -->	
+		<ENTITY>
+			<BASETYPE>			COLLECTOR</BASETYPE>
+			<TYPE>				COLLECTOR_1_DIGGER</TYPE>
+			<ISGOOD>			true</ISGOOD>
+			<!-- COSTS - INITIAL AND UPGRADES -->			
+			<COST_1>			50</COST_1>
+			<COST_2>			40</COST_2>
+			<COST_3>			50</COST_3>
+			<COST_4>			70</COST_4>
+			<!-- TRADE-IN RETURN - INITIAL AND UPGRADES -->
+			<SELL_1>			40</SELL_1>
+			<SELL_2>			70</SELL_2>
+			<SELL_3>			100</SELL_3>
+			<SELL_4>			140</SELL_4>
+			<!-- MOVEMENT SPEED -->		
+			<SPEED>				10</SPEED>
+			<!-- UNIT SIZE - FOR COLLISIONS -->
+			<RANGE_BASE>		40</RANGE_BASE>
+			<!-- SHIELD RANGES -->
+			<RANGE_INNER>		150</RANGE_INNER>
+			<!-- SHIELD RINGS - INITIAL AND UPGRADES -->
+			<RINGS>				1</RINGS>
+			<!-- HEAL COSTS - INITIAL AND UPGRADES -->
+			<HEAL_1>			30</HEAL_1>
+			<HEAL_2>			40</HEAL_2>
+			<HEAL_3>			60</HEAL_3>	
+			<HEAL_4>			70</HEAL_4>			
+			<!-- YIELD - SPEED -->
+			<YIELD_SPEED>		3</YIELD_SPEED>	
+			<!-- YIELD PER ROUND - INITIAL AND UPGRADES -->
+			<YIELD_1>			4</YIELD_1>	
+			<YIELD_2>			6</YIELD_2>
+			<YIELD_3>			9</YIELD_3>
+			<YIELD_4>			12</YIELD_4>
+			<!-- IMPACT ON THREATS -->	
+			<IMPACT_RANGE>		500</IMPACT_RANGE>	
+			<IMPACT_VALUE>		1</IMPACT_VALUE>
+			<IMPACT_TIME>		2</IMPACT_TIME>
+			<!-- LIGHTNING -->	
+			<LIGHTNING_SCALE>	2.6</LIGHTNING_SCALE>
+			<!-- THIS IS NOT NEEDED -->	
+			<GROWTH_TIME>		5</GROWTH_TIME>
+		</ENTITY>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<!-- DRIPPER - CATCHER -->	
+		<ENTITY>
+			<BASETYPE>			COLLECTOR</BASETYPE>
+			<TYPE>				COLLECTOR_2_DRIPPER</TYPE>
+			<ISGOOD>			true</ISGOOD>	
+			<!-- COSTS - INITIAL AND UPGRADES -->		
+			<COST_1>			70</COST_1>
+			<COST_2>			30</COST_2>
+			<COST_3>			40</COST_3>
+			<COST_4>			60</COST_4>
+			<!-- TRADE-IN RETURN - INITIAL AND UPGRADES -->
+			<SELL_1>			50</SELL_1>
+			<SELL_2>			90</SELL_2>
+			<SELL_3>			110</SELL_3>
+			<SELL_4>			200</SELL_4>	
+			<!-- MOVEMENT SPEED -->			
+			<SPEED>				10</SPEED>
+			<!-- UNIT SIZE - FOR COLLISIONS -->
+			<RANGE_BASE>		40</RANGE_BASE>
+			<!-- SHIELD RANGES -->
+			<RANGE_INNER>		150</RANGE_INNER>
+			<!-- SHIELD RINGS - INITIAL AND UPGRADES -->
+			<RINGS>				1</RINGS>
+			<!-- HEAL COSTS - INITIAL AND UPGRADES -->
+			<HEAL_1>			30</HEAL_1>
+			<HEAL_2>			40</HEAL_2>
+			<HEAL_3>			50</HEAL_3>	
+			<HEAL_4>			60</HEAL_4>
+			
+			<!-- YIELD - SPEED -->
+			<YIELD_SPEED>		6</YIELD_SPEED>	
+			<!-- YIELD PER ROUND - INITIAL AND UPGRADES -->
+			<YIELD_1>			3</YIELD_1>	
+			<YIELD_2>			5</YIELD_2>
+			<YIELD_3>			11</YIELD_3>
+			<YIELD_4>			14</YIELD_4>
+			<!-- IMPACT ON THREATS -->	
+			<IMPACT_RANGE>		400</IMPACT_RANGE>
+			<IMPACT_VALUE>		1</IMPACT_VALUE>
+			<IMPACT_TIME>		3</IMPACT_TIME>
+			<!-- LIGHTNING -->	
+			<LIGHTNING_SCALE>	1.8</LIGHTNING_SCALE>
+			<!-- THIS IS NOT NEEDED -->	
+			<GROWTH_TIME>		10</GROWTH_TIME>
+		</ENTITY>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<!-- WINDMILL - BREEZER -->	
+		<ENTITY>
+			<BASETYPE>			COLLECTOR</BASETYPE>
+			<TYPE>				COLLECTOR_3_WINDMILL</TYPE>
+			<ISGOOD>			true</ISGOOD>	
+			<!-- COSTS - INITIAL AND UPGRADES -->			
+			<COST_1>			140</COST_1>
+			<COST_2>			 70</COST_2>
+			<COST_3>			 90</COST_3>
+			<COST_4>			120</COST_4>	
+			<!-- TRADE-IN RETURN - INITIAL AND UPGRADES -->
+			<SELL_1>			100</SELL_1>
+			<SELL_2>			120</SELL_2>
+			<SELL_3>			150</SELL_3>
+			<SELL_4>			230</SELL_4>
+			<!-- MOVEMENT SPEED -->	
+			<SPEED>				10</SPEED>
+			<!-- UNIT SIZE - FOR COLLISIONS -->
+			<RANGE_BASE>		40</RANGE_BASE>
+			<!-- SHIELD RANGES -->
+			<RANGE_INNER>		150</RANGE_INNER>
+			<!-- SHIELD RINGS - INITIAL AND UPGRADES -->
+			<RINGS>				1</RINGS>	
+			<!-- HEAL COSTS - INITIAL AND UPGRADES -->
+			<HEAL_1>			30</HEAL_1>
+			<HEAL_2>			40</HEAL_2>
+			<HEAL_3>			50</HEAL_3>	
+			<HEAL_4>			60</HEAL_4>
+			
+			<!-- YIELD - SPEED -->
+			<YIELD_SPEED>		3</YIELD_SPEED>	
+			<!-- YIELD PER ROUND - INITIAL AND UPGRADES -->
+			<YIELD_1>			2</YIELD_1>	
+			<YIELD_2>			4</YIELD_2>
+			<YIELD_3>			8</YIELD_3>	
+			<YIELD_4>			10</YIELD_4>
+			<!-- IMPACT ON THREATS -->	
+			<IMPACT_RANGE>		370</IMPACT_RANGE>
+			<IMPACT_VALUE>		1</IMPACT_VALUE>
+			<IMPACT_TIME>		4</IMPACT_TIME>
+			<!-- LIGHTNING -->	
+			<LIGHTNING_SCALE>	0.6</LIGHTNING_SCALE>
+			<!-- THIS IS NOT NEEDED -->	
+			<GROWTH_TIME>		10</GROWTH_TIME>
+		</ENTITY>
+		
+		
+		
+		
+		
+		<!-----------------------------------------------------------------------------
+		// THREATS
+		// ALl threats are now the same, treated as one unit of realised threat. i have 
+		// left the 3 options here and ingame just incase. Will remove on delivery.
+		//----------------------------------------------------------------------------->
+		
+		<!-- ALL ROUNDER - SOLDIER -->	
+		<ENTITY>
+			<BASETYPE>			SPORE</BASETYPE>
+			<TYPE>				SPORE_1</TYPE>
+			<ISGOOD>			false</ISGOOD>	
+			<!-- MOVEMENT SPEED -->			
+			<SPEED>				5</SPEED>
+			<!-- UNIT SIZE - FOR COLLISIONS -->
+			<RANGE_BASE>		35</RANGE_BASE>
+			<!-- SHIELD RANGES -->
+			<RANGE_INNER>		10</RANGE_INNER>
+			<RANGE_OUTER>		30</RANGE_OUTER>
+			<!-- SHIELD RINGS -->
+			<RINGS>				1</RINGS>
+			<!-- ATTACK DAMAGE PER SPORE -->
+			<HIT_POWER>			2</HIT_POWER>	
+		</ENTITY>
+		
+		<!-- FAST LIGHT - ARCHER -->	
+		<ENTITY>
+			<BASETYPE>			SPORE</BASETYPE>
+			<TYPE>				SPORE_2</TYPE>
+			<ISGOOD>			false</ISGOOD>
+			<!-- MOVEMENT SPEED -->			
+			<SPEED>				5</SPEED>
+			<!-- UNIT SIZE - FOR COLLISIONS -->
+			<RANGE_BASE>		35</RANGE_BASE>
+			<!-- SHIELD RANGES -->
+			<RANGE_INNER>		10</RANGE_INNER>
+			<RANGE_OUTER>		30</RANGE_OUTER>
+			<!-- SHIELD RINGS -->
+			<RINGS>				1</RINGS>
+			<!-- ATTACK DAMAGE PER SPORE -->
+			<HIT_POWER>			2</HIT_POWER>	
+		</ENTITY>
+		
+		<!-- STRONG SLOW - TANK -->		
+		<ENTITY>
+			<BASETYPE>			SPORE</BASETYPE>
+			<TYPE>				SPORE_3</TYPE>
+			<ISGOOD>			false</ISGOOD>
+			<!-- MOVEMENT SPEED -->			
+			<SPEED>				5</SPEED>
+			<!-- UNIT SIZE - FOR COLLISIONS -->
+			<RANGE_BASE>		35</RANGE_BASE>
+			<!-- SHIELD RANGES -->
+			<RANGE_INNER>		10</RANGE_INNER>
+			<RANGE_OUTER>		30</RANGE_OUTER>
+			<!-- SHIELD RINGS -->
+			<RINGS>				1</RINGS>
+			<!-- ATTACK DAMAGE PER SPORE -->
+			<HIT_POWER>			2</HIT_POWER>
+		</ENTITY>
+
+		
+	</ENTITIES>
+	
+</DATA>
+
+
+
+
+
