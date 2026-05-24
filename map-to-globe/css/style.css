@@ -222,9 +222,9 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
 }
 
-/* ── Buttons (scoped to panel so navbar swatches are unaffected) ─────────── */
+/* ── Buttons (scoped to side panels so navbar swatches are unaffected) ────── */
 
-#panel button {
+#panel button, #left-panel button {
   background: transparent;
   border: var(--border);
   color: var(--text-muted);
@@ -240,19 +240,25 @@ input[type="range"]::-moz-range-thumb {
   transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 
-#panel button:hover {
+#panel button:hover, #left-panel button:hover {
   color: var(--amber);
   border-color: var(--amber-dim);
   background: var(--bg-hover);
 }
 
-#panel button:active {
+#panel button:active, #left-panel button:active {
   background: var(--amber-faint);
 }
 
-#panel button:disabled {
+#panel button:disabled, #left-panel button:disabled {
   opacity: 0.30;
   cursor: not-allowed;
+}
+
+#panel button.btn-active, #left-panel button.btn-active {
+  color: var(--amber);
+  border-color: var(--amber-dim);
+  background: var(--amber-faint);
 }
 
 /* ── File inputs (hidden) ──────────────────────────────────────────────────── */
@@ -326,9 +332,9 @@ select option {
   color: var(--text);
 }
 
-/* ── Value spans (scoped to panel so navbar is unaffected) ─────────────────── */
+/* ── Value spans (scoped to side panels so navbar is unaffected) ───────────── */
 
-#panel span {
+#panel span, #left-panel span {
   font-family: var(--font-mono);
   font-size: 0.72rem;
   color: var(--text-muted);
@@ -446,6 +452,94 @@ input[type="color"]::-moz-color-swatch            { border: none; }
 
 #panel.collapsed #panel-version { display: none; }
 
+/* ── Body tree ─────────────────────────────────────────────────────────────── */
+
+.body-slot {
+  margin-bottom: 4px;
+}
+
+/* Body select button fills available space, left-aligned text */
+#left-panel .body-select-btn {
+  flex: 1;
+  width: auto;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+#left-panel .body-select-btn.active {
+  color: var(--amber);
+  border-color: var(--amber-dim);
+  background: var(--amber-faint);
+}
+
+.body-btn-type {
+  font-family: var(--font-head);
+  font-size: 0.50rem;
+  letter-spacing: 0.10em;
+  color: var(--text-faint);
+  margin-right: 4px;
+}
+
+#left-panel .body-select-btn.active .body-btn-type {
+  color: var(--amber);
+  opacity: 0.75;
+}
+
+/* ── Body text input ───────────────────────────────────────────────────────── */
+
+.body-text-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--amber-dim);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  padding: 2px 4px;
+  outline: none;
+  min-width: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.body-text-input:focus {
+  border-bottom-color: var(--amber);
+  color: var(--amber);
+}
+
+/* ── Half-width buttons (confirm/cancel row) ───────────────────────────────── */
+
+.half-btn {
+  width: auto !important;
+  flex: 1;
+}
+
+/* ── Inline info value (e.g. binary partner name) ─────────────────────────── */
+
+.info-value {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--amber);
+  flex: 1;
+  text-align: right;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+/* ── Body slot action buttons (edit ✎ / remove ✕) ─────────────────────────── */
+
+.body-slot .clear-btn {
+  opacity: 0.45;
+  transition: opacity 0.15s, color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.body-slot:hover .clear-btn,
+.body-select-btn.active ~ .clear-btn {
+  opacity: 1;
+}
+
 /* ── GIF progress ──────────────────────────────────────────────────────────── */
 
 #gif-progress {
@@ -473,3 +567,87 @@ input[type="color"]::-moz-color-swatch            { border: none; }
   padding: 5px 8px;
   min-width: unset;
 }
+
+/* ── Left panel (system / solar-system controls) ───────────────────────────── */
+
+#left-panel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 260px;
+  background: var(--bg-panel);
+  border-right: var(--border);
+  box-shadow: var(--glow-lg);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  transition: width 0.28s ease;
+  overflow: hidden;
+}
+
+#left-panel.collapsed {
+  width: 38px;
+  background: transparent;
+  border-right: none;
+  box-shadow: none;
+}
+
+#left-panel-header {
+  padding: 10px;
+  border-bottom: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+#left-panel-toggle {
+  background: transparent;
+  border: var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  border-radius: 0;
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  /* override the full-width panel button style */
+  padding: 0;
+}
+
+#left-panel-toggle:hover {
+  color: var(--amber);
+  border-color: var(--amber-dim);
+  background: var(--bg-hover);
+}
+
+#left-panel.collapsed #left-panel-toggle {
+  transform: rotate(180deg);
+  color: var(--amber);
+  border-color: var(--amber-dim);
+}
+
+#left-panel.collapsed #left-panel-header {
+  border-bottom: none;
+  padding: 8px;
+}
+
+#left-panel-body {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: var(--amber-dim) transparent;
+}
+
+#left-panel.collapsed #left-panel-body {
+  display: none;
+}
+
+#left-panel-body::-webkit-scrollbar       { width: 4px; }
+#left-panel-body::-webkit-scrollbar-thumb { background: var(--amber-dim); }

@@ -21,94 +21,176 @@ renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
 
-const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
-camera.position.set(0, 0.4, 3.2);
+const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 500);
+camera.position.set(0, 2, 12);
 
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.dampingFactor = 0.06;
-controls.minDistance = 1.6;
-controls.maxDistance = 10;
-controls.autoRotate = false;
+controls.minDistance   = 1.0;
+controls.maxDistance   = 200;
+controls.autoRotate    = false;
+controls.mouseButtons  = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
 
 // ── Background stars ─────────────────────────────────────────────────────────
-// White circles at fixed pixel sizes (1–5 px) so they stay crisp at any zoom.
 
-const STAR_COUNT    = 5000;
-const starPositions = new Float32Array(STAR_COUNT * 3);
-const starSizes     = new Float32Array(STAR_COUNT);
-
-for (let i = 0; i < STAR_COUNT; i++) {
-  const theta = Math.random() * Math.PI * 2;
-  const phi   = Math.acos(2 * Math.random() - 1);
-  const r     = 60 + Math.random() * 30;
-  starPositions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
-  starPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-  starPositions[i * 3 + 2] = r * Math.cos(phi);
-  starSizes[i] = 1.0 + Math.random() * 4.0; // 1–5 px
+function buildStarGeo(count) {
+  const pos   = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi   = Math.acos(2 * Math.random() - 1);
+    const r     = 120 + Math.random() * 60;
+    pos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+    pos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+    pos[i*3+2] = r * Math.cos(phi);
+    sizes[i] = 0.8 + Math.random() * 1.2; // relative size multiplier (0.8–2.0, min avoids sub-pixel flicker)
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('size',     new THREE.BufferAttribute(sizes, 1));
+  return geo;
 }
 
-const starGeo = new THREE.BufferGeometry();
-starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-starGeo.setAttribute('size',     new THREE.BufferAttribute(starSizes, 1));
-
 const starMat = new THREE.ShaderMaterial({
-  uniforms: { opacity: { value: 1.0 } },
+  uniforms: {
+    baseSize:  { value: 3.5 },
+    starColor: { value: new THREE.Color(1, 1, 1) },
+  },
   vertexShader: `
     attribute float size;
+    uniform float baseSize;
     void main() {
-      gl_PointSize = size;
+      // max(3.0) prevents sub-pixel points from flickering as the camera moves
+      gl_PointSize = max(3.0, size * baseSize);
       gl_Position  = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
   `,
   fragmentShader: `
-    uniform float opacity;
+    uniform vec3 starColor;
     void main() {
-      float d     = length(gl_PointCoord - 0.5) * 2.0;
-      if (d > 1.0) discard;
-      float alpha = (1.0 - smoothstep(0.5, 1.0, d)) * opacity;
-      gl_FragColor = vec4(1.0, 1.0, 1.0, alpha);
+      // Gaussian soft falloff — no hard edge, no binary pop at pixel boundaries
+      vec2  uv = gl_PointCoord - 0.5;
+      float d2 = dot(uv, uv) * 4.0;        // 0 at centre, 1 at sprite edge
+      float b  = exp(-d2 * 2.8);            // smooth gaussian
+      float wb = b * 0.18;                  // faint white bloom on top
+      if (b < 0.004) discard;               // skip truly invisible fragments
+      gl_FragColor = vec4(starColor * b + vec3(wb), b);
     }
   `,
   transparent: true,
   depthWrite:  false,
+  blending:    THREE.AdditiveBlending,
 });
 
-const stars = new THREE.Points(starGeo, starMat);
-scene.add(stars);
+let bgStars = new THREE.Points(buildStarGeo(3000), starMat);
+scene.add(bgStars);
 
-// ── Globe group hierarchy ────────────────────────────────────────────────────
-//
-//  tiltGroup    – rotates around Z to tilt the spin axis in world space
-//    spinGroup  – rotates around local Y every frame (the actual spin)
-//      equatorGroup – extra Z rotation so equator tilt can be set independently
-//                     of axial tilt; when both sliders are locked this is 0.
-//
-// This three-level stack means spinGroup.rotation.y always advances along the
-// tilted axis, giving a physically correct wobble/tilt behaviour.
+function rebuildStarField(count) {
+  const wasVisible = bgStars.visible;
+  scene.remove(bgStars);
+  bgStars.geometry.dispose();
+  bgStars = new THREE.Points(buildStarGeo(count), starMat);
+  bgStars.visible = wasVisible;
+  scene.add(bgStars);
+}
 
-const tiltGroup    = new THREE.Group();
-const spinGroup    = new THREE.Group();
-const equatorGroup = new THREE.Group();
-tiltGroup.add(spinGroup);
-spinGroup.add(equatorGroup);
-scene.add(tiltGroup);
+// ── Star system ───────────────────────────────────────────────────────────────
+// Stars sit at the scene origin (barycenter). Symmetric offsets within sunGroup
+// keep the centroid at (0,0,0) so day/night shading is always correct.
 
-const R = 1.0;
+const globalLightColor   = new THREE.Color(1, 1, 1); // color of light cast on all bodies
+let   globalDayNight     = false;
+let   globalSunIntensity = 1.5;
+let   globalTimeWarp     = 1.0;
+let   globalShowTrails   = false;
 
-// ── Globe shader material ────────────────────────────────────────────────────
-//
-// Handles all three texture states in one shader:
-//   1. No textures   → base colour + Phong shading
-//   2. Day only      → day texture wraps whole globe, Phong shading
-//   3. Day + Night   → day texture on lit side, night texture on dark side,
-//                      smooth terminator blend
+// sunGroup is the rotatable container for all stars; lives at scene origin
+const sunGroup = new THREE.Group();
+scene.add(sunGroup);
 
-const VERT = /* glsl */`
+function makeStar(size, colorHex) {
+  const c    = new THREE.Color(colorHex);
+  const core = new THREE.Mesh(
+    new THREE.SphereGeometry(size, 32, 32),
+    new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 1, 1).lerp(c, 0.35), depthWrite: false })
+  );
+  const glow1 = new THREE.Mesh(
+    new THREE.SphereGeometry(size * 1.4, 32, 32),
+    new THREE.MeshBasicMaterial({ color: c.clone(), transparent: true, opacity: 0.45,
+      side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false })
+  );
+  const glow2 = new THREE.Mesh(
+    new THREE.SphereGeometry(size * 2.3, 32, 32),
+    new THREE.MeshBasicMaterial({ color: c.clone().multiplyScalar(0.65), transparent: true, opacity: 0.18,
+      side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false })
+  );
+  const group = new THREE.Group();
+  group.add(core, glow1, glow2);
+  return { group, core, glow1, glow2, size, colorHex };
+}
+
+// Three pre-built star slots; extras start invisible
+const STAR_INIT = [
+  { size: 4, color: '#ffcc44' },
+  { size: 3, color: '#ffcc44' },
+  { size: 3, color: '#ffcc44' },
+];
+const stars = STAR_INIT.map(({ size, color }) => {
+  const s = makeStar(size, color);
+  sunGroup.add(s.group);
+  return s;
+});
+stars[1].group.visible = false;
+stars[2].group.visible = false;
+sunGroup.visible = false; // hidden until user enables
+
+let starCount      = 1;
+let starSeparation = 15;
+
+function getStarOffsets(count, sep) {
+  if (count === 1) return [[0, 0, 0]];
+  if (count === 2) return [[-sep / 2, 0, 0], [sep / 2, 0, 0]];
+  // Equilateral triangle — circumradius = sep/√3, angles 0°/120°/240°
+  // Centroid of all three points is exactly (0, 0, 0)
+  const r = sep / Math.sqrt(3);
+  return [0, 1, 2].map(i => {
+    const a = (i * 2 * Math.PI) / 3;
+    return [r * Math.cos(a), 0, r * Math.sin(a)];
+  });
+}
+
+function applyStarLayout() {
+  const offsets = getStarOffsets(starCount, starSeparation);
+  for (let i = 0; i < 3; i++) {
+    stars[i].group.visible = i < starCount;
+    if (i < starCount) stars[i].group.position.set(...offsets[i]);
+  }
+}
+
+function setStarSize(idx, s) {
+  stars[idx].size = s;
+  stars[idx].core.geometry.dispose();  stars[idx].core.geometry  = new THREE.SphereGeometry(s,       32, 32);
+  stars[idx].glow1.geometry.dispose(); stars[idx].glow1.geometry = new THREE.SphereGeometry(s * 1.4, 32, 32);
+  stars[idx].glow2.geometry.dispose(); stars[idx].glow2.geometry = new THREE.SphereGeometry(s * 2.3, 32, 32);
+}
+
+function setStarColor(idx, hex) {
+  stars[idx].colorHex = hex;
+  const c = new THREE.Color(hex);
+  stars[idx].core.material.color.copy(new THREE.Color(1, 1, 1).lerp(c, 0.35));
+  stars[idx].glow1.material.color.copy(c.clone());
+  stars[idx].glow2.material.color.copy(c.clone().multiplyScalar(0.65));
+}
+
+applyStarLayout(); // set positions for initial count=1
+
+// ── Shader source strings ─────────────────────────────────────────────────────
+
+const GLOBE_VERT = /* glsl */`
   varying vec2  vUv;
   varying vec3  vWorldNormal;
   varying vec3  vViewDir;
-
   void main() {
     vUv          = uv;
     vWorldNormal = normalize(mat3(modelMatrix) * normal);
@@ -118,642 +200,1143 @@ const VERT = /* glsl */`
   }
 `;
 
-const FRAG = /* glsl */`
+const GLOBE_FRAG = /* glsl */`
   uniform sampler2D dayTex;
   uniform sampler2D nightTex;
   uniform bool      hasDayTex;
   uniform bool      hasNightTex;
-  uniform vec3      sunDir;         // world-space, toward sun (normalised)
-  uniform vec3      sunColor;       // light source tint (default white)
-  uniform float     sunIntensity;   // light source brightness multiplier
+  uniform vec3      sunDir;
+  uniform vec3      sunColor;
+  uniform float     sunIntensity;
   uniform vec3      baseColor;
-  uniform float     ambientStr;     // twilight scatter width/intensity 0..1
-  uniform bool      flatLit;        // true when day/night cycle is off
-  uniform float     nightThreshold; // luminance below which night pixels are zeroed
-
+  uniform float     ambientStr;
+  uniform bool      flatLit;
+  uniform float     nightThreshold;
   varying vec2  vUv;
   varying vec3  vWorldNormal;
   varying vec3  vViewDir;
-
   void main() {
     vec3 color;
-
     if (flatLit) {
       color = hasDayTex ? texture2D(dayTex, vUv).rgb : baseColor;
-
     } else {
       vec3  N     = normalize(vWorldNormal);
       float NdotL = dot(N, sunDir);
-
-      // Sharp terminator — ~2° twilight zone
       float dayMask = smoothstep(-0.02, 0.02, NdotL);
-
-      // Linear diffuse — the gamma encoding below handles the perceptual curve
       float diffuse = clamp(NdotL * sunIntensity, 0.0, 1.0);
-
-      // Lit factor: day-side diffuse + narrow twilight scatter.
-      // Night side is pitch black (dayMask = 0 away from terminator).
-      float lit = diffuse * (1.0 - ambientStr) + ambientStr * dayMask;
-
-      // Gamma-encode the lighting factor (pow ≈ 1/2.2).
-      // The 8-bit framebuffer stores linear values, so dark regions only
-      // get ~25 discrete steps out of 255. Encoding the *lighting* through
-      // a 2.2 power curve spreads those steps across 4× more values,
-      // turning the visible staircase into a smooth gradient.
+      float lit     = diffuse * (1.0 - ambientStr) + ambientStr * dayMask;
       float litDisp = pow(max(lit, 0.0), 1.0 / 2.2);
-
       if (hasDayTex && hasNightTex) {
         vec3 day      = texture2D(dayTex,   vUv).rgb;
         vec3 nightRaw = texture2D(nightTex, vUv).rgb;
-
-        // Luminance bright-pass — only pixels brighter than nightThreshold
-        // contribute. Soft knee of 0.08 avoids a hard clip on dim city glow.
-        // This lets you upload any texture as the night side and only the
-        // genuinely bright spots (city lights) will show through.
         float lum       = dot(nightRaw, vec3(0.2126, 0.7152, 0.0722));
         vec3 cityLights = nightRaw * smoothstep(nightThreshold, nightThreshold + 0.08, lum);
-
-        // Additive blend: city lights sit on top of the day lighting so they
-        // naturally vanish on the fully-lit day side and peak on the night side.
         color = day * litDisp * sunColor + cityLights * (1.0 - dayMask);
-
       } else if (hasDayTex) {
         color = texture2D(dayTex, vUv).rgb * litDisp * sunColor;
-
       } else {
         color = baseColor * litDisp * sunColor;
       }
     }
-
-    // Ordered dithering — interleaved gradient noise, ±½ of an 8-bit step.
-    // Breaks up any remaining quantisation banding into imperceptible grain
-    // without changing the overall appearance.
     float dither = (fract(dot(gl_FragCoord.xy, vec2(0.75487766, 0.56984029))) - 0.5) / 255.0;
     gl_FragColor = vec4(clamp(color + dither, 0.0, 1.0), 1.0);
   }
 `;
 
-const globeMat = new THREE.ShaderMaterial({
-  vertexShader:   VERT,
-  fragmentShader: FRAG,
-  uniforms: {
-    dayTex:      { value: null },
-    nightTex:    { value: null },
-    hasDayTex:   { value: false },
-    hasNightTex: { value: false },
-    sunDir:         { value: new THREE.Vector3(1, 0, 0) }, // sun directly to the right on equator
-    sunColor:       { value: new THREE.Vector3(1, 1, 1) },
-    sunIntensity:   { value: 1.5 },
-    baseColor:      { value: new THREE.Color(0x060618) },
-    ambientStr:     { value: 0.18 },
-    flatLit:        { value: true },  // off by default until day/night cycle is enabled
-    nightThreshold: { value: 0.05 }, // 5% — passes city lights, rejects dark ocean/land
-  },
-});
+const GRAT_VERT = /* glsl */`
+  uniform vec3 sunDir;
+  varying float vFacing;
+  varying float vNdotL;
+  void main() {
+    vec3 worldPos    = (modelMatrix * vec4(position, 1.0)).xyz;
+    vec3 worldNormal = normalize(mat3(modelMatrix) * normal);
+    vFacing = dot(worldNormal, normalize(cameraPosition - worldPos));
+    vNdotL  = dot(worldNormal, sunDir);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
 
-const globe = new THREE.Mesh(new THREE.SphereGeometry(R, 256, 256), globeMat);
-globe.visible = false; // hidden until a day texture is loaded
-equatorGroup.add(globe);
+const GRAT_FRAG = /* glsl */`
+  uniform vec3  lineColor;
+  uniform float opacity;
+  uniform bool  flatLit;
+  varying float vFacing;
+  varying float vNdotL;
+  void main() {
+    float t          = clamp(vFacing * 0.5 + 0.5, 0.0, 1.0);
+    float brightness = mix(0.40, 1.0, t);
+    float backFade   = flatLit ? 1.0 : max(sign(vFacing), 0.0);
+    float nightFade  = flatLit ? 1.0 : smoothstep(-0.05, 0.05, vNdotL);
+    gl_FragColor = vec4(lineColor * brightness, opacity * backFade * nightFade);
+  }
+`;
 
-// Graticule — explicit lat/lon LineSegments (no triangle diagonals)
+const RIM_VERT = /* glsl */`
+  uniform vec3 viewVector;
+  varying float rim;
+  void main() {
+    vec3 vn = normalize(normalMatrix * normal);
+    vec3 vv = normalize(normalMatrix * viewVector);
+    rim = pow(1.0 - abs(dot(vn, vv)), 3.5);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const RIM_FRAG = /* glsl */`
+  uniform vec3 glowColor;
+  varying float rim;
+  void main() { gl_FragColor = vec4(glowColor, rim * 0.18); }
+`;
+
+// ── Graticule builders ────────────────────────────────────────────────────────
+
 function buildGraticule(radius, latDiv, lonDiv, seg = 128) {
   const pts = [];
-  // Parallels (latitude rings)
-  for (let i = 1; i < latDiv; i++) {
-    const phi = (i / latDiv) * Math.PI;
-    const y = radius * Math.cos(phi);
-    const r = radius * Math.sin(phi);
-    for (let j = 0; j < seg; j++) {
-      const a1 = (j       / seg) * Math.PI * 2;
-      const a2 = ((j + 1) / seg) * Math.PI * 2;
-      pts.push(r * Math.cos(a1), y, r * Math.sin(a1));
-      pts.push(r * Math.cos(a2), y, r * Math.sin(a2));
-    }
-  }
-  // Meridians (longitude great-circles)
-  for (let i = 0; i < lonDiv; i++) {
-    const theta = (i / lonDiv) * Math.PI * 2;
-    const ct = Math.cos(theta), st = Math.sin(theta);
-    for (let j = 0; j < seg; j++) {
-      const p1 = (j       / seg) * Math.PI;
-      const p2 = ((j + 1) / seg) * Math.PI;
-      pts.push(radius * Math.sin(p1) * ct, radius * Math.cos(p1), radius * Math.sin(p1) * st);
-      pts.push(radius * Math.sin(p2) * ct, radius * Math.cos(p2), radius * Math.sin(p2) * st);
-    }
-  }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-  return geo;
-}
-
-// ── Triangle graticule — edges of a geodesic icosphere ─────────────────────
-function buildTriangleGraticule(radius, detail = 4) {
-  return new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(radius, detail));
-}
-
-// ── Hexagon graticule — dual graph of a geodesic icosphere ──────────────────
-// IcosahedronGeometry in Three.js r169 is NON-INDEXED (index === null), so we
-// find adjacent faces by hashing vertex positions instead of using index arrays.
-function buildHexGraticule(radius, detail = 2) {
-  const icoGeo = new THREE.IcosahedronGeometry(1, detail);
-  const pos    = icoGeo.attributes.position;
-  const nFaces = pos.count / 3; // 3 verts per face, non-indexed
-
-  const PREC = 1e6;
-  const vKey = vi =>
-    `${Math.round(pos.getX(vi) * PREC)},${Math.round(pos.getY(vi) * PREC)},${Math.round(pos.getZ(vi) * PREC)}`;
-
-  // Centroid of each face, projected back onto the sphere surface
-  const centroids = [];
-  for (let i = 0; i < nFaces; i++) {
-    const a = i * 3, b = a + 1, c = a + 2;
-    centroids.push(
-      new THREE.Vector3(
-        (pos.getX(a) + pos.getX(b) + pos.getX(c)) / 3,
-        (pos.getY(a) + pos.getY(b) + pos.getY(c)) / 3,
-        (pos.getZ(a) + pos.getZ(b) + pos.getZ(c)) / 3,
-      ).normalize().multiplyScalar(radius)
-    );
-  }
-
-  // Build edge → [faceA, faceB] map using sorted vertex-position keys
-  const edgeMap = new Map();
-  for (let i = 0; i < nFaces; i++) {
-    const vk = [vKey(i * 3), vKey(i * 3 + 1), vKey(i * 3 + 2)];
-    for (let e = 0; e < 3; e++) {
-      const k1 = vk[e], k2 = vk[(e + 1) % 3];
-      const edgeKey = k1 < k2 ? `${k1}|${k2}` : `${k2}|${k1}`;
-      if (!edgeMap.has(edgeKey)) edgeMap.set(edgeKey, []);
-      edgeMap.get(edgeKey).push(i);
-    }
-  }
-
-  // One dual edge per shared original edge → hexagon/pentagon outlines
-  const pts = [];
-  for (const faces of edgeMap.values()) {
-    if (faces.length === 2) {
-      pts.push(...centroids[faces[0]].toArray(), ...centroids[faces[1]].toArray());
-    }
-  }
-
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-  return geo;
-}
-
-// ── Brick graticule — lat/lon grid with vertical lines offset every other row ─
-// Looks like a brick-wall pattern wrapped around the sphere.
-// lonDiv ≈ latDiv gives ~2:1 brick aspect ratio (360°/latDiv wide, 180°/latDiv tall).
-function buildBrickGraticule(radius, latDiv, lonDiv, seg = 64) {
-  const pts = [];
-
-  // Horizontal mortar lines — identical to plain-grid parallels
   for (let i = 1; i < latDiv; i++) {
     const phi = (i / latDiv) * Math.PI;
     const y = radius * Math.cos(phi), r = radius * Math.sin(phi);
     for (let j = 0; j < seg; j++) {
-      const a1 = (j       / seg) * Math.PI * 2;
-      const a2 = ((j + 1) / seg) * Math.PI * 2;
-      pts.push(r * Math.cos(a1), y, r * Math.sin(a1),
-               r * Math.cos(a2), y, r * Math.sin(a2));
+      const a1 = (j / seg) * Math.PI * 2, a2 = ((j + 1) / seg) * Math.PI * 2;
+      pts.push(r * Math.cos(a1), y, r * Math.sin(a1), r * Math.cos(a2), y, r * Math.sin(a2));
     }
   }
-
-  // Vertical mortar lines — shifted by half a brick width on odd rows
-  const vSeg = 8;
-  for (let row = 0; row < latDiv; row++) {
-    const offset = (row % 2) * 0.5;          // 0.0 on even rows, 0.5 on odd
-    const phi1 = (row       / latDiv) * Math.PI;
-    const phi2 = ((row + 1) / latDiv) * Math.PI;
-    for (let j = 0; j < lonDiv; j++) {
-      const theta = ((j + offset) / lonDiv) * Math.PI * 2;
-      const ct = Math.cos(theta), st = Math.sin(theta);
-      for (let k = 0; k < vSeg; k++) {
-        const p1 = phi1 + (k       / vSeg) * (phi2 - phi1);
-        const p2 = phi1 + ((k + 1) / vSeg) * (phi2 - phi1);
-        pts.push(radius * Math.sin(p1) * ct, radius * Math.cos(p1), radius * Math.sin(p1) * st,
-                 radius * Math.sin(p2) * ct, radius * Math.cos(p2), radius * Math.sin(p2) * st);
-      }
+  for (let i = 0; i < lonDiv; i++) {
+    const theta = (i / lonDiv) * Math.PI * 2, ct = Math.cos(theta), st = Math.sin(theta);
+    for (let j = 0; j < seg; j++) {
+      const p1 = (j / seg) * Math.PI, p2 = ((j + 1) / seg) * Math.PI;
+      pts.push(radius * Math.sin(p1) * ct, radius * Math.cos(p1), radius * Math.sin(p1) * st,
+               radius * Math.sin(p2) * ct, radius * Math.cos(p2), radius * Math.sin(p2) * st);
     }
   }
-
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
   return geo;
 }
 
-// ── Diamond graticule — both diagonals of every lat/lon cell ─────────────────
-// With lonDiv = latDiv*2 the cells are square in degree-space, so the diagonals
-// cross at 45° and the resulting shapes are true rhombuses / diamonds.
-// Diagonals are geodesic arcs (great-circle segments) via lerp+normalise.
-function buildDiamondGraticule(radius, latDiv, lonDiv, seg = 8) {
-  const pts = [];
-  const v0 = new THREE.Vector3(), v1 = new THREE.Vector3();
-
-  const spt = (phi, theta) => new THREE.Vector3(
-    Math.sin(phi) * Math.cos(theta),
-    Math.cos(phi),
-    Math.sin(phi) * Math.sin(theta)
-  ).multiplyScalar(radius);
-
-  for (let i = 0; i < latDiv; i++) {
-    const phi1 = (i       / latDiv) * Math.PI;
-    const phi2 = ((i + 1) / latDiv) * Math.PI;
-    for (let j = 0; j < lonDiv; j++) {
-      const theta1 = (j       / lonDiv) * Math.PI * 2;
-      const theta2 = ((j + 1) / lonDiv) * Math.PI * 2;
-      const NW = spt(phi1, theta1), NE = spt(phi1, theta2);
-      const SW = spt(phi2, theta1), SE = spt(phi2, theta2);
-      // Each cell gets two crossing great-circle diagonals: NW↔SE and NE↔SW
-      for (const [a, b] of [[NW, SE], [NE, SW]]) {
-        for (let k = 0; k < seg; k++) {
-          v0.lerpVectors(a, b, k       / seg).normalize().multiplyScalar(radius);
-          v1.lerpVectors(a, b, (k + 1) / seg).normalize().multiplyScalar(radius);
-          pts.push(v0.x, v0.y, v0.z, v1.x, v1.y, v1.z);
-        }
-      }
-    }
-  }
-
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-  return geo;
+function buildTriangleGraticule(radius, detail = 4) {
+  return new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(radius, detail));
 }
 
-// ── Loxodrome (rhumb-line spiral) graticule ───────────────────────────────────
-// A loxodrome crosses every meridian at the same angle α, spiralling from pole
-// to pole without ever arriving. Drawing `count` NE (+) and NW (−) spirals
-// together creates a crossing web. At 60° the spiral makes ~1.2 full revolutions
-// pole-to-pole — tight enough to weave but loose enough to read clearly.
-function buildLoxodromeGraticule(radius, count, angleDeg = 60, seg = 200) {
-  const pts  = [];
-  const tanA = Math.tan(THREE.MathUtils.degToRad(angleDeg));
-  const lo   = THREE.MathUtils.degToRad(-80); // stay clear of polar singularities
-  const hi   = THREE.MathUtils.degToRad( 80);
-
-  for (let i = 0; i < count; i++) {
-    const lon0 = (i / count) * Math.PI * 2;
-    for (const sign of [1, -1]) {             // NE spiral (+1) and NW spiral (−1)
-      for (let k = 0; k < seg - 1; k++) {
-        const lat1 = lo + (k       / (seg - 1)) * (hi - lo);
-        const lat2 = lo + ((k + 1) / (seg - 1)) * (hi - lo);
-        // Mercator northing: M = ln( tan(π/4 + lat/2) )
-        const M1   = Math.log(Math.tan(Math.PI / 4 + lat1 / 2));
-        const M2   = Math.log(Math.tan(Math.PI / 4 + lat2 / 2));
-        const lon1 = lon0 + sign * tanA * M1;
-        const lon2 = lon0 + sign * tanA * M2;
-        // Convert (lat, lon) → Cartesian (Y-up convention, colatitude = π/2 − lat)
-        const co1 = Math.PI / 2 - lat1, co2 = Math.PI / 2 - lat2;
-        pts.push(
-          radius * Math.sin(co1) * Math.cos(lon1), radius * Math.cos(co1), radius * Math.sin(co1) * Math.sin(lon1),
-          radius * Math.sin(co2) * Math.cos(lon2), radius * Math.cos(co2), radius * Math.sin(co2) * Math.sin(lon2),
-        );
-      }
-    }
-  }
-
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-  return geo;
-}
-
-// ── Voronoi cell graticule — spherical Voronoi of a Fibonacci lattice ─────────
-// Algorithm:
-//   1. Distribute N seeds evenly via the Fibonacci (golden-angle) spiral.
-//   2. ConvexGeometry(seeds) computes the 3-D convex hull of sphere-surface
-//      points, which IS the spherical Delaunay triangulation (one face per
-//      Delaunay triangle). The result is non-indexed: 3 consecutive positions
-//      per triangle, just like IcosahedronGeometry.
-//   3. Each triangle's spherical circumcenter becomes a Voronoi vertex.
-//      Exact formula for unit-sphere points: normalize( A×B + B×C + C×A ).
-//   4. Adjacent Delaunay triangles share an edge → their circumcenters are
-//      neighbours in the Voronoi diagram. Connect them with geodesic arcs
-//      (lerp + normalize) to draw the Voronoi cell boundaries.
-function buildVoronoiGraticule(radius, N, arcSeg = 6) {
-  // ── 1. Fibonacci seeds on the unit sphere ──────────────────────────────────
-  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-  const seeds = [];
-  for (let i = 0; i < N; i++) {
-    const y = 1 - (2 * i + 1) / N;
-    const r = Math.sqrt(Math.max(0, 1 - y * y));
-    const theta = goldenAngle * i;
-    seeds.push(new THREE.Vector3(r * Math.cos(theta), y, r * Math.sin(theta)));
-  }
-
-  // ── 2. Convex hull = spherical Delaunay triangulation ─────────────────────
-  // ConvexGeometry returns a non-indexed BufferGeometry (3 verts per face).
-  const hullGeo = new ConvexGeometry(seeds);
-  const pos     = hullGeo.attributes.position;
-  const nFaces  = pos.count / 3;
-
+function buildHexGraticule(radius, detail = 2) {
+  const icoGeo = new THREE.IcosahedronGeometry(1, detail);
+  const pos = icoGeo.attributes.position, nFaces = pos.count / 3;
   const PREC = 1e6;
-  const vKey = vi =>
-    `${Math.round(pos.getX(vi) * PREC)},${Math.round(pos.getY(vi) * PREC)},${Math.round(pos.getZ(vi) * PREC)}`;
-
-  // ── 3. Spherical circumcenter for each Delaunay face ──────────────────────
-  const A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3();
-  const ab = new THREE.Vector3(), bc = new THREE.Vector3(), ca = new THREE.Vector3();
-  const circumcenters = [];
-
+  const vKey = vi => `${Math.round(pos.getX(vi)*PREC)},${Math.round(pos.getY(vi)*PREC)},${Math.round(pos.getZ(vi)*PREC)}`;
+  const centroids = [];
   for (let i = 0; i < nFaces; i++) {
-    const ai = i * 3, bi = ai + 1, ci = ai + 2;
-    A.fromBufferAttribute(pos, ai);
-    B.fromBufferAttribute(pos, bi);
-    C.fromBufferAttribute(pos, ci);
-    ab.crossVectors(A, B);
-    bc.crossVectors(B, C);
-    ca.crossVectors(C, A);
-    const cc = new THREE.Vector3().addVectors(ab, bc).add(ca).normalize().multiplyScalar(radius);
-    if (cc.dot(A) < 0) cc.negate();  // pick the hemisphere-consistent solution
-    circumcenters.push(cc);
+    const a = i*3, b = a+1, c = a+2;
+    centroids.push(new THREE.Vector3(
+      (pos.getX(a)+pos.getX(b)+pos.getX(c))/3,
+      (pos.getY(a)+pos.getY(b)+pos.getY(c))/3,
+      (pos.getZ(a)+pos.getZ(b)+pos.getZ(c))/3).normalize().multiplyScalar(radius));
   }
-
-  // ── 4. Build edge → [faceA, faceB] map using sorted vertex-position keys ──
-  // Same pattern as buildHexGraticule — works for any non-indexed geometry.
   const edgeMap = new Map();
   for (let i = 0; i < nFaces; i++) {
-    const vk = [vKey(i * 3), vKey(i * 3 + 1), vKey(i * 3 + 2)];
+    const vk = [vKey(i*3), vKey(i*3+1), vKey(i*3+2)];
     for (let e = 0; e < 3; e++) {
-      const k1 = vk[e], k2 = vk[(e + 1) % 3];
-      const edgeKey = k1 < k2 ? `${k1}|${k2}` : `${k2}|${k1}`;
-      if (!edgeMap.has(edgeKey)) edgeMap.set(edgeKey, []);
-      edgeMap.get(edgeKey).push(i);
+      const k1 = vk[e], k2 = vk[(e+1)%3];
+      const ek = k1 < k2 ? `${k1}|${k2}` : `${k2}|${k1}`;
+      if (!edgeMap.has(ek)) edgeMap.set(ek, []);
+      edgeMap.get(ek).push(i);
+    }
+  }
+  const pts = [];
+  for (const f of edgeMap.values()) if (f.length === 2) pts.push(...centroids[f[0]].toArray(), ...centroids[f[1]].toArray());
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  return geo;
+}
+
+function buildBrickGraticule(radius, latDiv, lonDiv, seg = 64) {
+  const pts = [];
+  for (let i = 1; i < latDiv; i++) {
+    const phi = (i/latDiv)*Math.PI, y = radius*Math.cos(phi), r = radius*Math.sin(phi);
+    for (let j = 0; j < seg; j++) {
+      const a1=(j/seg)*Math.PI*2, a2=((j+1)/seg)*Math.PI*2;
+      pts.push(r*Math.cos(a1),y,r*Math.sin(a1),r*Math.cos(a2),y,r*Math.sin(a2));
+    }
+  }
+  for (let row = 0; row < latDiv; row++) {
+    const off=(row%2)*0.5, phi1=(row/latDiv)*Math.PI, phi2=((row+1)/latDiv)*Math.PI;
+    for (let j = 0; j < lonDiv; j++) {
+      const theta=((j+off)/lonDiv)*Math.PI*2, ct=Math.cos(theta), st=Math.sin(theta);
+      for (let k = 0; k < 8; k++) {
+        const p1=phi1+(k/8)*(phi2-phi1), p2=phi1+((k+1)/8)*(phi2-phi1);
+        pts.push(radius*Math.sin(p1)*ct,radius*Math.cos(p1),radius*Math.sin(p1)*st,
+                 radius*Math.sin(p2)*ct,radius*Math.cos(p2),radius*Math.sin(p2)*st);
+      }
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  return geo;
+}
+
+function buildDiamondGraticule(radius, latDiv, lonDiv, seg = 8) {
+  const pts=[], v0=new THREE.Vector3(), v1=new THREE.Vector3();
+  const spt=(phi,theta)=>new THREE.Vector3(Math.sin(phi)*Math.cos(theta),Math.cos(phi),Math.sin(phi)*Math.sin(theta)).multiplyScalar(radius);
+  for (let i=0;i<latDiv;i++) {
+    const phi1=(i/latDiv)*Math.PI, phi2=((i+1)/latDiv)*Math.PI;
+    for (let j=0;j<lonDiv;j++) {
+      const t1=(j/lonDiv)*Math.PI*2, t2=((j+1)/lonDiv)*Math.PI*2;
+      const NW=spt(phi1,t1),NE=spt(phi1,t2),SW=spt(phi2,t1),SE=spt(phi2,t2);
+      for (const [a,b] of [[NW,SE],[NE,SW]])
+        for (let k=0;k<seg;k++) {
+          v0.lerpVectors(a,b,k/seg).normalize().multiplyScalar(radius);
+          v1.lerpVectors(a,b,(k+1)/seg).normalize().multiplyScalar(radius);
+          pts.push(v0.x,v0.y,v0.z,v1.x,v1.y,v1.z);
+        }
+    }
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
+  return geo;
+}
+
+function buildLoxodromeGraticule(radius, count, angleDeg=60, seg=200) {
+  const pts=[], tanA=Math.tan(THREE.MathUtils.degToRad(angleDeg));
+  const lo=THREE.MathUtils.degToRad(-80), hi=THREE.MathUtils.degToRad(80);
+  for (let i=0;i<count;i++) {
+    const lon0=(i/count)*Math.PI*2;
+    for (const sign of [1,-1]) for (let k=0;k<seg-1;k++) {
+      const lat1=lo+(k/(seg-1))*(hi-lo), lat2=lo+((k+1)/(seg-1))*(hi-lo);
+      const M1=Math.log(Math.tan(Math.PI/4+lat1/2)), M2=Math.log(Math.tan(Math.PI/4+lat2/2));
+      const lon1=lon0+sign*tanA*M1, lon2=lon0+sign*tanA*M2;
+      const co1=Math.PI/2-lat1, co2=Math.PI/2-lat2;
+      pts.push(radius*Math.sin(co1)*Math.cos(lon1),radius*Math.cos(co1),radius*Math.sin(co1)*Math.sin(lon1),
+               radius*Math.sin(co2)*Math.cos(lon2),radius*Math.cos(co2),radius*Math.sin(co2)*Math.sin(lon2));
+    }
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
+  return geo;
+}
+
+function buildVoronoiGraticule(radius, N, arcSeg=6) {
+  const goldenAngle=Math.PI*(3-Math.sqrt(5)), seeds=[];
+  for (let i=0;i<N;i++) { const y=1-(2*i+1)/N,r=Math.sqrt(Math.max(0,1-y*y)),theta=goldenAngle*i; seeds.push(new THREE.Vector3(r*Math.cos(theta),y,r*Math.sin(theta))); }
+  const hullGeo=new ConvexGeometry(seeds), pos=hullGeo.attributes.position, nFaces=pos.count/3;
+  const PREC=1e6, vKey=vi=>`${Math.round(pos.getX(vi)*PREC)},${Math.round(pos.getY(vi)*PREC)},${Math.round(pos.getZ(vi)*PREC)}`;
+  const A=new THREE.Vector3(),B=new THREE.Vector3(),C=new THREE.Vector3();
+  const ab=new THREE.Vector3(),bc=new THREE.Vector3(),ca=new THREE.Vector3();
+  const circumcenters=[];
+  for (let i=0;i<nFaces;i++) {
+    const ai=i*3,bi=ai+1,ci=ai+2;
+    A.fromBufferAttribute(pos,ai);B.fromBufferAttribute(pos,bi);C.fromBufferAttribute(pos,ci);
+    ab.crossVectors(A,B);bc.crossVectors(B,C);ca.crossVectors(C,A);
+    const cc=new THREE.Vector3().addVectors(ab,bc).add(ca).normalize().multiplyScalar(radius);
+    if(cc.dot(A)<0)cc.negate(); circumcenters.push(cc);
+  }
+  const edgeMap=new Map();
+  for (let i=0;i<nFaces;i++) {
+    const vk=[vKey(i*3),vKey(i*3+1),vKey(i*3+2)];
+    for (let e=0;e<3;e++) { const k1=vk[e],k2=vk[(e+1)%3],ek=k1<k2?`${k1}|${k2}`:`${k2}|${k1}`; if(!edgeMap.has(ek))edgeMap.set(ek,[]); edgeMap.get(ek).push(i); }
+  }
+  const pts=[],v0=new THREE.Vector3(),v1=new THREE.Vector3();
+  for (const f of edgeMap.values()) if(f.length===2) { const c1=circumcenters[f[0]],c2=circumcenters[f[1]]; for(let k=0;k<arcSeg;k++){v0.lerpVectors(c1,c2,k/arcSeg).normalize().multiplyScalar(radius);v1.lerpVectors(c1,c2,(k+1)/arcSeg).normalize().multiplyScalar(radius);pts.push(v0.x,v0.y,v0.z,v1.x,v1.y,v1.z);} }
+  hullGeo.dispose();
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
+  return geo;
+}
+
+function buildGreatCircleFan(radius, count, seg=128) {
+  const pts=[],goldenAngle=Math.PI*(3-Math.sqrt(5));
+  const pole=new THREE.Vector3(),fallback=new THREE.Vector3(),u=new THREE.Vector3(),v=new THREE.Vector3(),p1=new THREE.Vector3(),p2=new THREE.Vector3();
+  for (let i=0;i<count;i++) {
+    const y=(i+0.5)/count,r=Math.sqrt(1-y*y);
+    pole.set(r*Math.cos(goldenAngle*i),y,r*Math.sin(goldenAngle*i));
+    fallback.set(0,1,0); if(Math.abs(pole.dot(fallback))>0.9)fallback.set(1,0,0);
+    u.crossVectors(pole,fallback).normalize(); v.crossVectors(pole,u);
+    for (let j=0;j<seg;j++) {
+      const a1=(j/seg)*Math.PI*2,a2=((j+1)/seg)*Math.PI*2;
+      p1.copy(u).multiplyScalar(Math.cos(a1)*radius).addScaledVector(v,Math.sin(a1)*radius);
+      p2.copy(u).multiplyScalar(Math.cos(a2)*radius).addScaledVector(v,Math.sin(a2)*radius);
+      pts.push(p1.x,p1.y,p1.z,p2.x,p2.y,p2.z);
+    }
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
+  return geo;
+}
+
+function addSphereNormals(geo) {
+  const pos=geo.attributes.position, norms=new Float32Array(pos.count*3), v=new THREE.Vector3();
+  for (let i=0;i<pos.count;i++) { v.fromBufferAttribute(pos,i).normalize(); norms[i*3]=v.x;norms[i*3+1]=v.y;norms[i*3+2]=v.z; }
+  geo.setAttribute('normal',new THREE.BufferAttribute(norms,3));
+  return geo;
+}
+
+function buildWireGeometry(size, style, density) {
+  const idx=density-1, t=idx/9, wn=g=>addSphereNormals(g);
+  switch (style) {
+    case 'triangle': { const L=[0,1,2,2,3,4,4,5,5,6]; return wn(buildTriangleGraticule(size,L[idx])); }
+    case 'hexagon':  { const L=[0,0,1,1,2,3,3,4,4,5]; return wn(buildHexGraticule(size,L[idx])); }
+    case 'brick':    { const d=Math.round(6+t*30); return wn(buildBrickGraticule(size,d,d)); }
+    case 'diamond':  { const d=Math.round(4+t*18); return wn(buildDiamondGraticule(size,d,d*2)); }
+    case 'loxodrome':{ return wn(buildLoxodromeGraticule(size,Math.round(2+idx*10/9))); }
+    case 'voronoi':  { return wn(buildVoronoiGraticule(size,Math.round(20+idx*31))); }
+    case 'greatcircle':{ return wn(buildGreatCircleFan(size,Math.round(3+idx*7/3))); }
+    default:         { const d=Math.round(6+t*30); return wn(buildGraticule(size,d,d*2)); }
+  }
+}
+
+// ── Per-body sun direction temp vector ────────────────────────────────────────
+// Sun sits at origin. Each body's sunDir is computed per-frame from its
+// world position so day/night shading is correct at every orbital angle.
+
+const _sunDirTmp = new THREE.Vector3();
+
+// ── UI helpers ────────────────────────────────────────────────────────────────
+
+const $ = id => document.getElementById(id);
+const MAX_ANISOTROPY = renderer.capabilities.getMaxAnisotropy();
+
+function setUploadLoaded(btnId, clearId, filename) {
+  const btn = $(btnId);
+  btn.textContent = filename;
+  const len = filename.length;
+  btn.style.fontSize = len > 18 ? Math.max(0.42, 0.58 - (len - 18) * 0.007) + 'rem' : '';
+  $(clearId).style.display = 'inline-block';
+}
+
+function resetUpload(btnId, clearId, defaultLabel = 'Upload') {
+  const btn = $(btnId);
+  btn.textContent    = defaultLabel;
+  btn.style.fontSize = '';
+  $(clearId).style.display = 'none';
+}
+
+function loadTex(url, onLoad) {
+  new THREE.TextureLoader().load(url, tex => {
+    tex.colorSpace = THREE.LinearSRGBColorSpace;
+    tex.anisotropy = MAX_ANISOTROPY;
+    tex.minFilter  = THREE.LinearMipmapLinearFilter;
+    tex.magFilter  = THREE.LinearFilter;
+    tex.needsUpdate = true;
+    onLoad(tex);
+    URL.revokeObjectURL(url);
+  });
+}
+
+// ── Body class ────────────────────────────────────────────────────────────────
+//
+// Orbit types:
+//   centered   — body sits at parent's origin (no orbit)
+//   circular   — constant-radius circular orbit
+//   elliptical — Keplerian ellipse; eccentricity stretches the shape
+//   binary     — two bodies share a common barycenter
+//
+// Scene graph:
+//   [parent.bodyGroup or scene]
+//     └─ orbitGroup          ← outer-orbit rotation (circular) or ellipse advance
+//          └─ bodyGroup      ← offset by orbitRadius along X
+//               ├─ tiltGroup → spinGroup → equatorGroup → mesh + wireframe
+//               ├─ atmosphere
+//               └─ rimGlow
+//
+// Binary restructures bodyGroup as:
+//   bodyGroup (host, position = barycenter offset from parent)
+//     └─ binarySpinGroup ← mutual orbit rotation
+//          ├─ binaryOffsetA (position.x = +sep/2) → host tiltGroup etc.
+//          └─ binaryOffsetB (position.x = −sep/2) → guest tiltGroup etc.
+
+class Body {
+  constructor({
+    name             = 'Body',
+    type             = 'planet',
+    parent           = null,
+    size             = 1.0,
+    orbitType        = 'centered',
+    orbitRadius      = 0,
+    orbitPeriod      = 120,
+    orbitInclination = 0,
+    orbitEccentricity = 0,
+  } = {}) {
+    this.name             = name;
+    this.type             = type;
+    this.parent           = parent;
+    this.size             = size;
+
+    // ── Orbit state ──────────────────────────────────────────────────────────
+    this.orbitType        = orbitType;
+    this.orbitRadius      = orbitRadius;
+    this.orbitPeriod      = orbitPeriod;   // seconds per full orbit
+    this.orbitInclination = orbitInclination;
+    this.orbitEccentricity = orbitEccentricity;
+    this._orbitAngle      = 0;             // radians, advances each frame
+    this._orbitSpeed      = 0;             // rad per frame at 60fps — computed below
+
+    // ── Binary state ──────────────────────────────────────────────────────────
+    this.binaryPartner     = null;
+    this.binaryIsHost      = false;
+    this._binarySpinGroup  = null;
+    this._binaryOffset     = null;  // this body's offset group within binarySpinGroup
+    this.binarySeparation  = 4;
+    this.binaryPeriod      = 60;    // seconds per mutual orbit
+
+    // ── Per-body panel state ─────────────────────────────────────────────────
+    this.autoRotate    = true;
+    this.rotateSpeed   = (2 * Math.PI) / (60 * 60);
+    this.axialTilt     = 0;
+    this.equatorTilt   = 0;
+    this.tiltLocked    = true;
+    this.fullTiltRange = false;
+    this.wireStyle     = 'triangle';
+    this.wireDensity   = 5;
+    this.dayTexName    = null;
+    this.nightTexName  = null;
+
+    // ── Ring state ───────────────────────────────────────────────────────────
+    this.ringEnabled     = false;
+    this.ringInnerRadius = 1.5;
+    this.ringOuterRadius = 2.5;
+    this.ringTilt        = 0;      // degrees, extra tilt beyond equatorial plane
+    this.ringOpacity     = 0.6;
+    this.ringColor       = '#aaaaaa';
+
+    // ── Trail state ──────────────────────────────────────────────────────────
+    this.trailLine = null;
+
+    this._syncOrbitSpeed();
+
+    // ── Scene graph ───────────────────────────────────────────────────────────
+    this.orbitGroup = new THREE.Group();
+    this.orbitGroup.rotation.z = THREE.MathUtils.degToRad(orbitInclination);
+
+    this.bodyGroup = new THREE.Group();
+    this.bodyGroup.position.x = orbitRadius;
+    this.orbitGroup.add(this.bodyGroup);
+
+    this.tiltGroup    = new THREE.Group();
+    this.spinGroup    = new THREE.Group();
+    this.equatorGroup = new THREE.Group();
+    this.tiltGroup.add(this.spinGroup);
+    this.spinGroup.add(this.equatorGroup);
+    this.bodyGroup.add(this.tiltGroup);
+
+    // ── Globe ─────────────────────────────────────────────────────────────────
+    this.globeMat = new THREE.ShaderMaterial({
+      vertexShader: GLOBE_VERT, fragmentShader: GLOBE_FRAG,
+      uniforms: {
+        dayTex:         { value: null },
+        nightTex:       { value: null },
+        hasDayTex:      { value: false },
+        hasNightTex:    { value: false },
+        sunDir:         { value: new THREE.Vector3(1, 0, 0) },
+        sunColor:       { value: new THREE.Vector3(globalLightColor.r, globalLightColor.g, globalLightColor.b) },
+        sunIntensity:   { value: globalSunIntensity },
+        baseColor:      { value: new THREE.Color(0x060618) },
+        ambientStr:     { value: 0.18 },
+        flatLit:        { value: !globalDayNight },
+        nightThreshold: { value: 0.05 },
+      },
+    });
+
+    this.mesh = new THREE.Mesh(new THREE.SphereGeometry(size, 256, 256), this.globeMat);
+    this.mesh.visible = false;
+    this.equatorGroup.add(this.mesh);
+
+    // ── Wireframe ─────────────────────────────────────────────────────────────
+    this.graticuleMat = new THREE.ShaderMaterial({
+      uniforms: {
+        lineColor: { value: new THREE.Color(0x2266cc) },
+        opacity:   { value: 0.55 },
+        sunDir:    { value: new THREE.Vector3(1, 0, 0) },
+        flatLit:   { value: !globalDayNight },
+      },
+      vertexShader: GRAT_VERT, fragmentShader: GRAT_FRAG,
+      transparent: true, depthWrite: false, depthTest: false,
+    });
+
+    this.wireframe = new THREE.LineSegments(
+      buildWireGeometry(size * 1.001, this.wireStyle, this.wireDensity),
+      this.graticuleMat
+    );
+    this.wireframe.renderOrder = 2;
+    this.wireframe.visible     = true;
+    this.equatorGroup.add(this.wireframe);
+
+    // ── Atmosphere ────────────────────────────────────────────────────────────
+    this.atmosphere = new THREE.Mesh(
+      new THREE.SphereGeometry(size * 1.055, 64, 64),
+      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.05, side: THREE.FrontSide, depthWrite: false })
+    );
+    this.atmosphere.visible = false;
+    this.bodyGroup.add(this.atmosphere);
+
+    // ── Rim glow ──────────────────────────────────────────────────────────────
+    this.rimMat = new THREE.ShaderMaterial({
+      uniforms: { glowColor: { value: new THREE.Color(0xffffff) }, viewVector: { value: new THREE.Vector3() } },
+      vertexShader: RIM_VERT, fragmentShader: RIM_FRAG,
+      side: THREE.BackSide, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false,
+    });
+    this.rimGlow = new THREE.Mesh(new THREE.SphereGeometry(size * 1.12, 64, 64), this.rimMat);
+    this.rimGlow.visible = false;
+    this.bodyGroup.add(this.rimGlow);
+
+    this._wp = new THREE.Vector3();
+
+    // ── Ring mesh ─────────────────────────────────────────────────────────────
+    // RingGeometry lies in XY plane, so rotate -PI/2 around X to lay it flat in XZ
+    this.ringMesh = new THREE.Mesh(
+      new THREE.RingGeometry(this.ringInnerRadius, this.ringOuterRadius, 128),
+      new THREE.MeshBasicMaterial({
+        color: new THREE.Color(this.ringColor),
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: this.ringOpacity,
+        depthWrite: false,
+      })
+    );
+    this.ringMesh.rotation.x = -Math.PI / 2; // lay flat in XZ plane
+    this.ringMesh.visible = false;
+    this.bodyGroup.add(this.ringMesh);
+
+    // ── Attach ────────────────────────────────────────────────────────────────
+    const pg = parent ? parent.bodyGroup : scene;
+    pg.add(this.orbitGroup);
+
+    // Build initial trail (after orbitGroup is attached so parent chain is set)
+    this._buildTrail();
+  }
+
+  _syncOrbitSpeed() {
+    this._orbitSpeed = this.orbitPeriod > 0
+      ? (2 * Math.PI) / (this.orbitPeriod * 60)
+      : 0;
+  }
+
+  // ── Trail ─────────────────────────────────────────────────────────────────
+  // Draws the static orbit path line in the parent's local space.
+  _buildTrail() {
+    // Remove old trail
+    if (this.trailLine) {
+      const pg = this.parent ? this.parent.bodyGroup : scene;
+      pg.remove(this.trailLine);
+      this.trailLine.geometry.dispose();
+      this.trailLine.material.dispose();
+      this.trailLine = null;
+    }
+
+    if (this.orbitType === 'centered' || this.orbitRadius <= 0) return;
+
+    const N = 128;
+    const points = [];
+
+    if (this.orbitType === 'circular' || this.orbitType === 'binary') {
+      for (let i = 0; i <= N; i++) {
+        const a = (i / N) * Math.PI * 2;
+        points.push(new THREE.Vector3(
+          this.orbitRadius * Math.cos(a), 0, this.orbitRadius * Math.sin(a)
+        ));
+      }
+    } else if (this.orbitType === 'elliptical') {
+      const a = this.orbitRadius;
+      const e = this.orbitEccentricity;
+      const b = a * Math.sqrt(Math.max(0, 1 - e * e));
+      for (let i = 0; i <= N; i++) {
+        const angle = (i / N) * Math.PI * 2;
+        points.push(new THREE.Vector3(
+          a * Math.cos(angle) - a * e, 0, b * Math.sin(angle)
+        ));
+      }
+    }
+
+    if (points.length === 0) return;
+
+    const geo = new THREE.BufferGeometry().setFromPoints(points);
+    const mat = new THREE.LineBasicMaterial({
+      color: 0x334455,
+      transparent: true,
+      opacity: 0.5,
+      depthWrite: false,
+    });
+    this.trailLine = new THREE.Line(geo, mat);
+    this.trailLine.rotation.z = THREE.MathUtils.degToRad(this.orbitInclination);
+    this.trailLine.visible = globalShowTrails;
+
+    const pg = this.parent ? this.parent.bodyGroup : scene;
+    pg.add(this.trailLine);
+  }
+
+  // ── Ring ──────────────────────────────────────────────────────────────────
+  _applyRingGeometry() {
+    this.ringMesh.geometry.dispose();
+    this.ringMesh.geometry = new THREE.RingGeometry(
+      this.ringInnerRadius, this.ringOuterRadius, 128
+    );
+  }
+
+  applyTilts() {
+    this.tiltGroup.rotation.z    = THREE.MathUtils.degToRad(this.axialTilt);
+    this.equatorGroup.rotation.z = THREE.MathUtils.degToRad(this.equatorTilt - this.axialTilt);
+  }
+
+  rebuildWireframe() {
+    this.wireframe.geometry.dispose();
+    this.wireframe.geometry = buildWireGeometry(this.size * 1.001, this.wireStyle, this.wireDensity);
+  }
+
+  setSize(s) {
+    this.size = s;
+    this.mesh.geometry.dispose();
+    this.mesh.geometry = new THREE.SphereGeometry(s, 256, 256);
+    this.wireframe.geometry.dispose();
+    this.wireframe.geometry = buildWireGeometry(s * 1.001, this.wireStyle, this.wireDensity);
+    this.atmosphere.geometry.dispose();
+    this.atmosphere.geometry = new THREE.SphereGeometry(s * 1.055, 64, 64);
+    this.rimGlow.geometry.dispose();
+    this.rimGlow.geometry = new THREE.SphereGeometry(s * 1.12, 64, 64);
+  }
+
+  update(dt) {
+    const wdt = dt * globalTimeWarp; // scaled delta for orbital motion + rotation
+
+    switch (this.orbitType) {
+      case 'circular':
+        this.orbitGroup.rotation.y += this._orbitSpeed * wdt * 60;
+        break;
+
+      case 'elliptical': {
+        this._orbitAngle += this._orbitSpeed * wdt * 60;
+        const a = this.orbitRadius;
+        const e = this.orbitEccentricity;
+        const b = a * Math.sqrt(Math.max(0, 1 - e * e));
+        // Place body on ellipse with one focus at parent origin
+        this.bodyGroup.position.x = a * Math.cos(this._orbitAngle) - a * e;
+        this.bodyGroup.position.z = b * Math.sin(this._orbitAngle);
+        break;
+      }
+
+      case 'binary':
+        if (this.binaryIsHost) {
+          // Outer orbit of the barycenter around the parent star
+          this.orbitGroup.rotation.y += this._orbitSpeed * wdt * 60;
+          // Mutual binary orbit
+          const binSpeed = (2 * Math.PI) / (this.binaryPeriod * 60);
+          this._binarySpinGroup.rotation.y += binSpeed * wdt * 60;
+        }
+        // Guest body: no independent orbit; the host drives everything
+        break;
+
+      // 'centered': body sits at parent origin, no orbit advancement
+    }
+
+    if (this.autoRotate)
+      this.spinGroup.rotation.y += this.rotateSpeed * wdt * 60;
+
+    if (this.rimGlow.visible) {
+      this.rimGlow.getWorldPosition(this._wp);
+      this.rimMat.uniforms.viewVector.value.subVectors(camera.position, this._wp);
     }
   }
 
-  // ── 5. One geodesic arc per shared Delaunay edge → Voronoi cell boundaries ─
-  const pts = [];
-  const v0 = new THREE.Vector3(), v1 = new THREE.Vector3();
+  dispose() {
+    this.globeMat.uniforms.dayTex.value?.dispose();
+    this.globeMat.uniforms.nightTex.value?.dispose();
+    this.globeMat.dispose();
+    this.graticuleMat.dispose();
+    this.rimMat.dispose();
+    this.ringMesh.material.dispose();
+    this.atmosphere.material.dispose();
+    this.mesh.geometry.dispose();
+    this.wireframe.geometry.dispose();
+    this.atmosphere.geometry.dispose();
+    this.rimGlow.geometry.dispose();
+    this.ringMesh.geometry.dispose();
 
-  for (const faces of edgeMap.values()) {
-    if (faces.length === 2) {
-      const c1 = circumcenters[faces[0]], c2 = circumcenters[faces[1]];
-      for (let k = 0; k < arcSeg; k++) {
-        v0.lerpVectors(c1, c2, k       / arcSeg).normalize().multiplyScalar(radius);
-        v1.lerpVectors(c1, c2, (k + 1) / arcSeg).normalize().multiplyScalar(radius);
-        pts.push(v0.x, v0.y, v0.z, v1.x, v1.y, v1.z);
+    if (this.trailLine) {
+      this.trailLine.geometry.dispose();
+      this.trailLine.material.dispose();
+      // trail is removed with orbitGroup's parent below
+    }
+
+    if (this.orbitType === 'binary' && !this.binaryIsHost) return; // host removal handles scene detach
+    const pg = this.parent ? this.parent.bodyGroup : scene;
+    pg.remove(this.orbitGroup);
+    if (this.trailLine) pg.remove(this.trailLine);
+  }
+}
+
+// ── Binary linking ────────────────────────────────────────────────────────────
+//
+// Makes `host` and `guest` orbit a common barycenter.
+// Host keeps its orbitGroup position (outer orbit); guest's orbitGroup is
+// detached and its internals folded into the host's binarySpinGroup.
+
+function linkBinary(host, guest, separation = 4, period = 60) {
+  const sep = separation;
+
+  // Create spin group inside host's bodyGroup
+  const bsg  = new THREE.Group();
+  const offA = new THREE.Group(); // host side (+x)
+  const offB = new THREE.Group(); // guest side (−x)
+  offA.position.x = +sep / 2;
+  offB.position.x = -sep / 2;
+  bsg.add(offA, offB);
+  host.bodyGroup.add(bsg);
+
+  // Reparent host's internals from bodyGroup → offA
+  // THREE.Object3D.add() auto-detaches from previous parent
+  offA.add(host.tiltGroup, host.atmosphere, host.rimGlow);
+
+  // Detach guest's orbitGroup from scene/parent, reparent guest's internals → offB
+  const guestPG = guest.parent ? guest.parent.bodyGroup : scene;
+  guestPG.remove(guest.orbitGroup);
+  offB.add(guest.tiltGroup, guest.atmosphere, guest.rimGlow);
+
+  // Host bodyGroup now only has bsg; position it at barycenter (center = 0)
+  host.bodyGroup.position.x = host.orbitRadius; // barycenter offset from parent star
+
+  // Record linkage
+  host.orbitType       = 'binary';
+  host.binaryPartner   = guest;
+  host.binaryIsHost    = true;
+  host._binarySpinGroup = bsg;
+  host._binaryOffset   = offA;
+  host.binarySeparation = sep;
+  host.binaryPeriod    = period;
+
+  guest.orbitType       = 'binary';
+  guest.binaryPartner   = host;
+  guest.binaryIsHost    = false;
+  guest._binarySpinGroup = bsg;
+  guest._binaryOffset   = offB;
+  guest.binarySeparation = sep;
+  guest.binaryPeriod    = period;
+}
+
+// ── Bodies list & selection ───────────────────────────────────────────────────
+
+const bodies = [];
+let selectedBody   = null;
+let editingBody    = null;
+let lockedBody     = null;        // body the camera is locked onto
+let isCapturingGif = false;
+let hasBgTex       = false;
+const _lockPos     = new THREE.Vector3();
+const _lockDelta   = new THREE.Vector3();
+
+function createBody(opts) {
+  const b = new Body(opts);
+  bodies.push(b);
+  renderBodyTree();
+  return b;
+}
+
+function removeBody(target) {
+  // Collect target + binary partner (if any) + all descendants
+  const toRemove = new Set([target]);
+  if (target.orbitType === 'binary' && target.binaryPartner)
+    toRemove.add(target.binaryPartner);
+
+  function collectDescendants(b) {
+    for (const other of bodies)
+      if (other.parent === b && !toRemove.has(other)) {
+        toRemove.add(other);
+        collectDescendants(other);
+      }
+  }
+  toRemove.forEach(collectDescendants);
+
+  // Dispose host first so scene graph cleanup is correct, then guests
+  const sorted = [...toRemove].sort((a, b) => (a.binaryIsHost ? -1 : 1));
+  sorted.forEach(b => {
+    b.dispose();
+    bodies.splice(bodies.indexOf(b), 1);
+  });
+
+  // Clear camera lock if the locked body was removed
+  if (lockedBody && toRemove.has(lockedBody)) unlockCamera();
+
+  selectBody(bodies[0] ?? null);
+}
+
+// ── Body tree UI ──────────────────────────────────────────────────────────────
+
+const TYPE_LABEL = { planet: 'PLANET', moon: 'MOON' };
+
+function renderBodyTree() {
+  const tree = $('body-tree');
+  tree.innerHTML = '';
+
+  bodies.forEach(b => {
+    const slot = document.createElement('div');
+    slot.className = 'upload-slot body-slot';
+    const isChild = b.parent || (b.orbitType === 'binary' && !b.binaryIsHost);
+    if (isChild) slot.style.paddingLeft = '14px';
+
+    const btn = document.createElement('button');
+    btn.className = 'body-select-btn' + (b === selectedBody ? ' active' : '');
+    btn.innerHTML = '<span class="body-btn-type">' + (TYPE_LABEL[b.type] ?? b.type.toUpperCase()) + '</span> ' + escHtml(b.name);
+    btn.addEventListener('click', () => selectBody(b));
+
+    const editBtn = document.createElement('button');
+    editBtn.className   = 'clear-btn';
+    editBtn.textContent = '✎';
+    editBtn.title       = 'Edit body';
+    editBtn.addEventListener('click', e => { e.stopPropagation(); openEditForm(b); });
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className   = 'clear-btn';
+    removeBtn.textContent = '✕';
+    removeBtn.title       = 'Remove body';
+    removeBtn.addEventListener('click', e => { e.stopPropagation(); removeBody(b); });
+
+    slot.append(btn, editBtn, removeBtn);
+    tree.appendChild(slot);
+  });
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Camera lock-on ────────────────────────────────────────────────────────────
+
+function refreshLockBtn() {
+  const btn = $('lock-camera-btn');
+  if (!btn) return;
+  const isLocked = lockedBody !== null;
+  btn.disabled = !selectedBody;
+  btn.textContent = isLocked ? '⊙ Unlock Camera' : '⊙ Lock Camera';
+  btn.classList.toggle('btn-active', isLocked);
+}
+
+function lockOnto(b) {
+  lockedBody = b;
+  controls.enablePan = false;
+  refreshLockBtn();
+}
+
+function unlockCamera() {
+  lockedBody = null;
+  controls.enablePan = true;
+  refreshLockBtn();
+}
+
+// ── Add-body form ─────────────────────────────────────────────────────────────
+
+function openAddForm() {
+  closeEditForm(); // mutually exclusive with edit form
+  // Populate parent select
+  const parentSel = $('new-body-parent');
+  parentSel.innerHTML = '<option value="none">None (root)</option>';
+  bodies.forEach((b, i) => {
+    const opt = document.createElement('option');
+    opt.value = i; opt.textContent = b.name;
+    parentSel.appendChild(opt);
+  });
+  if (bodies.length) parentSel.value = '0';
+
+  // Default name
+  $('new-body-name').value = suggestName($('new-body-type').value);
+
+  // Show/hide binary partner row
+  updateAddFormOrbitVisibility();
+
+  $('add-body-form').style.display = '';
+  $('add-body-btn').style.display  = 'none';
+}
+
+function closeAddForm() {
+  $('add-body-form').style.display = 'none';
+  $('add-body-btn').style.display  = '';
+}
+
+// ── Edit-body form ────────────────────────────────────────────────────────────
+
+// Returns true if `node` is a descendant of `ancestor` in the bodies hierarchy
+function isDescendantOf(node, ancestor) {
+  let cur = node.parent;
+  while (cur) {
+    if (cur === ancestor) return true;
+    cur = cur.parent;
+  }
+  return false;
+}
+
+function reparentBody(b, newParent) {
+  const oldPG = b.parent ? b.parent.bodyGroup : scene;
+  oldPG.remove(b.orbitGroup);
+  b.parent = newParent;
+  const newPG = newParent ? newParent.bodyGroup : scene;
+  newPG.add(b.orbitGroup);
+}
+
+function openEditForm(b) {
+  editingBody = b;
+  closeAddForm(); // mutually exclusive with add form
+
+  $('edit-body-label').textContent = 'Editing: ' + b.name;
+  $('edit-body-name').value = b.name;
+  $('edit-body-type').value = b.type;
+
+  // Orbit type (binary bodies can't change type from this form)
+  const isBinary = b.orbitType === 'binary';
+  $('edit-body-orbit').value    = isBinary ? 'binary' : b.orbitType;
+  $('edit-body-orbit').disabled = isBinary;
+  // Ensure binary option exists only while a binary body is selected
+  let binOpt = $('edit-body-orbit').querySelector('option[value="binary"]');
+  if (isBinary && !binOpt) {
+    binOpt = document.createElement('option');
+    binOpt.value = 'binary'; binOpt.textContent = 'Binary';
+    $('edit-body-orbit').appendChild(binOpt);
+  } else if (!isBinary && binOpt) {
+    binOpt.remove();
+  }
+
+  // Parent select — can't set to self, own descendants, or change while binary
+  const parentSel = $('edit-body-parent');
+  parentSel.innerHTML = '<option value="none">None (root)</option>';
+  parentSel.disabled  = isBinary;
+  if (!isBinary) {
+    bodies.forEach((other, i) => {
+      if (other === b || isDescendantOf(other, b)) return; // skip invalid parents
+      const opt = document.createElement('option');
+      opt.value = i; opt.textContent = other.name;
+      parentSel.appendChild(opt);
+    });
+    parentSel.value = b.parent ? String(bodies.indexOf(b.parent)) : 'none';
+  }
+
+  $('edit-body-form').style.display = '';
+}
+
+function closeEditForm() {
+  editingBody = null;
+  $('edit-body-form').style.display = 'none';
+}
+
+$('confirm-edit-body').addEventListener('click', () => {
+  const b = editingBody; if (!b) return;
+
+  const newName = $('edit-body-name').value.trim();
+  if (newName) b.name = newName;
+
+  b.type = $('edit-body-type').value;
+
+  // Apply orbit type change (non-binary only)
+  if (b.orbitType !== 'binary') {
+    const newOrbit = $('edit-body-orbit').value;
+    if (newOrbit !== b.orbitType) {
+      b.orbitType = newOrbit;
+      if (newOrbit === 'centered') {
+        b.bodyGroup.position.set(0, 0, 0);
+      } else if (newOrbit === 'circular') {
+        b.bodyGroup.position.x = b.orbitRadius;
+        b.bodyGroup.position.z = 0;
+        b.orbitGroup.rotation.y = 0;
+      } else if (newOrbit === 'elliptical') {
+        b._orbitAngle = 0;
+        b.orbitGroup.rotation.y = 0;
       }
     }
   }
 
-  hullGeo.dispose();
+  // Apply parent change
+  const parentVal  = $('edit-body-parent').value;
+  const newParent  = parentVal === 'none' ? null : bodies[parseInt(parentVal)];
+  if (newParent !== b.parent) reparentBody(b, newParent);
 
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-  return geo;
-}
-
-// ── Great circle fan graticule ────────────────────────────────────────────────
-// Draws `count` full great circles whose poles are Fibonacci-distributed across
-// the hemisphere (antipodal poles give the same circle, so hemisphere = unique).
-// The evenly-spread orientations produce a crystal-ball / gyroscope web.
-function buildGreatCircleFan(radius, count, seg = 128) {
-  const pts         = [];
-  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-  const pole = new THREE.Vector3(), fallback = new THREE.Vector3();
-  const u = new THREE.Vector3(), v = new THREE.Vector3();
-  const p1 = new THREE.Vector3(), p2 = new THREE.Vector3();
-
-  for (let i = 0; i < count; i++) {
-    // Fibonacci hemisphere — y from just above 0 to just below 1
-    const y = (i + 0.5) / count;
-    const r = Math.sqrt(1 - y * y);
-    pole.set(r * Math.cos(goldenAngle * i), y, r * Math.sin(goldenAngle * i));
-
-    // Build an orthonormal frame {u, v} spanning the great-circle plane
-    fallback.set(0, 1, 0);
-    if (Math.abs(pole.dot(fallback)) > 0.9) fallback.set(1, 0, 0);
-    u.crossVectors(pole, fallback).normalize();
-    v.crossVectors(pole, u);                   // u and pole are unit → v is unit
-
-    for (let j = 0; j < seg; j++) {
-      const a1 = (j       / seg) * Math.PI * 2;
-      const a2 = ((j + 1) / seg) * Math.PI * 2;
-      p1.copy(u).multiplyScalar(Math.cos(a1) * radius).addScaledVector(v, Math.sin(a1) * radius);
-      p2.copy(u).multiplyScalar(Math.cos(a2) * radius).addScaledVector(v, Math.sin(a2) * radius);
-      pts.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
-    }
-  }
-
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-  return geo;
-}
-
-// ── Wireframe normal helper ──────────────────────────────────────────────────
-// Every wireframe vertex lies on the sphere surface, so its outward normal is
-// just the normalised position. We need this attribute so the shader can tell
-// front-facing lines from back-facing ones.
-function addSphereNormals(geo) {
-  const pos = geo.attributes.position;
-  const norms = new Float32Array(pos.count * 3);
-  const v = new THREE.Vector3();
-  for (let i = 0; i < pos.count; i++) {
-    v.fromBufferAttribute(pos, i).normalize();
-    norms[i * 3]     = v.x;
-    norms[i * 3 + 1] = v.y;
-    norms[i * 3 + 2] = v.z;
-  }
-  geo.setAttribute('normal', new THREE.BufferAttribute(norms, 3));
-  return geo;
-}
-
-// ── Active wireframe ─────────────────────────────────────────────────────────
-// ShaderMaterial that dims back-facing lines to a darker variant of the front
-// colour. vFacing = dot(worldNormal, viewDir): +1 = directly facing camera,
-// -1 = directly away. We map that to a brightness range [0.15, 1.0].
-const graticuleMat = new THREE.ShaderMaterial({
-  uniforms: {
-    lineColor: { value: new THREE.Color(0x2266cc) },
-    opacity:   { value: 0.55 },
-    sunDir:    { value: new THREE.Vector3(1, 0, 0) },
-    flatLit:   { value: true },
-  },
-  vertexShader: /* glsl */`
-    uniform vec3 sunDir;
-    varying float vFacing;
-    varying float vNdotL;
-    void main() {
-      vec3 worldPos    = (modelMatrix * vec4(position, 1.0)).xyz;
-      vec3 worldNormal = normalize(mat3(modelMatrix) * normal);
-      vFacing = dot(worldNormal, normalize(cameraPosition - worldPos));
-      vNdotL  = dot(worldNormal, sunDir);
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
-  fragmentShader: /* glsl */`
-    uniform vec3  lineColor;
-    uniform float opacity;
-    uniform bool  flatLit;
-    varying float vFacing;
-    varying float vNdotL;
-    void main() {
-      // Front hemisphere: full brightness. Back hemisphere: ~40%.
-      float t          = clamp(vFacing * 0.5 + 0.5, 0.0, 1.0);
-      float brightness = mix(0.40, 1.0, t);
-
-      // In flat-lit mode the dim back-hemisphere lines are a nice depth cue.
-      // In day/night mode they must be hidden — depthTest is off so they would
-      // project straight through the opaque globe as visible bands on the dark side.
-      float backFade  = flatLit ? 1.0 : max(sign(vFacing), 0.0);
-
-      // Also fade lines to black on the night side.
-      float nightFade = flatLit ? 1.0 : smoothstep(-0.05, 0.05, vNdotL);
-
-      gl_FragColor = vec4(lineColor * brightness, opacity * backFade * nightFade);
-    }
-  `,
-  transparent: true,
-  depthWrite:  false,
-  depthTest:   false,
+  closeEditForm();
+  selectBody(b); // re-renders tree + refreshes panel
 });
 
-function withNormals(geo) { return addSphereNormals(geo); }
+$('cancel-edit-body').addEventListener('click', closeEditForm);
 
-// ── Wireframe density / style state ─────────────────────────────────────────
-let currentWireStyle   = 'triangle';
-let currentWireDensity = 5; // 1 (coarse) … 10 (fine)
+function suggestName(type) {
+  const count = bodies.filter(b => b.type === type).length + 1;
+  return { planet: 'Planet', moon: 'Moon' }[type] + ' ' + count;
+}
 
-function buildWireGeometry() {
-  // idx is a direct 0–9 index corresponding to density 1–10.
-  // Using it directly avoids Math.round flat-spots where adjacent slider
-  // positions map to the same detail level and produce no visible change.
-  const idx = currentWireDensity - 1; // 0 … 9
-  const t   = idx / 9;                // 0 … 1  (for continuous styles)
+function updateAddFormOrbitVisibility() {
+  const orbitType = $('new-body-orbit').value;
+  const isBinary  = orbitType === 'binary';
+  $('new-body-partner-row').style.display = isBinary ? '' : 'none';
 
-  switch (currentWireStyle) {
-
-    case 'triangle': {
-      // 7 distinct icosphere detail levels (0–6) spread across 10 positions.
-      // Flat spots placed away from centre so both slider directions change.
-      //           density:  1  2  3  4  5  6  7  8  9  10
-      const LEVELS        = [0, 1, 2, 2, 3, 4, 4, 5, 5, 6];
-      return withNormals(buildTriangleGraticule(R * 1.001, LEVELS[idx]));
-    }
-
-    case 'hexagon': {
-      // 6 distinct detail levels (0–5). Centre (density 5 → 2) changes both ways.
-      //           density:  1  2  3  4  5  6  7  8  9  10
-      const LEVELS        = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5];
-      return withNormals(buildHexGraticule(R * 1.001, LEVELS[idx]));
-    }
-
-    case 'brick': {
-      // Continuous like grid; lonDiv = latDiv gives ~2:1 brick aspect ratio.
-      const latDiv = Math.round(6 + t * 30);
-      return withNormals(buildBrickGraticule(R * 1.001, latDiv, latDiv));
-    }
-
-    case 'diamond': {
-      // lonDiv = latDiv*2 → square cells in degree-space → true 45° diagonals.
-      // Slightly narrower range than grid so max density stays performant.
-      const latDiv = Math.round(4 + t * 18);
-      return withNormals(buildDiamondGraticule(R * 1.001, latDiv, latDiv * 2));
-    }
-
-    case 'loxodrome': {
-      // 2–12 spiral pairs (NE + NW) → 4–24 total spirals.
-      const count = Math.round(2 + idx * 10 / 9);
-      return withNormals(buildLoxodromeGraticule(R * 1.001, count));
-    }
-
-    case 'voronoi': {
-      // 20–299 Fibonacci seed points → matching number of Voronoi cells.
-      const N = Math.round(20 + idx * 31);
-      return withNormals(buildVoronoiGraticule(R * 1.001, N));
-    }
-
-    case 'greatcircle': {
-      // 3–24 great circles with Fibonacci-distributed orientations.
-      const count = Math.round(3 + idx * 7 / 3);
-      return withNormals(buildGreatCircleFan(R * 1.001, count));
-    }
-
-    default: {                                // 'grid' — continuous parameter
-      const latDiv = Math.round(6 + t * 30); // 6–36 divisions
-      return withNormals(buildGraticule(R * 1.001, latDiv, latDiv * 2));
-    }
+  if (isBinary) {
+    const partnerSel = $('new-body-partner');
+    partnerSel.innerHTML = '';
+    bodies.forEach((b, i) => {
+      if (b.orbitType !== 'binary') { // can't link to already-binary body
+        const opt = document.createElement('option');
+        opt.value = i; opt.textContent = b.name;
+        partnerSel.appendChild(opt);
+      }
+    });
   }
 }
 
-const wireframe = new THREE.LineSegments(buildWireGeometry(), graticuleMat);
-wireframe.renderOrder = 2; // always on top of the globe surface
-equatorGroup.add(wireframe);
-
-function rebuildWireframe() {
-  wireframe.geometry.dispose();
-  wireframe.geometry = buildWireGeometry();
+function autoOrbitRadius(parent) {
+  const siblings = bodies.filter(b => b.parent === parent && b.orbitType !== 'centered');
+  if (!siblings.length) return parent ? 3 : 8;
+  return Math.max(...siblings.map(b => b.orbitRadius)) + 5;
 }
 
-function setWireframeStyle(style) {
-  currentWireStyle = style;
-  rebuildWireframe();
-}
-
-// ── Atmosphere ───────────────────────────────────────────────────────────────
-
-// MeshBasicMaterial — no directional lighting so it won't show a day/night
-// gradient when the day/night cycle is disabled.
-const atmosphere = new THREE.Mesh(
-  new THREE.SphereGeometry(R * 1.055, 64, 64),
-  new THREE.MeshBasicMaterial({
-    color: 0xffffff, transparent: true, opacity: 0.05,
-    side: THREE.FrontSide, depthWrite: false,
-  })
-);
-atmosphere.visible = false;
-scene.add(atmosphere);
-
-const rimMat = new THREE.ShaderMaterial({
-  uniforms: {
-    glowColor:  { value: new THREE.Color(0xffffff) },
-    viewVector: { value: new THREE.Vector3() },
-  },
-  vertexShader: `
-    uniform vec3 viewVector;
-    varying float rim;
-    void main() {
-      vec3 vn = normalize(normalMatrix * normal);
-      vec3 vv = normalize(normalMatrix * viewVector);
-      rim = pow(1.0 - abs(dot(vn, vv)), 3.5);
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
-  fragmentShader: `
-    uniform vec3 glowColor;
-    varying float rim;
-    void main() { gl_FragColor = vec4(glowColor, rim * 0.18); }
-  `,
-  side: THREE.BackSide,
-  blending: THREE.AdditiveBlending,
-  transparent: true,
-  depthWrite: false,
+$('new-body-type').addEventListener('change', () => {
+  $('new-body-name').value = suggestName($('new-body-type').value);
+  // Stars default to centered
+  const isStar = $('new-body-type').value === 'star';
+  if (isStar) $('new-body-orbit').value = 'centered';
+  else if ($('new-body-orbit').value === 'centered') $('new-body-orbit').value = 'circular';
+  updateAddFormOrbitVisibility();
 });
 
-const rimGlow = new THREE.Mesh(new THREE.SphereGeometry(R * 1.12, 64, 64), rimMat);
-rimGlow.visible = false; // hidden by default; atmosphere toggle enables it
-scene.add(rimGlow);
+$('new-body-orbit').addEventListener('change', updateAddFormOrbitVisibility);
 
-// ── Sun light (direction only — all meshes use ShaderMaterial, no Three.js lighting) ──
-// Position is only used to derive sunDir for the globe shader and to drive
-// the atmosphere glow mesh if lights: true is ever added.
+$('add-body-btn').addEventListener('click', openAddForm);
+$('cancel-add-body').addEventListener('click', closeAddForm);
+$('lock-camera-btn').addEventListener('click', () => {
+  if (lockedBody) unlockCamera();
+  else if (selectedBody) lockOnto(selectedBody);
+});
 
-const sunLight = new THREE.DirectionalLight(0xffffff, 3.0);
-sunLight.position.set(5, 0, 0); // Y=0 keeps sun on equatorial plane → vertical terminator
-scene.add(sunLight);
+$('confirm-add-body').addEventListener('click', () => {
+  const name      = $('new-body-name').value.trim() || 'New Body';
+  const type      = $('new-body-type').value;
+  const orbitType = $('new-body-orbit').value;
+  const parentVal = $('new-body-parent').value;
+  const parent    = parentVal === 'none' ? null : bodies[parseInt(parentVal)];
 
-// Keep globe + graticule shaders' sunDir in sync with the Three.js light
-function syncSunDir() {
-  const dir = new THREE.Vector3().copy(sunLight.position).normalize();
-  globeMat.uniforms.sunDir.value.copy(dir);
-  graticuleMat.uniforms.sunDir.value.copy(dir);
+  if (orbitType === 'binary') {
+    const partnerEl = $('new-body-partner');
+    if (!partnerEl.options.length) { alert('No valid binary partner available.'); return; }
+    const host = bodies[parseInt(partnerEl.value)];
+
+    // Create the guest body as centered first (linkBinary will detach it)
+    const guest = createBody({ name, type, parent: host.parent, orbitType: 'centered' });
+    linkBinary(host, guest, 4, 60);
+    applyGlobeTheme(localStorage.getItem('itschu-theme') || 'dark');
+    closeAddForm();
+    selectBody(guest);
+    return;
+  }
+
+  const orbitRadius = orbitType === 'centered' ? 0 : autoOrbitRadius(parent);
+  const newBody = createBody({ name, type, parent, orbitType, orbitRadius, orbitPeriod: 120 });
+  applyGlobeTheme(localStorage.getItem('itschu-theme') || 'dark');
+  closeAddForm();
+  selectBody(newBody);
+});
+
+// ── Panel population ──────────────────────────────────────────────────────────
+
+function selectBody(b) {
+  // Close edit form if switching to a different body
+  if (editingBody && editingBody !== b) closeEditForm();
+  selectedBody = b;
+  renderBodyTree();
+  refreshLockBtn();
+  if (b) populatePanel(b);
 }
-syncSunDir();
 
-// ── Theme sync ───────────────────────────────────────────────────────────────
-// Maps site theme names → globe material colors
+const ORBIT_HINTS = {
+  centered:   'Body sits at parent center — no orbit.',
+  circular:   'Constant-radius circular path.',
+  elliptical: 'Stretched elliptical path around parent.',
+  binary:     'Binary pair — sharing a common barycenter.',
+};
 
-// Atmosphere & rim glow are always white — only wireframe + globe base change.
+function populatePanel(body) {
+  // ── Size ──────────────────────────────────────────────────────────────────
+  $('body-size-slider').value = body.size;
+  $('body-size-num').value    = body.size;
+
+  // ── Textures ───────────────────────────────────────────────────────────────
+  if (body.dayTexName)   setUploadLoaded('upload-day-btn',   'clear-day-btn',   body.dayTexName);
+  else                   resetUpload('upload-day-btn',   'clear-day-btn',   'Map Texture');
+  if (body.nightTexName) setUploadLoaded('upload-night-btn', 'clear-night-btn', body.nightTexName);
+  else                   resetUpload('upload-night-btn', 'clear-night-btn', 'Night Texture');
+  $('night-threshold-row').style.display = body.nightTexName ? 'flex' : 'none';
+  const nt = Math.round(body.globeMat.uniforms.nightThreshold.value * 100);
+  $('night-threshold-slider').value = nt; $('night-threshold-num').value = nt;
+
+  // ── Orbit ─────────────────────────────────────────────────────────────────
+  const ot = body.orbitType;
+  const orbitTypeEl = $('orbit-type');
+  // Ensure 'binary' option exists in select
+  if (!orbitTypeEl.querySelector('option[value="binary"]')) {
+    const opt = document.createElement('option');
+    opt.value = 'binary'; opt.textContent = 'Binary';
+    orbitTypeEl.appendChild(opt);
+  }
+  orbitTypeEl.value    = ot;
+  orbitTypeEl.disabled = (ot === 'binary');
+  $('orbit-type-hint').textContent = ORBIT_HINTS[ot] ?? '';
+
+  const showParams = (ot !== 'centered');
+  $('orbit-params').style.display          = showParams ? '' : 'none';
+  $('orbit-eccentricity-row').style.display = (ot === 'elliptical') ? '' : 'none';
+  $('orbit-binary-params').style.display    = (ot === 'binary') ? '' : 'none';
+
+  const refBody = (ot === 'binary' && !body.binaryIsHost) ? body.binaryPartner : body;
+  if (showParams) {
+    $('orbit-radius-slider').value      = refBody.orbitRadius;
+    $('orbit-radius-num').value         = refBody.orbitRadius;
+    $('orbit-period-slider').value      = refBody.orbitPeriod;
+    $('orbit-period-num').value         = refBody.orbitPeriod;
+    $('orbit-inclination-slider').value = refBody.orbitInclination;
+    $('orbit-inclination-num').value    = refBody.orbitInclination;
+  }
+  if (ot === 'elliptical') {
+    const ecc = Math.round(body.orbitEccentricity * 99);
+    $('orbit-eccentricity-slider').value = ecc; $('orbit-eccentricity-num').value = ecc;
+  }
+  if (ot === 'binary') {
+    $('orbit-binary-partner-name').textContent = body.binaryPartner?.name ?? '—';
+    const h = body.binaryIsHost ? body : body.binaryPartner;
+    $('orbit-binary-sep-slider').value    = h.binarySeparation;
+    $('orbit-binary-sep-num').value       = h.binarySeparation;
+    $('orbit-binary-period-slider').value = h.binaryPeriod;
+    $('orbit-binary-period-num').value    = h.binaryPeriod;
+    // Binary hosts can still have outer orbit params visible
+    $('orbit-params').style.display = body.binaryIsHost ? '' : 'none';
+  }
+
+  // ── Rotation ───────────────────────────────────────────────────────────────
+  const speedSec = Math.round((2 * Math.PI) / (body.rotateSpeed * 60));
+  $('speed-slider').value    = speedSec; $('speed-num').value = speedSec;
+  $('rotate-toggle').checked = body.autoRotate;
+  const tiltMax = body.fullTiltRange ? 360 : 45;
+  $('axial-tilt-slider').max     = tiltMax; $('axial-tilt-slider').value   = body.axialTilt;
+  $('axial-tilt-num').value      = body.axialTilt;
+  $('equator-tilt-slider').max   = tiltMax; $('equator-tilt-slider').value = body.equatorTilt;
+  $('equator-tilt-num').value    = body.equatorTilt;
+  $('tilt-lock').checked         = body.tiltLocked;
+  $('tilt-fullrange').checked    = body.fullTiltRange;
+
+  // ── Lighting ───────────────────────────────────────────────────────────────
+  $('sun-color').value = '#' + globalLightColor.getHexString();
+
+  // ── Wireframe ─────────────────────────────────────────────────────────────
+  $('wireframe-toggle').checked = body.wireframe.visible;
+  $('wire-style').value         = body.wireStyle;
+  $('wire-density').value       = body.wireDensity;
+  $('wire-density-num').value   = body.wireDensity;
+
+  // ── Rings ─────────────────────────────────────────────────────────────────
+  $('ring-enabled').checked            = body.ringEnabled;
+  $('ring-params').style.display       = body.ringEnabled ? '' : 'none';
+  $('ring-inner-slider').value         = body.ringInnerRadius;
+  $('ring-inner-num').value            = body.ringInnerRadius;
+  $('ring-outer-slider').value         = body.ringOuterRadius;
+  $('ring-outer-num').value            = body.ringOuterRadius;
+  $('ring-tilt-slider').value          = body.ringTilt;
+  $('ring-tilt-num').value             = body.ringTilt;
+  $('ring-opacity-slider').value       = Math.round(body.ringOpacity * 100);
+  $('ring-opacity-num').value          = Math.round(body.ringOpacity * 100);
+  $('ring-color').value                = body.ringColor;
+
+  // ── Experimental ──────────────────────────────────────────────────────────
+  const amb = Math.round(body.globeMat.uniforms.ambientStr.value / 0.6 * 100);
+  $('ambient-slider').value      = amb; $('ambient-num').value = amb;
+  $('atmosphere-toggle').checked = body.atmosphere.visible;
+}
+
+// ── Theme sync ────────────────────────────────────────────────────────────────
+
 const GLOBE_THEME_COLORS = {
   dark:  { line: new THREE.Color(0x888888), base: new THREE.Color(0x1a1a1a) },
   light: { line: new THREE.Color(0xcccccc), base: new THREE.Color(0x1a1a1a) },
@@ -765,504 +1348,589 @@ const GLOBE_THEME_COLORS = {
 
 function applyGlobeTheme(name) {
   const c = GLOBE_THEME_COLORS[name] || GLOBE_THEME_COLORS.dark;
-  graticuleMat.uniforms.lineColor.value.copy(c.line);
-  globeMat.uniforms.baseColor.value.copy(c.base);
+  for (const b of bodies) {
+    b.graticuleMat.uniforms.lineColor.value.copy(c.line);
+    b.globeMat.uniforms.baseColor.value.copy(c.base);
+  }
 }
 
-// Apply saved theme on load
+new MutationObserver(() => applyGlobeTheme(localStorage.getItem('itschu-theme') || 'dark'))
+  .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+// ── Default body ──────────────────────────────────────────────────────────────
+
+selectBody(createBody({ name: 'Planet 1', type: 'planet', orbitType: 'circular', orbitRadius: 40, orbitPeriod: 120 }));
+lockOnto(bodies[0]); // camera locked onto the first body by default
 applyGlobeTheme(localStorage.getItem('itschu-theme') || 'dark');
 
-// React instantly when user clicks a swatch on any page
-new MutationObserver(() => {
-  applyGlobeTheme(localStorage.getItem('itschu-theme') || 'amber');
-}).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+// (star is hidden by default; colors already set via makeStar in STAR_INIT)
 
-// ── State ────────────────────────────────────────────────────────────────────
+// ── Panel listeners ───────────────────────────────────────────────────────────
 
-const state = {
-  autoRotate:     true,
-  rotateSpeed:    (2 * Math.PI) / (60 * 60), // 60 s per rotation (matches Speed slider default)
-  dayNightCycle:  false,
-  isCapturingGif: false,
-  axialTilt:      0,       // degrees — tilts the spin axis
-  equatorTilt:    0,       // degrees — tilts the visible equator independently
-  tiltLocked:     true,    // when true the two sliders move together
-};
+// ── Textures ──────────────────────────────────────────────────────────────────
 
-// ── UI helpers ───────────────────────────────────────────────────────────────
-
-const $ = id => document.getElementById(id);
-
-// Sets an upload button to show the loaded filename and reveals its ✕ sibling.
-// Font size scales down smoothly for long names so text never overflows.
-function setUploadLoaded(btnId, clearId, filename) {
-  const btn = $(btnId);
-  btn.textContent = filename;
-  const len  = filename.length;
-  btn.style.fontSize = len > 18
-    ? Math.max(0.42, 0.58 - (len - 18) * 0.007) + 'rem'
-    : '';
-  $(clearId).style.display = 'inline-block';
-}
-
-// Resets an upload button to its default "Upload" label and hides the ✕.
-function resetUpload(btnId, clearId) {
-  const btn = $(btnId);
-  btn.textContent  = 'Upload';
-  btn.style.fontSize = '';
-  $(clearId).style.display = 'none';
-}
-
-// Maximum anisotropy supported by the GPU — reduces blurring at oblique angles
-// (most noticeable near the poles where UV coordinates are compressed).
-const MAX_ANISOTROPY = renderer.capabilities.getMaxAnisotropy();
-
-function loadTex(url, onLoad) {
-  new THREE.TextureLoader().load(url, tex => {
-    tex.colorSpace  = THREE.LinearSRGBColorSpace;
-    tex.anisotropy  = MAX_ANISOTROPY;
-    tex.minFilter   = THREE.LinearMipmapLinearFilter; // trilinear — best quality
-    tex.magFilter   = THREE.LinearFilter;
-    tex.needsUpdate = true;
-    onLoad(tex);
-    URL.revokeObjectURL(url);
-  });
-}
-
-// ── Appearance ───────────────────────────────────────────────────────────────
-
-$('wireframe-toggle').addEventListener('change', e => {
-  wireframe.visible = e.target.checked;
-});
-
-$('wire-style').addEventListener('change', e => {
-  setWireframeStyle(e.target.value);
-});
-
-$('wire-density').addEventListener('input', e => {
-  currentWireDensity = parseInt(e.target.value);
-  $('wire-density-num').value = e.target.value;
-  rebuildWireframe();
-});
-
-$('atmosphere-toggle').addEventListener('change', e => {
-  atmosphere.visible = e.target.checked;
-  rimGlow.visible    = e.target.checked;
-});
-
-$('stars-toggle').addEventListener('change', e => {
-  // Only affect procedural stars; background tex star sphere is separate
-  stars.visible = e.target.checked && !state.hasBgTex;
-});
-
-// ── Textures ─────────────────────────────────────────────────────────────────
-
-state.hasBgTex = false;
-
-// Day texture
 $('upload-day-btn').addEventListener('click', () => $('day-tex-input').click());
 $('day-tex-input').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
+  const b = selectedBody;
   loadTex(URL.createObjectURL(file), tex => {
-    if (globeMat.uniforms.dayTex.value) globeMat.uniforms.dayTex.value.dispose();
-    globeMat.uniforms.dayTex.value    = tex;
-    globeMat.uniforms.hasDayTex.value = true;
-    globe.visible = true;
+    b.globeMat.uniforms.dayTex.value?.dispose();
+    b.globeMat.uniforms.dayTex.value    = tex;
+    b.globeMat.uniforms.hasDayTex.value = true;
+    b.mesh.visible = true; b.dayTexName = file.name;
     setUploadLoaded('upload-day-btn', 'clear-day-btn', file.name);
-    // Auto-disable wireframe
-    wireframe.visible = false;
-    $('wireframe-toggle').checked = false;
+    b.wireframe.visible = false; $('wireframe-toggle').checked = false;
   });
   e.target.value = '';
 });
 $('clear-day-btn').addEventListener('click', () => {
-  if (globeMat.uniforms.dayTex.value) globeMat.uniforms.dayTex.value.dispose();
-  globeMat.uniforms.dayTex.value    = null;
-  globeMat.uniforms.hasDayTex.value = false;
-  globe.visible = false;
+  const b = selectedBody;
+  b.globeMat.uniforms.dayTex.value?.dispose();
+  b.globeMat.uniforms.dayTex.value    = null;
+  b.globeMat.uniforms.hasDayTex.value = false;
+  b.mesh.visible = false; b.dayTexName = null;
   resetUpload('upload-day-btn', 'clear-day-btn', 'Map Texture');
 });
 
-// Night texture
 $('upload-night-btn').addEventListener('click', () => $('night-tex-input').click());
 $('night-tex-input').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
+  const b = selectedBody;
   loadTex(URL.createObjectURL(file), tex => {
-    if (globeMat.uniforms.nightTex.value) globeMat.uniforms.nightTex.value.dispose();
-    globeMat.uniforms.nightTex.value    = tex;
-    globeMat.uniforms.hasNightTex.value = true;
+    b.globeMat.uniforms.nightTex.value?.dispose();
+    b.globeMat.uniforms.nightTex.value    = tex;
+    b.globeMat.uniforms.hasNightTex.value = true;
+    b.nightTexName = file.name;
     setUploadLoaded('upload-night-btn', 'clear-night-btn', file.name);
     $('night-threshold-row').style.display = 'flex';
   });
   e.target.value = '';
 });
 $('clear-night-btn').addEventListener('click', () => {
-  if (globeMat.uniforms.nightTex.value) globeMat.uniforms.nightTex.value.dispose();
-  globeMat.uniforms.nightTex.value    = null;
-  globeMat.uniforms.hasNightTex.value = false;
+  const b = selectedBody;
+  b.globeMat.uniforms.nightTex.value?.dispose();
+  b.globeMat.uniforms.nightTex.value    = null;
+  b.globeMat.uniforms.hasNightTex.value = false;
+  b.nightTexName = null;
   resetUpload('upload-night-btn', 'clear-night-btn', 'Night Texture');
   $('night-threshold-row').style.display = 'none';
 });
 
 $('night-threshold-slider').addEventListener('input', e => {
-  globeMat.uniforms.nightThreshold.value = e.target.value / 100;
+  selectedBody.globeMat.uniforms.nightThreshold.value = e.target.value / 100;
   $('night-threshold-num').value = e.target.value;
 });
 
-// Background texture (equirectangular → scene.background)
 $('upload-bg-btn').addEventListener('click', () => $('bg-tex-input').click());
 $('bg-tex-input').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
   loadTex(URL.createObjectURL(file), tex => {
     tex.mapping = THREE.EquirectangularReflectionMapping;
-    scene.background = tex;
-    stars.visible    = false; // hide procedural stars
-    state.hasBgTex   = true;
+    scene.background = tex; bgStars.visible = false; hasBgTex = true;
     setUploadLoaded('upload-bg-btn', 'clear-bg-btn', file.name);
   });
   e.target.value = '';
 });
 $('clear-bg-btn').addEventListener('click', () => {
-  if (scene.background && scene.background.isTexture) scene.background.dispose();
+  if (scene.background?.isTexture) scene.background.dispose();
   scene.background = new THREE.Color(0x000000);
-  stars.visible    = $('stars-toggle').checked;
-  state.hasBgTex   = false;
+  bgStars.visible = $('stars-toggle').checked; hasBgTex = false;
   resetUpload('upload-bg-btn', 'clear-bg-btn', 'Background');
 });
 
-// ── Rotation ─────────────────────────────────────────────────────────────────
+// ── Body size ─────────────────────────────────────────────────────────────────
 
-$('rotate-toggle').addEventListener('change', e => {
-  state.autoRotate = e.target.checked;
+$('body-size-slider').addEventListener('input', e => {
+  selectedBody.setSize(parseFloat(e.target.value));
+  $('body-size-num').value = e.target.value;
 });
 
+// ── Orbit ─────────────────────────────────────────────────────────────────────
+
+$('time-warp-slider').addEventListener('input', e => {
+  globalTimeWarp = parseFloat(e.target.value);
+  $('time-warp-num').value = globalTimeWarp;
+});
+$('time-warp-num').addEventListener('input', e => {
+  globalTimeWarp = parseFloat(e.target.value);
+  $('time-warp-slider').value = globalTimeWarp;
+});
+
+$('show-trails-toggle').addEventListener('change', e => {
+  globalShowTrails = e.target.checked;
+  for (const b of bodies) {
+    if (b.trailLine) b.trailLine.visible = globalShowTrails;
+  }
+});
+
+$('orbit-type').addEventListener('change', e => {
+  const b = selectedBody, newType = e.target.value;
+  b.orbitType = newType;
+  $('orbit-type-hint').textContent = ORBIT_HINTS[newType] ?? '';
+
+  if (newType === 'centered') {
+    b.bodyGroup.position.set(0, 0, 0);
+  } else if (newType === 'circular') {
+    b.bodyGroup.position.x = b.orbitRadius;
+    b.bodyGroup.position.z = 0;
+    b.orbitGroup.rotation.y = 0;
+  } else if (newType === 'elliptical') {
+    b._orbitAngle = 0;
+    b.orbitGroup.rotation.y = 0;
+  }
+
+  $('orbit-params').style.display           = (newType !== 'centered') ? '' : 'none';
+  $('orbit-eccentricity-row').style.display  = (newType === 'elliptical') ? '' : 'none';
+  $('orbit-binary-params').style.display     = 'none';
+  b._buildTrail();
+});
+
+$('orbit-radius-slider').addEventListener('input', e => {
+  const b = selectedBody;
+  b.orbitRadius = parseFloat(e.target.value);
+  $('orbit-radius-num').value = e.target.value;
+  if (b.orbitType === 'circular') {
+    b.bodyGroup.position.x = b.orbitRadius;
+    b.bodyGroup.position.z = 0;
+  }
+  if (b.orbitType === 'binary' && b.binaryIsHost)
+    b.bodyGroup.position.x = b.orbitRadius;
+  b._buildTrail();
+});
+
+$('orbit-period-slider').addEventListener('input', e => {
+  const b = selectedBody;
+  b.orbitPeriod = parseFloat(e.target.value);
+  b._syncOrbitSpeed();
+  $('orbit-period-num').value = e.target.value;
+});
+
+$('orbit-inclination-slider').addEventListener('input', e => {
+  const b = selectedBody;
+  b.orbitInclination = parseFloat(e.target.value);
+  b.orbitGroup.rotation.z = THREE.MathUtils.degToRad(b.orbitInclination);
+  $('orbit-inclination-num').value = e.target.value;
+  b._buildTrail();
+});
+
+$('orbit-eccentricity-slider').addEventListener('input', e => {
+  const b = selectedBody;
+  b.orbitEccentricity = e.target.value / 99;
+  $('orbit-eccentricity-num').value = e.target.value;
+  b._buildTrail();
+});
+
+$('orbit-binary-sep-slider').addEventListener('input', e => {
+  const b   = selectedBody;
+  const sep = parseFloat(e.target.value);
+  $('orbit-binary-sep-num').value = e.target.value;
+  const host = b.binaryIsHost ? b : b.binaryPartner;
+  host.binarySeparation = sep; host.binaryPartner.binarySeparation = sep;
+  host._binaryOffset.position.x         = +sep / 2;
+  host.binaryPartner._binaryOffset.position.x = -sep / 2;
+});
+
+$('orbit-binary-period-slider').addEventListener('input', e => {
+  const b   = selectedBody;
+  const per = parseFloat(e.target.value);
+  $('orbit-binary-period-num').value = e.target.value;
+  b.binaryPeriod = per; b.binaryPartner.binaryPeriod = per;
+});
+
+// ── Rotation ──────────────────────────────────────────────────────────────────
+
+$('rotate-toggle').addEventListener('change', e => { selectedBody.autoRotate = e.target.checked; });
+
 $('speed-slider').addEventListener('input', e => {
-  // Slider value is seconds per full rotation
-  state.rotateSpeed = (2 * Math.PI) / (e.target.value * 60);
+  selectedBody.rotateSpeed = (2 * Math.PI) / (e.target.value * 60);
   $('speed-num').value = e.target.value;
 });
 
-// Applies both tilt values to the group hierarchy.
-// tiltGroup.rotation.z  = axialTilt         → tilts the spin axis in world space
-// equatorGroup.rotation.z = equatorTilt − axialTilt
-//   → net visual equator tilt in world space equals equatorTilt regardless of
-//     how much axialTilt is set, because equatorGroup inherits axialTilt from
-//     its parent chain.
-function applyTilts() {
-  tiltGroup.rotation.z    = THREE.MathUtils.degToRad(state.axialTilt);
-  equatorGroup.rotation.z = THREE.MathUtils.degToRad(state.equatorTilt - state.axialTilt);
-}
-
 $('axial-tilt-slider').addEventListener('input', e => {
-  const deg = parseFloat(e.target.value);
-  state.axialTilt = deg;
-  $('axial-tilt-num').value = deg;
-  if (state.tiltLocked) {
-    state.equatorTilt = deg;
-    $('equator-tilt-slider').value = deg;
-    $('equator-tilt-num').value    = deg;
-  }
-  applyTilts();
+  const b = selectedBody, deg = parseFloat(e.target.value);
+  b.axialTilt = deg; $('axial-tilt-num').value = deg;
+  if (b.tiltLocked) { b.equatorTilt = deg; $('equator-tilt-slider').value = deg; $('equator-tilt-num').value = deg; }
+  b.applyTilts();
 });
 
 $('equator-tilt-slider').addEventListener('input', e => {
-  const deg = parseFloat(e.target.value);
-  state.equatorTilt = deg;
-  $('equator-tilt-num').value = deg;
-  if (state.tiltLocked) {
-    state.axialTilt = deg;
-    $('axial-tilt-slider').value = deg;
-    $('axial-tilt-num').value    = deg;
-  }
-  applyTilts();
+  const b = selectedBody, deg = parseFloat(e.target.value);
+  b.equatorTilt = deg; $('equator-tilt-num').value = deg;
+  if (b.tiltLocked) { b.axialTilt = deg; $('axial-tilt-slider').value = deg; $('axial-tilt-num').value = deg; }
+  b.applyTilts();
 });
 
 $('tilt-lock').addEventListener('change', e => {
-  state.tiltLocked = e.target.checked;
-  if (state.tiltLocked) {
-    // Snap equator tilt to match axial tilt when re-locking
-    state.equatorTilt              = state.axialTilt;
-    $('equator-tilt-slider').value = state.axialTilt;
-    $('equator-tilt-num').value    = state.axialTilt;
-    applyTilts();
+  const b = selectedBody; b.tiltLocked = e.target.checked;
+  if (b.tiltLocked) {
+    b.equatorTilt = b.axialTilt;
+    $('equator-tilt-slider').value = b.axialTilt; $('equator-tilt-num').value = b.axialTilt;
+    b.applyTilts();
   }
 });
-
 
 $('tilt-fullrange').addEventListener('change', e => {
-  const max = e.target.checked ? 360 : 45;
-  $('axial-tilt-slider').max   = max;
-  $('equator-tilt-slider').max = max;
-
-  // When narrowing back to 45°, clamp any out-of-range values
-  if (!e.target.checked) {
-    if (state.axialTilt > 45) {
-      state.axialTilt = 45;
-      $('axial-tilt-slider').value = 45;
-      $('axial-tilt-num').value    = 45;
-    }
-    if (state.equatorTilt > 45) {
-      state.equatorTilt = 45;
-      $('equator-tilt-slider').value = 45;
-      $('equator-tilt-num').value    = 45;
-    }
-    applyTilts();
+  const b = selectedBody; b.fullTiltRange = e.target.checked;
+  const max = b.fullTiltRange ? 360 : 45;
+  $('axial-tilt-slider').max = $('equator-tilt-slider').max = max;
+  if (!b.fullTiltRange) {
+    if (b.axialTilt   > 45) { b.axialTilt   = 45; $('axial-tilt-slider').value   = 45; $('axial-tilt-num').value   = 45; }
+    if (b.equatorTilt > 45) { b.equatorTilt = 45; $('equator-tilt-slider').value = 45; $('equator-tilt-num').value = 45; }
+    b.applyTilts();
   }
 });
 
-// ── Lighting ─────────────────────────────────────────────────────────────────
+// ── Lighting ──────────────────────────────────────────────────────────────────
 
 $('daynight-toggle').addEventListener('change', e => {
-  state.dayNightCycle                  = e.target.checked;
-  globeMat.uniforms.flatLit.value      = !e.target.checked;
-  graticuleMat.uniforms.flatLit.value  = !e.target.checked;
-  $('sun-options').style.display       = e.target.checked ? 'block' : 'none';
+  globalDayNight = e.target.checked;
+  $('sun-options').style.display = globalDayNight ? '' : 'none';
+  for (const b of bodies) {
+    b.globeMat.uniforms.flatLit.value      = !globalDayNight;
+    b.graticuleMat.uniforms.flatLit.value  = !globalDayNight;
+  }
 });
 
-
 $('sun-intensity-slider').addEventListener('input', e => {
-  // Map 0–100 → 0–3.0 sun intensity in the globe shader
-  globeMat.uniforms.sunIntensity.value = e.target.value / 50;
+  globalSunIntensity = e.target.value / 50;
   $('sun-intensity-num').value = e.target.value;
+  for (const b of bodies) b.globeMat.uniforms.sunIntensity.value = globalSunIntensity;
 });
 
 $('sun-color').addEventListener('input', e => {
-  const c = new THREE.Color(e.target.value);
-  globeMat.uniforms.sunColor.value.set(c.r, c.g, c.b);
-  sunLight.color.set(e.target.value);
+  globalLightColor.set(e.target.value);
+  for (const b of bodies)
+    b.globeMat.uniforms.sunColor.value.set(globalLightColor.r, globalLightColor.g, globalLightColor.b);
 });
 
+// ── Star system controls ──────────────────────────────────────────────────────
+
+$('sun-visible-toggle').addEventListener('change', e => { sunGroup.visible = e.target.checked; });
+
+function setStarCount(n) {
+  starCount = n;
+  [1, 2, 3].forEach(i => $(`star-count-${i}`).classList.toggle('btn-active', i === n));
+  $('star-sep-row').style.display   = n > 1 ? '' : 'none';
+  $('star-sep-hint').style.display  = n > 1 ? '' : 'none';
+  $('star2-size-row').style.display = n >= 2 ? '' : 'none';
+  $('star3-size-row').style.display = n >= 3 ? '' : 'none';
+  $('star2-color').style.display    = n >= 2 ? '' : 'none';
+  $('star3-color').style.display    = n >= 3 ? '' : 'none';
+  applyStarLayout();
+}
+
+$('star-count-1').addEventListener('click', () => setStarCount(1));
+$('star-count-2').addEventListener('click', () => setStarCount(2));
+$('star-count-3').addEventListener('click', () => setStarCount(3));
+
+$('star-sep-slider').addEventListener('input', e => {
+  starSeparation = parseFloat(e.target.value);
+  $('star-sep-num').value = e.target.value;
+  applyStarLayout();
+});
+
+['x', 'y', 'z'].forEach(axis => {
+  $(`star-rot-${axis}-slider`).addEventListener('input', e => {
+    sunGroup.rotation[axis] = THREE.MathUtils.degToRad(parseFloat(e.target.value));
+    $(`star-rot-${axis}-num`).value = e.target.value;
+  });
+});
+
+[0, 1, 2].forEach(i => {
+  const n = i + 1;
+  $(`star${n}-size-slider`).addEventListener('input', e => {
+    setStarSize(i, parseFloat(e.target.value));
+    $(`star${n}-size-num`).value = e.target.value;
+  });
+  $(`star${n}-color`).addEventListener('input', e => setStarColor(i, e.target.value));
+});
+
+// ── Rings ─────────────────────────────────────────────────────────────────────
+
+$('ring-enabled').addEventListener('change', e => {
+  const b = selectedBody;
+  b.ringEnabled = e.target.checked;
+  b.ringMesh.visible = b.ringEnabled;
+  $('ring-params').style.display = b.ringEnabled ? '' : 'none';
+});
+
+$('ring-inner-slider').addEventListener('input', e => {
+  const b = selectedBody;
+  b.ringInnerRadius = parseFloat(e.target.value);
+  $('ring-inner-num').value = e.target.value;
+  b._applyRingGeometry();
+});
+$('ring-inner-num').addEventListener('input', e => {
+  const b = selectedBody;
+  b.ringInnerRadius = parseFloat(e.target.value);
+  $('ring-inner-slider').value = e.target.value;
+  b._applyRingGeometry();
+});
+
+$('ring-outer-slider').addEventListener('input', e => {
+  const b = selectedBody;
+  b.ringOuterRadius = parseFloat(e.target.value);
+  $('ring-outer-num').value = e.target.value;
+  b._applyRingGeometry();
+});
+$('ring-outer-num').addEventListener('input', e => {
+  const b = selectedBody;
+  b.ringOuterRadius = parseFloat(e.target.value);
+  $('ring-outer-slider').value = e.target.value;
+  b._applyRingGeometry();
+});
+
+$('ring-tilt-slider').addEventListener('input', e => {
+  const b = selectedBody;
+  b.ringTilt = parseFloat(e.target.value);
+  $('ring-tilt-num').value = e.target.value;
+  b.ringMesh.rotation.x = -Math.PI / 2 + THREE.MathUtils.degToRad(b.ringTilt);
+});
+$('ring-tilt-num').addEventListener('input', e => {
+  const b = selectedBody;
+  b.ringTilt = parseFloat(e.target.value);
+  $('ring-tilt-slider').value = e.target.value;
+  b.ringMesh.rotation.x = -Math.PI / 2 + THREE.MathUtils.degToRad(b.ringTilt);
+});
+
+$('ring-opacity-slider').addEventListener('input', e => {
+  const b = selectedBody;
+  b.ringOpacity = e.target.value / 100;
+  $('ring-opacity-num').value = e.target.value;
+  b.ringMesh.material.opacity = b.ringOpacity;
+});
+$('ring-opacity-num').addEventListener('input', e => {
+  const b = selectedBody;
+  b.ringOpacity = e.target.value / 100;
+  $('ring-opacity-slider').value = e.target.value;
+  b.ringMesh.material.opacity = b.ringOpacity;
+});
+
+$('ring-color').addEventListener('input', e => {
+  const b = selectedBody;
+  b.ringColor = e.target.value;
+  b.ringMesh.material.color.set(e.target.value);
+});
+
+// ── Wireframe ─────────────────────────────────────────────────────────────────
+
+$('wireframe-toggle').addEventListener('change', e => { selectedBody.wireframe.visible = e.target.checked; });
+$('wire-style').addEventListener('change', e => { selectedBody.wireStyle = e.target.value; selectedBody.rebuildWireframe(); });
+$('wire-density').addEventListener('input', e => {
+  selectedBody.wireDensity = parseInt(e.target.value);
+  $('wire-density-num').value = e.target.value;
+  selectedBody.rebuildWireframe();
+});
+
+// ── Experimental ──────────────────────────────────────────────────────────────
+
+$('stars-toggle').addEventListener('change', e => { bgStars.visible = e.target.checked && !hasBgTex; });
+
+$('star-count-slider').addEventListener('input', e => {
+  $('star-count-num').value = e.target.value;
+  rebuildStarField(parseInt(e.target.value));
+});
+
+$('star-size-slider').addEventListener('input', e => {
+  starMat.uniforms.baseSize.value = parseFloat(e.target.value);
+  $('star-size-num').value = e.target.value;
+});
+
+$('star-color').addEventListener('input', e => {
+  starMat.uniforms.starColor.value.set(new THREE.Color(e.target.value));
+});
+$('atmosphere-toggle').addEventListener('change', e => {
+  selectedBody.atmosphere.visible = selectedBody.rimGlow.visible = e.target.checked;
+});
 $('ambient-slider').addEventListener('input', e => {
-  const v = e.target.value / 100;
-  globeMat.uniforms.ambientStr.value = v * 0.6;
+  selectedBody.globeMat.uniforms.ambientStr.value = (e.target.value / 100) * 0.6;
   $('ambient-num').value = e.target.value;
 });
 
-// ── Export ───────────────────────────────────────────────────────────────────
+// ── Export ────────────────────────────────────────────────────────────────────
 
 $('screenshot-btn').addEventListener('click', () => {
   renderer.render(scene, camera);
-  const a = Object.assign(document.createElement('a'), {
-    href: canvas.toDataURL('image/png'),
-    download: 'globe.png',
-  });
-  a.click();
+  Object.assign(document.createElement('a'), { href: canvas.toDataURL('image/png'), download: 'system.png' }).click();
 });
 
 $('gif-duration-slider').addEventListener('input', e => { $('gif-duration-num').value = e.target.value; });
-$('gif-fps-slider').addEventListener('input',     e => { $('gif-fps-num').value     = e.target.value; });
-$('gif-size-slider').addEventListener('input',    e => { $('gif-size-num').value    = e.target.value; });
-
+$('gif-fps-slider').addEventListener('input',      e => { $('gif-fps-num').value      = e.target.value; });
+$('gif-size-slider').addEventListener('input',     e => { $('gif-size-num').value     = e.target.value; });
 $('gif-btn').addEventListener('click', captureGif);
 
 async function captureGif() {
-  if (state.isCapturingGif) return;
-  if (typeof GIF === 'undefined') {
-    alert('gif.js not found — make sure vendor/gif.js exists.');
-    return;
-  }
+  if (isCapturingGif) return;
+  if (typeof GIF === 'undefined') { alert('gif.js not found.'); return; }
 
-  const loopDuration = parseInt($('gif-duration-slider').value); // seconds
+  const loopDuration = parseInt($('gif-duration-slider').value);
   const fps          = parseInt($('gif-fps-slider').value);
   const frameCount   = Math.ceil(loopDuration * fps);
   const delay        = Math.round(1000 / fps);
   const gifSize      = parseInt($('gif-size-slider').value);
 
-  state.isCapturingGif = true;
+  isCapturingGif = true;
   $('gif-btn').disabled = true;
   $('gif-progress').style.display = 'block';
 
-  const savedRotY       = spinGroup.rotation.y;
-  const savedAutoRotate = state.autoRotate;
-  const savedDayNight   = state.dayNightCycle;
-  state.autoRotate    = false;
-  state.dayNightCycle = false;
+  const savedRotY    = bodies.map(b => b.spinGroup.rotation.y);
+  const savedAutoRot = bodies.map(b => b.autoRotate);
+  bodies.forEach(b => { b.autoRotate = false; });
 
   const offCanvas = Object.assign(document.createElement('canvas'), { width: gifSize, height: gifSize });
   const offCtx    = offCanvas.getContext('2d');
-
-  // ── Phase 1: render all frames, store pixel data ──────────────────────────
-  // Storing ImageData (not canvases) keeps memory lower; copy:true later
-  // means gif.js snapshots the pixel data immediately on addFrame.
   const imageDataArr = [];
 
   for (let i = 0; i < frameCount; i++) {
-    spinGroup.rotation.y = savedRotY + (i / frameCount) * Math.PI * 2;
+    bodies.forEach((b, bi) => { b.spinGroup.rotation.y = savedRotY[bi] + (i / frameCount) * Math.PI * 2; });
     renderer.render(scene, camera);
-
     const side = Math.min(canvas.width, canvas.height);
-    const sx   = (canvas.width  - side) / 2;
-    const sy   = (canvas.height - side) / 2;
+    const sx = (canvas.width - side) / 2, sy = (canvas.height - side) / 2;
     offCtx.drawImage(canvas, sx, sy, side, side, 0, 0, gifSize, gifSize);
     imageDataArr.push(offCtx.getImageData(0, 0, gifSize, gifSize));
-
     $('gif-progress-bar').style.width  = ((i + 1) / frameCount * 40) + '%';
     $('gif-progress-text').textContent = `Capturing ${i + 1} / ${frameCount}…`;
     await new Promise(r => setTimeout(r, 0));
   }
 
-  // ── Phase 2: build round-robin composite ─────────────────────────────────
-  // Each pixel is taken raw from a different frame (no blending), so NeuQuant
-  // sees real, unblended colours from every frame without desaturation.
   $('gif-progress-text').textContent = 'Building palette…';
   await new Promise(r => setTimeout(r, 0));
 
-  const totalPx   = gifSize * gifSize;
-  const composite = new Uint8ClampedArray(totalPx * 4);
+  const totalPx = gifSize * gifSize, composite = new Uint8ClampedArray(totalPx * 4);
   for (let p = 0; p < totalPx; p++) {
-    const src  = imageDataArr[p % imageDataArr.length].data;
-    const base = p * 4;
-    composite[base]     = src[base];
-    composite[base + 1] = src[base + 1];
-    composite[base + 2] = src[base + 2];
-    composite[base + 3] = src[base + 3];
+    const src = imageDataArr[p % imageDataArr.length].data, base = p * 4;
+    composite[base] = src[base]; composite[base+1] = src[base+1];
+    composite[base+2] = src[base+2]; composite[base+3] = src[base+3];
   }
   offCtx.putImageData(new ImageData(composite, gifSize, gifSize), 0, 0);
 
-  // ── Phase 2b: pre-render composite to extract the global palette array ────
-  // gif.js sets options.globalPalette to the NeuQuant colour table after the
-  // first frame finishes. We run a throwaway 1-frame GIF, capture that array,
-  // then pass it directly to the real GIF — no extra display frame, no loop
-  // flicker.
   $('gif-progress-bar').style.width  = '42%';
   $('gif-progress-text').textContent = 'Quantising palette…';
   await new Promise(r => setTimeout(r, 0));
 
   const globalPalette = await new Promise(resolve => {
-    const palGif = new GIF({
-      workers: 1,
-      quality: 1,
-      width: gifSize, height: gifSize,
-      workerScript: 'vendor/gif.worker.js',
-      globalPalette: true,
-    });
-    palGif.addFrame(offCanvas, { delay: 1, copy: true });
-    palGif.on('finished', () => resolve(palGif.options.globalPalette));
-    palGif.render();
+    const pg = new GIF({ workers:1, quality:1, width:gifSize, height:gifSize, workerScript:'vendor/gif.worker.js', globalPalette:true });
+    pg.addFrame(offCanvas, { delay:1, copy:true });
+    pg.on('finished', () => resolve(pg.options.globalPalette));
+    pg.render();
   });
 
-  $('gif-progress-bar').style.width  = '50%';
+  $('gif-progress-bar').style.width = '50%';
 
-  // ── Phase 3: encode — all frames share the pre-built palette ─────────────
-  const gif = new GIF({
-    workers: 4,
-    quality: 1,
-    width: gifSize, height: gifSize,
-    workerScript: 'vendor/gif.worker.js',
-    globalPalette, // array → used directly, no palette-building frame added
-  });
-
+  const gif = new GIF({ workers:4, quality:1, width:gifSize, height:gifSize, workerScript:'vendor/gif.worker.js', globalPalette });
   for (let i = 0; i < imageDataArr.length; i++) {
     offCtx.putImageData(imageDataArr[i], 0, 0);
-    gif.addFrame(offCanvas, { delay, copy: true });
-
-    $('gif-progress-bar').style.width  = (50 + (i + 1) / frameCount * 5) + '%';
-    $('gif-progress-text').textContent = `Queuing ${i + 1} / ${frameCount}…`;
+    gif.addFrame(offCanvas, { delay, copy:true });
+    $('gif-progress-bar').style.width  = (50 + (i+1) / frameCount * 5) + '%';
+    $('gif-progress-text').textContent = `Queuing ${i+1} / ${frameCount}…`;
     await new Promise(r => setTimeout(r, 0));
   }
 
-  gif.on('progress', p => {
-    $('gif-progress-bar').style.width  = (50 + p * 50) + '%';
-    $('gif-progress-text').textContent = 'Encoding…';
-  });
-
+  gif.on('progress', p => { $('gif-progress-bar').style.width = (50 + p*50) + '%'; $('gif-progress-text').textContent = 'Encoding…'; });
   gif.on('finished', blob => {
-    const a = Object.assign(document.createElement('a'), {
-      href: URL.createObjectURL(blob),
-      download: 'globe.gif',
-    });
-    a.click();
-
-    spinGroup.rotation.y = savedRotY;
-    state.autoRotate    = savedAutoRotate;
-    state.dayNightCycle = savedDayNight;
-    state.isCapturingGif   = false;
-    $('gif-btn').disabled  = false;
-    $('gif-progress').style.display   = 'none';
-    $('gif-progress-bar').style.width = '0%';
+    Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'system.gif' }).click();
+    bodies.forEach((b, bi) => { b.spinGroup.rotation.y = savedRotY[bi]; b.autoRotate = savedAutoRot[bi]; });
+    isCapturingGif = false; $('gif-btn').disabled = false;
+    $('gif-progress').style.display = 'none'; $('gif-progress-bar').style.width = '0%';
   });
-
   gif.render();
 }
 
-// ── Section collapse toggles ─────────────────────────────────────────────────
+// ── Section collapse ──────────────────────────────────────────────────────────
 
 document.querySelectorAll('.collapsible-header').forEach(h => {
-  h.addEventListener('click', () => {
-    h.classList.toggle('open');
-    h.nextElementSibling.classList.toggle('open');
-  });
+  h.addEventListener('click', () => { h.classList.toggle('open'); h.nextElementSibling.classList.toggle('open'); });
 });
 
-// ── Panel toggle ─────────────────────────────────────────────────────────────
+// ── Panel toggle ──────────────────────────────────────────────────────────────
 
-$('panel-toggle').addEventListener('click', () => {
-  $('panel').classList.toggle('collapsed');
-  setTimeout(onResize, 300);
-});
+$('panel-toggle').addEventListener('click',       () => { $('panel').classList.toggle('collapsed');       setTimeout(onResize, 300); });
+$('left-panel-toggle').addEventListener('click',  () => { $('left-panel').classList.toggle('collapsed');  setTimeout(onResize, 300); });
 
-// ── Resize ───────────────────────────────────────────────────────────────────
+// ── Resize ────────────────────────────────────────────────────────────────────
 
 function onResize() {
-  const w = canvas.clientWidth;
-  const h = canvas.clientHeight;
-  if (w === 0 || h === 0) return;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w || !h) return;
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   renderer.setSize(w, h, false);
 }
-
 window.addEventListener('resize', onResize);
 new ResizeObserver(onResize).observe(canvas);
 onResize();
 
-// ── Slider ↔ number-input bidirectional wiring ────────────────────────────────
-// Typing in the number box clamps to [min,max] then fires the slider's input
-// event so all existing slider logic runs without duplication.
+// ── Slider ↔ number-input wiring ──────────────────────────────────────────────
+
 function wireSliderNum(sliderId, numId) {
   const s = $(sliderId), n = $(numId);
   n.addEventListener('change', () => {
-    const clamped = Math.min(Math.max(+n.value || 0, +s.min), +s.max);
-    n.value = clamped;
-    s.value = clamped;
-    s.dispatchEvent(new Event('input', { bubbles: true }));
+    const c = Math.min(Math.max(+n.value || 0, +s.min), +s.max);
+    n.value = c; s.value = c; s.dispatchEvent(new Event('input', { bubbles: true }));
   });
-  // Also sync on unlock: when slider becomes enabled, re-enable num too
-  const obs = new MutationObserver(() => { n.disabled = s.disabled; });
-  obs.observe(s, { attributes: true, attributeFilter: ['disabled'] });
+  new MutationObserver(() => { n.disabled = s.disabled; }).observe(s, { attributes: true, attributeFilter: ['disabled'] });
 }
 
-wireSliderNum('speed-slider',         'speed-num');
-wireSliderNum('axial-tilt-slider',    'axial-tilt-num');
-wireSliderNum('equator-tilt-slider',  'equator-tilt-num');
-wireSliderNum('sun-intensity-slider', 'sun-intensity-num');
-wireSliderNum('ambient-slider',       'ambient-num');
-wireSliderNum('gif-duration-slider',  'gif-duration-num');
-wireSliderNum('gif-fps-slider',       'gif-fps-num');
-wireSliderNum('gif-size-slider',      'gif-size-num');
-wireSliderNum('wire-density',            'wire-density-num');
-wireSliderNum('night-threshold-slider', 'night-threshold-num');
+wireSliderNum('body-size-slider',          'body-size-num');
+wireSliderNum('speed-slider',              'speed-num');
+wireSliderNum('axial-tilt-slider',         'axial-tilt-num');
+wireSliderNum('equator-tilt-slider',       'equator-tilt-num');
+wireSliderNum('sun-intensity-slider',      'sun-intensity-num');
+wireSliderNum('ambient-slider',            'ambient-num');
+wireSliderNum('gif-duration-slider',       'gif-duration-num');
+wireSliderNum('gif-fps-slider',            'gif-fps-num');
+wireSliderNum('gif-size-slider',           'gif-size-num');
+wireSliderNum('wire-density',              'wire-density-num');
+wireSliderNum('night-threshold-slider',    'night-threshold-num');
+wireSliderNum('orbit-radius-slider',       'orbit-radius-num');
+wireSliderNum('orbit-period-slider',       'orbit-period-num');
+wireSliderNum('orbit-inclination-slider',  'orbit-inclination-num');
+wireSliderNum('orbit-eccentricity-slider', 'orbit-eccentricity-num');
+wireSliderNum('orbit-binary-sep-slider',   'orbit-binary-sep-num');
+wireSliderNum('orbit-binary-period-slider','orbit-binary-period-num');
+wireSliderNum('star-count-slider',         'star-count-num');
+wireSliderNum('star-size-slider',          'star-size-num');
+wireSliderNum('star-sep-slider',           'star-sep-num');
+wireSliderNum('star-rot-x-slider',         'star-rot-x-num');
+wireSliderNum('star-rot-y-slider',         'star-rot-y-num');
+wireSliderNum('star-rot-z-slider',         'star-rot-z-num');
+wireSliderNum('star1-size-slider',         'star1-size-num');
+wireSliderNum('star2-size-slider',         'star2-size-num');
+wireSliderNum('star3-size-slider',         'star3-size-num');
+wireSliderNum('time-warp-slider',          'time-warp-num');
+wireSliderNum('ring-inner-slider',         'ring-inner-num');
+wireSliderNum('ring-outer-slider',         'ring-outer-num');
+wireSliderNum('ring-tilt-slider',          'ring-tilt-num');
+wireSliderNum('ring-opacity-slider',       'ring-opacity-num');
 
-// ── Render loop ──────────────────────────────────────────────────────────────
+// ── Render loop ───────────────────────────────────────────────────────────────
 
 const clock = new THREE.Clock();
 
 function animate() {
   requestAnimationFrame(animate);
-  if (state.isCapturingGif) return;
-
+  if (isCapturingGif) return;
   const dt = clock.getDelta();
-
-  if (state.autoRotate) {
-    spinGroup.rotation.y += state.rotateSpeed * dt * 60;
+  for (const b of bodies) {
+    // Sun direction: from body's world position toward origin (star barycenter).
+    if (!b.globeMat.uniforms.flatLit.value) {
+      b.bodyGroup.getWorldPosition(_sunDirTmp);
+      _sunDirTmp.negate().normalize();
+      b.globeMat.uniforms.sunDir.value.copy(_sunDirTmp);
+      b.graticuleMat.uniforms.sunDir.value.copy(_sunDirTmp);
+    }
+    b.update(dt);
   }
-
-
-  rimMat.uniforms.viewVector.value.copy(camera.position);
+  // Camera lock-on: track the locked body maintaining zoom / view angle
+  if (lockedBody) {
+    lockedBody.bodyGroup.getWorldPosition(_lockPos);
+    _lockDelta.subVectors(_lockPos, controls.target); // delta since last frame
+    controls.target.copy(_lockPos);
+    camera.position.add(_lockDelta);                  // move camera by same delta
+  }
   controls.update();
+  // Keep background stars centred on the camera so they never appear to move
+  bgStars.position.copy(camera.position);
   renderer.render(scene, camera);
 }
 

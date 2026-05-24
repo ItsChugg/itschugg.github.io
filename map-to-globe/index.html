@@ -2,10 +2,513 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=/map-to-system/">
-  <title>Redirecting…</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map to System — itschu.gg</title>
+  <link rel="stylesheet" href="css/style.css?v=10">
+  <link rel="stylesheet" href="/components/themes/theme.css?v=5">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
 </head>
 <body>
-  <script>window.location.replace('/map-to-system/');</script>
+  <!-- Navbar inlined so it appears instantly (no fetch flash) -->
+  <nav class="navbar">
+    <span class="navbar-brand">ITSCHU.GG</span>
+    <div class="theme-swatches">
+      <button class="swatch" data-theme="dark"  title="Dark"></button>
+      <button class="swatch" data-theme="light" title="Light"></button>
+      <button class="swatch" data-theme="amber" title="Amber"></button>
+      <button class="swatch" data-theme="red"   title="Red"></button>
+      <button class="swatch" data-theme="green" title="Green"></button>
+      <button class="swatch" data-theme="blue"  title="Blue"></button>
+    </div>
+    <ul class="navbar-links">
+      <li><a href="/">HOME</a></li>
+      <li><a href="/pages/evolutionary/">EVOLUTIONARY</a></li>
+      <li><a href="/map-to-globe/">MAP TO GLOBE</a></li>
+      <li><a href="/map-projection/">MAP PROJECTION</a></li>
+    </ul>
+  </nav>
+
+  <div id="globe-layout">
+  <canvas id="globe-canvas"></canvas>
+
+  <!-- ── Left panel: system-level controls ──────────────────────────────── -->
+  <div id="left-panel">
+    <div id="left-panel-header">
+      <button id="left-panel-toggle" title="Collapse panel">▶</button>
+    </div>
+
+    <div id="left-panel-body">
+      <section>
+        <h2 class="collapsible-header open">Bodies <span class="exp-chevron">▶</span></h2>
+        <div class="collapsible-body open">
+          <div id="body-tree"></div>
+          <div class="control-row" style="margin-top:6px">
+            <button id="lock-camera-btn" disabled>⊙ Lock Camera</button>
+          </div>
+          <div class="control-row" style="margin-top:8px">
+            <label for="body-size-slider">Size</label>
+            <input type="range" id="body-size-slider" min="0.1" max="5" step="0.05" value="1">
+            <input type="number" id="body-size-num" class="slider-num" min="0.1" max="5" step="0.05" value="1">
+          </div>
+          <p class="control-hint">Radius of the body in scene units.</p>
+          <div class="control-row" style="margin-top:4px">
+            <button id="add-body-btn">+ Add Body</button>
+          </div>
+          <div id="add-body-form" style="display:none">
+            <div class="control-row">
+              <label for="new-body-name">Name</label>
+              <input type="text" id="new-body-name" class="body-text-input" value="Planet 2">
+            </div>
+            <div class="control-row">
+              <label for="new-body-type">Type</label>
+              <select id="new-body-type">
+                <option value="planet">Planet</option>
+                <option value="moon">Moon</option>
+              </select>
+            </div>
+            <div class="control-row">
+              <label for="new-body-parent">Parent</label>
+              <select id="new-body-parent"></select>
+            </div>
+            <div class="control-row">
+              <label for="new-body-orbit">Orbit</label>
+              <select id="new-body-orbit">
+                <option value="circular" selected>Circular</option>
+                <option value="elliptical">Elliptical</option>
+                <option value="centered">Centered</option>
+                <option value="binary">Binary</option>
+              </select>
+            </div>
+            <div class="control-row" id="new-body-partner-row" style="display:none">
+              <label for="new-body-partner">Partner</label>
+              <select id="new-body-partner"></select>
+            </div>
+            <div class="control-row">
+              <button id="confirm-add-body" class="half-btn">Confirm</button>
+              <button id="cancel-add-body" class="half-btn">Cancel</button>
+            </div>
+          </div>
+
+          <div id="edit-body-form" style="display:none">
+            <p class="control-hint" id="edit-body-label" style="margin:4px 0 6px;opacity:1;color:var(--amber)"></p>
+            <div class="control-row">
+              <label for="edit-body-name">Name</label>
+              <input type="text" id="edit-body-name" class="body-text-input">
+            </div>
+            <div class="control-row">
+              <label for="edit-body-type">Type</label>
+              <select id="edit-body-type">
+                <option value="planet">Planet</option>
+                <option value="moon">Moon</option>
+              </select>
+            </div>
+            <div class="control-row">
+              <label for="edit-body-parent">Parent</label>
+              <select id="edit-body-parent"></select>
+            </div>
+            <div class="control-row">
+              <label for="edit-body-orbit">Orbit Type</label>
+              <select id="edit-body-orbit">
+                <option value="centered">Centered</option>
+                <option value="circular">Circular</option>
+                <option value="elliptical">Elliptical</option>
+              </select>
+            </div>
+            <div class="control-row">
+              <button id="confirm-edit-body" class="half-btn">Apply</button>
+              <button id="cancel-edit-body" class="half-btn">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="collapsible-header open">Orbit <span class="exp-chevron">▶</span></h2>
+        <div class="collapsible-body open">
+          <div class="control-row">
+            <label for="time-warp-slider">Speed</label>
+            <input type="range" id="time-warp-slider" min="0" max="5" step="0.1" value="1">
+            <input type="number" id="time-warp-num" class="slider-num" min="0" max="5" step="0.1" value="1">
+          </div>
+          <p class="control-hint">Simulation speed — 0 = paused, 1× = normal, 5× = fast.</p>
+          <div class="control-row">
+            <label for="show-trails-toggle">Show Trails</label>
+            <input type="checkbox" id="show-trails-toggle">
+          </div>
+          <p class="control-hint">Draw the orbital path of each body.</p>
+          <div class="control-row">
+            <label for="orbit-type">Type</label>
+            <select id="orbit-type">
+              <option value="centered">Centered</option>
+              <option value="circular" selected>Circular</option>
+              <option value="elliptical">Elliptical</option>
+              <option value="binary">Binary</option>
+            </select>
+          </div>
+          <p class="control-hint" id="orbit-type-hint">Constant-radius circular path.</p>
+          <div id="orbit-params" style="display:none">
+            <div class="control-row">
+              <label for="orbit-radius-slider">Radius</label>
+              <input type="range" id="orbit-radius-slider" min="5" max="150" step="1" value="40">
+              <input type="number" id="orbit-radius-num" class="slider-num" min="5" max="150" step="1" value="40">
+            </div>
+            <p class="control-hint">Distance from parent center.</p>
+            <div class="control-row">
+              <label for="orbit-period-slider">Period (s)</label>
+              <input type="range" id="orbit-period-slider" min="5" max="600" step="5" value="120">
+              <input type="number" id="orbit-period-num" class="slider-num" min="5" max="600" step="5" value="120">
+            </div>
+            <p class="control-hint">Time for one full orbit.</p>
+            <div class="control-row">
+              <label for="orbit-inclination-slider">Inclination</label>
+              <input type="range" id="orbit-inclination-slider" min="-90" max="90" step="1" value="0">
+              <input type="number" id="orbit-inclination-num" class="slider-num" min="-90" max="90" step="1" value="0">
+            </div>
+            <p class="control-hint">Tilt of the orbital plane.</p>
+          </div>
+          <div id="orbit-eccentricity-row" style="display:none">
+            <div class="control-row">
+              <label for="orbit-eccentricity-slider">Eccentricity</label>
+              <input type="range" id="orbit-eccentricity-slider" min="0" max="99" step="1" value="0">
+              <input type="number" id="orbit-eccentricity-num" class="slider-num" min="0" max="99" step="1" value="0">
+            </div>
+            <p class="control-hint">Shape stretch (0 = circle, 99 = very elongated).</p>
+          </div>
+          <div id="orbit-binary-params" style="display:none">
+            <div class="control-row">
+              <label>Partner</label>
+              <span id="orbit-binary-partner-name" class="info-value">—</span>
+            </div>
+            <div class="control-row">
+              <label for="orbit-binary-sep-slider">Separation</label>
+              <input type="range" id="orbit-binary-sep-slider" min="1" max="20" step="0.5" value="4">
+              <input type="number" id="orbit-binary-sep-num" class="slider-num" min="1" max="20" step="0.5" value="4">
+            </div>
+            <p class="control-hint">Distance between binary partners.</p>
+            <div class="control-row">
+              <label for="orbit-binary-period-slider">Binary Period (s)</label>
+              <input type="range" id="orbit-binary-period-slider" min="5" max="300" step="5" value="60">
+              <input type="number" id="orbit-binary-period-num" class="slider-num" min="5" max="300" step="5" value="60">
+            </div>
+            <p class="control-hint">Mutual orbit period.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="collapsible-header open">Lighting <span class="exp-chevron">▶</span></h2>
+        <div class="collapsible-body open">
+          <div class="control-row">
+            <label for="daynight-toggle">Day/Night Cycle</label>
+            <input type="checkbox" id="daynight-toggle">
+          </div>
+          <p class="control-hint">Global — applies to all bodies.</p>
+          <div id="sun-options" style="display:none">
+            <div class="control-row">
+              <label for="sun-intensity-slider">Intensity</label>
+              <input type="range" id="sun-intensity-slider" min="0" max="100" value="75">
+              <input type="number" id="sun-intensity-num" class="slider-num" min="0" max="100" value="75">
+            </div>
+            <p class="control-hint">Luminosity of light on all bodies.</p>
+            <div class="control-row">
+              <label for="sun-color">Light Color</label>
+              <input type="color" id="sun-color" value="#ffffff">
+            </div>
+            <p class="control-hint">Tint of light cast on all planets.</p>
+          </div>
+
+          <div class="control-row" style="margin-top:6px">
+            <label for="sun-visible-toggle">Show Stars</label>
+            <input type="checkbox" id="sun-visible-toggle">
+          </div>
+          <p class="control-hint">Toggle the central star(s).</p>
+
+          <div class="control-row">
+            <label>Star Count</label>
+            <div style="display:flex;gap:4px;flex:1">
+              <button id="star-count-1" class="half-btn btn-active">1</button>
+              <button id="star-count-2" class="half-btn">2</button>
+              <button id="star-count-3" class="half-btn">3</button>
+            </div>
+          </div>
+          <div class="control-row" id="star-sep-row" style="display:none">
+            <label for="star-sep-slider">Separation</label>
+            <input type="range" id="star-sep-slider" min="2" max="60" step="1" value="15">
+            <input type="number" id="star-sep-num" class="slider-num" min="2" max="60" step="1" value="15">
+          </div>
+          <p class="control-hint" id="star-sep-hint" style="display:none">Distance between stars.</p>
+
+          <div class="control-row">
+            <label for="star-rot-x-slider">Rotation X</label>
+            <input type="range" id="star-rot-x-slider" min="-180" max="180" step="1" value="0">
+            <input type="number" id="star-rot-x-num" class="slider-num" min="-180" max="180" step="1" value="0">
+          </div>
+          <div class="control-row">
+            <label for="star-rot-y-slider">Rotation Y</label>
+            <input type="range" id="star-rot-y-slider" min="-180" max="180" step="1" value="0">
+            <input type="number" id="star-rot-y-num" class="slider-num" min="-180" max="180" step="1" value="0">
+          </div>
+          <div class="control-row">
+            <label for="star-rot-z-slider">Rotation Z</label>
+            <input type="range" id="star-rot-z-slider" min="-180" max="180" step="1" value="0">
+            <input type="number" id="star-rot-z-num" class="slider-num" min="-180" max="180" step="1" value="0">
+          </div>
+          <p class="control-hint">Orientation of the star group.</p>
+
+          <!-- Sizes grouped together -->
+          <div class="control-row" id="star1-size-row">
+            <label for="star1-size-slider">Star α Size</label>
+            <input type="range" id="star1-size-slider" min="0.5" max="15" step="0.5" value="4">
+            <input type="number" id="star1-size-num" class="slider-num" min="0.5" max="15" step="0.5" value="4">
+          </div>
+          <div class="control-row" id="star2-size-row" style="display:none">
+            <label for="star2-size-slider">Star β Size</label>
+            <input type="range" id="star2-size-slider" min="0.5" max="15" step="0.5" value="3">
+            <input type="number" id="star2-size-num" class="slider-num" min="0.5" max="15" step="0.5" value="3">
+          </div>
+          <div class="control-row" id="star3-size-row" style="display:none">
+            <label for="star3-size-slider">Star γ Size</label>
+            <input type="range" id="star3-size-slider" min="0.5" max="15" step="0.5" value="3">
+            <input type="number" id="star3-size-num" class="slider-num" min="0.5" max="15" step="0.5" value="3">
+          </div>
+          <!-- Colors all in one row -->
+          <div class="control-row">
+            <label>Colors</label>
+            <div style="display:flex;gap:6px;flex:1;align-items:center">
+              <input type="color" id="star1-color" value="#ffcc44" title="Star α">
+              <input type="color" id="star2-color" value="#ffcc44" title="Star β" style="display:none">
+              <input type="color" id="star3-color" value="#ffcc44" title="Star γ" style="display:none">
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ── Right panel: local planet controls ─────────────────────────────── -->
+  <div id="panel">
+    <div id="panel-header">
+      <button id="panel-toggle" title="Collapse panel">◀</button>
+    </div>
+
+    <div id="panel-body">
+      <section>
+        <h2 class="collapsible-header open">Textures <span class="exp-chevron">▶</span></h2>
+        <div class="collapsible-body open">
+          <div class="upload-slot">
+            <button id="upload-day-btn">Map Texture</button>
+            <button id="clear-day-btn" class="clear-btn" style="display:none">✕</button>
+          </div>
+          <p class="control-hint">Equirectangular projection is preferred.</p>
+
+          <div class="upload-slot upload-slot-opt">
+            <button id="upload-night-btn">Night Texture</button>
+            <button id="clear-night-btn" class="clear-btn" style="display:none">✕</button>
+          </div>
+          <p class="control-hint">Generally used for City Lights.</p>
+          <div class="control-row" id="night-threshold-row" style="display:none">
+            <label for="night-threshold-slider">Light Threshold</label>
+            <input type="range" id="night-threshold-slider" min="0" max="50" step="1" value="5">
+            <input type="number" id="night-threshold-num" class="slider-num" min="0" max="50" step="1" value="5">
+          </div>
+
+          <div class="upload-slot upload-slot-opt">
+            <button id="upload-bg-btn">Background</button>
+            <button id="clear-bg-btn" class="clear-btn" style="display:none">✕</button>
+          </div>
+          <p class="control-hint">Replaces the starry night.</p>
+
+          <input type="file" id="day-tex-input"   accept="image/*">
+          <input type="file" id="night-tex-input" accept="image/*">
+          <input type="file" id="bg-tex-input"    accept="image/*">
+        </div>
+      </section>
+
+      <section>
+        <h2 class="collapsible-header open">Rotation <span class="exp-chevron">▶</span></h2>
+        <div class="collapsible-body open">
+          <div class="control-row">
+            <label for="speed-slider">Spin Speed (s)</label>
+            <input type="range" id="speed-slider" min="5" max="300" step="1" value="60">
+            <input type="number" id="speed-num" class="slider-num" min="5" max="300" step="1" value="60">
+          </div>
+          <p class="control-hint">Length of time to finish a rotation.</p>
+          <div class="control-row">
+            <label for="axial-tilt-slider">Axis Tilt</label>
+            <input type="range" id="axial-tilt-slider" min="0" max="45" value="0">
+            <input type="number" id="axial-tilt-num" class="slider-num" min="0" max="45" value="0">
+          </div>
+          <p class="control-hint">Changes angle relative to the sun.</p>
+          <div class="control-row">
+            <label for="equator-tilt-slider">Equator Tilt</label>
+            <input type="range" id="equator-tilt-slider" min="0" max="45" value="0">
+            <input type="number" id="equator-tilt-num" class="slider-num" min="0" max="45" value="0">
+          </div>
+          <p class="control-hint">Changes the direction of rotation.</p>
+          <div class="control-row">
+            <label for="rotate-toggle">Auto Rotate</label>
+            <input type="checkbox" id="rotate-toggle" checked>
+          </div>
+          <p class="control-hint">Toggles planetary rotation.</p>
+          <div class="control-row tilt-lock-row">
+            <label for="tilt-lock">Tilt Lock</label>
+            <input type="checkbox" id="tilt-lock" checked>
+          </div>
+          <p class="control-hint">Toggles the link between tilts.</p>
+          <div class="control-row tilt-lock-row">
+            <label for="tilt-fullrange">Full Tilt Range</label>
+            <input type="checkbox" id="tilt-fullrange">
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="collapsible-header open">Export <span class="exp-chevron">▶</span></h2>
+        <div class="collapsible-body open">
+          <div class="control-row">
+            <label for="gif-duration-slider">Duration (s)</label>
+            <input type="range" id="gif-duration-slider" min="1" max="12" step="1" value="3">
+            <input type="number" id="gif-duration-num" class="slider-num" min="1" max="12" step="1" value="3">
+          </div>
+          <p class="control-hint">Length of time to finish a rotation.</p>
+          <div class="control-row">
+            <label for="gif-fps-slider">Smoothness</label>
+            <input type="range" id="gif-fps-slider" min="10" max="50" step="1" value="50">
+            <input type="number" id="gif-fps-num" class="slider-num" min="10" max="50" step="1" value="50">
+          </div>
+          <p class="control-hint">How many frames per rotation.</p>
+          <div class="control-row">
+            <label for="gif-size-slider">Resolution</label>
+            <input type="range" id="gif-size-slider" min="200" max="800" step="100" value="800">
+            <input type="number" id="gif-size-num" class="slider-num" min="200" max="800" step="100" value="800">
+          </div>
+          <p class="control-hint">Output size in pixels.</p>
+          <div class="control-row">
+            <button id="gif-btn">Export GIF</button>
+          </div>
+          <div class="control-row">
+            <button id="screenshot-btn">Export Screenshot</button>
+          </div>
+          <div id="gif-progress">
+            <div id="gif-progress-bar"></div>
+            <span id="gif-progress-text">Capturing…</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="collapsible-header open">Rings <span class="exp-chevron">▶</span></h2>
+        <div class="collapsible-body open">
+          <div class="control-row">
+            <label for="ring-enabled">Enable</label>
+            <input type="checkbox" id="ring-enabled">
+          </div>
+          <div id="ring-params" style="display:none">
+            <div class="control-row">
+              <label for="ring-inner-slider">Inner</label>
+              <input type="range" id="ring-inner-slider" min="0.5" max="10" step="0.1" value="1.5">
+              <input type="number" id="ring-inner-num" class="slider-num" min="0.5" max="10" step="0.1" value="1.5">
+            </div>
+            <p class="control-hint">Inner edge radius.</p>
+            <div class="control-row">
+              <label for="ring-outer-slider">Outer</label>
+              <input type="range" id="ring-outer-slider" min="1" max="15" step="0.1" value="2.5">
+              <input type="number" id="ring-outer-num" class="slider-num" min="1" max="15" step="0.1" value="2.5">
+            </div>
+            <p class="control-hint">Outer edge radius.</p>
+            <div class="control-row">
+              <label for="ring-tilt-slider">Tilt</label>
+              <input type="range" id="ring-tilt-slider" min="-90" max="90" step="1" value="0">
+              <input type="number" id="ring-tilt-num" class="slider-num" min="-90" max="90" step="1" value="0">
+            </div>
+            <div class="control-row">
+              <label for="ring-opacity-slider">Opacity</label>
+              <input type="range" id="ring-opacity-slider" min="0" max="100" step="1" value="60">
+              <input type="number" id="ring-opacity-num" class="slider-num" min="0" max="100" step="1" value="60">
+            </div>
+            <div class="control-row">
+              <label for="ring-color">Color</label>
+              <input type="color" id="ring-color" value="#aaaaaa">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="collapsible-header open">Wireframe <span class="exp-chevron">▶</span></h2>
+        <div class="collapsible-body open">
+          <div class="control-row">
+            <label for="wireframe-toggle">Wireframe</label>
+            <input type="checkbox" id="wireframe-toggle" checked>
+          </div>
+          <div class="control-row" id="wire-style-row">
+            <label for="wire-style">Style</label>
+            <select id="wire-style">
+              <option value="grid">Grid</option>
+              <option value="triangle" selected>Triangle</option>
+              <option value="hexagon">Hexagon</option>
+              <option value="brick">Brick</option>
+              <option value="diamond">Diamond</option>
+              <option value="loxodrome">Loxodrome</option>
+              <option value="voronoi">Voronoi</option>
+              <option value="greatcircle">Great Circles</option>
+            </select>
+          </div>
+          <div class="control-row">
+            <label for="wire-density">Density</label>
+            <input type="range" id="wire-density" min="1" max="10" value="5">
+            <input type="number" id="wire-density-num" class="slider-num" min="1" max="10" value="5">
+          </div>
+        </div>
+      </section>
+
+      <section id="experimental-section">
+        <h2 class="collapsible-header">Experimental <span class="exp-chevron">▶</span></h2>
+        <div class="collapsible-body">
+          <div class="control-row">
+            <label for="stars-toggle">Stars</label>
+            <input type="checkbox" id="stars-toggle" checked>
+          </div>
+          <div class="control-row">
+            <label for="star-count-slider">Star Count</label>
+            <input type="range" id="star-count-slider" min="500" max="8000" step="100" value="3000">
+            <input type="number" id="star-count-num" class="slider-num" min="500" max="8000" step="100" value="3000">
+          </div>
+          <div class="control-row">
+            <label for="star-size-slider">Star Size</label>
+            <input type="range" id="star-size-slider" min="1" max="8" step="0.5" value="3.5">
+            <input type="number" id="star-size-num" class="slider-num" min="1" max="8" step="0.5" value="3.5">
+          </div>
+          <div class="control-row">
+            <label for="star-color">Star Color</label>
+            <input type="color" id="star-color" value="#ffffff">
+          </div>
+          <div class="control-row">
+            <label for="atmosphere-toggle">Atmosphere Glow</label>
+            <input type="checkbox" id="atmosphere-toggle">
+          </div>
+          <div class="control-row">
+            <label for="ambient-slider">Ambient</label>
+            <input type="range" id="ambient-slider" min="0" max="100" value="25">
+            <input type="number" id="ambient-num" class="slider-num" min="0" max="100" value="25">
+          </div>
+        </div>
+      </section>
+    </div>
+    <div id="panel-version">v2.7</div>
+  </div>
+
+  </div><!-- #globe-layout -->
+
+  <script src="vendor/gif.js"></script>
+  <script type="module" src="js/app.js?v=55"></script>
+  <script src="/components/navbar/inject-navbar.js" defer></script>
 </body>
 </html>
