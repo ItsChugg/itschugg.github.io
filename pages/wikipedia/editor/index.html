@@ -522,7 +522,7 @@
         });
         d.querySelector('[data-t="addimg"]').addEventListener('click', e => {
           const sec = sections.find(x => x.id===+e.target.dataset.sid);
-          if (sec) { sec.imgs.push({id:nid(),src:'',alt:'',align:'right'}); renderSec(); dp(); }
+          if (sec) { sec.imgs.push({id:nid(),src:'',alt:'',align:'right',previewSrc:''}); renderSec(); dp(); }
         });
         renderSecImgs(s);
       });
@@ -571,17 +571,31 @@
         fileInp.addEventListener('change', async () => {
           const file = fileInp.files[0];
           if (!file) return;
-          const imgId  = +fileInp.dataset.imgid;
+          const imgId    = +fileInp.dataset.imgid;
           const statusEl = $('imgst-'+imgId);
+          const row      = s.imgs.find(x => x.id===imgId);
+
+          // Show image in preview immediately via object URL
+          if (row) {
+            if (row.previewSrc) URL.revokeObjectURL(row.previewSrc);
+            row.previewSrc = URL.createObjectURL(file);
+            dp();
+          }
+
           uploadBtn.disabled = true;
           statusEl.className = 'img-status';
           statusEl.textContent = 'Uploading…';
           try {
             const url = await uploadImage(file);
-            const row = s.imgs.find(x => x.id===imgId);
-            if (row) { row.src = url; renderSecImgs(s); dp(); }
+            if (row) {
+              URL.revokeObjectURL(row.previewSrc);
+              row.previewSrc = '';
+              row.src = url;
+              renderSecImgs(s);
+              dp();
+            }
             const st = $('imgst-'+imgId);
-            if (st) { st.className='img-status ok'; st.textContent='Uploaded → '+url; }
+            if (st) { st.className='img-status ok'; st.textContent='Uploaded → '+url+' (live in ~60s)'; }
           } catch(err) {
             statusEl.className = 'img-status err';
             statusEl.textContent = 'Upload failed: '+err.message;
@@ -649,7 +663,7 @@
     const bodySzMap = { sm:'0.82rem', md:'0.88rem', lg:'0.96rem' };
     const headSzMap = { sm:'0.82',   md:'1',        lg:'1.18'    };
 
-    function genHTML() {
+    function genHTML(forPreview = false) {
       const title = $('f-title').value.trim() || 'Untitled';
       const lead  = $('f-lead').value.trim();
       const cats  = [...activeCats];
@@ -681,11 +695,13 @@
 
       const secHtml = validSecs.map(s => {
         const id = slugify(s.h||'section');
-        const imgHtml = s.imgs.filter(i=>i.src).map(i =>
-          `          <figure class="wiki-figure wiki-figure-${i.align}">
-            <img src="${esc(i.src)}" alt="${esc(i.alt)}" />
+        const imgHtml = s.imgs.filter(i=>i.src||i.previewSrc).map(i => {
+          const dispSrc = forPreview ? (i.previewSrc || i.src) : i.src;
+          return `          <figure class="wiki-figure wiki-figure-${i.align}">
+            <img src="${esc(dispSrc)}" alt="${esc(i.alt)}" />
             ${i.alt?`<figcaption>${esc(i.alt)}</figcaption>`:''}`+`
-          </figure>`).join('\n');
+          </figure>`;
+        }).join('\n');
         const paras = (s.c||'').split(/\n\n+/).filter(Boolean)
           .map(p=>`          <p>${esc(p.trim())}</p>`).join('\n');
         return `
@@ -757,7 +773,7 @@ ${catHtml}
 
     // ── Live preview ──────────────────────────────────────────────────────────
     let pt = null;
-    function dp() { clearTimeout(pt); pt = setTimeout(()=>{ $('prev-frame').srcdoc = genHTML(); }, 280); }
+    function dp() { clearTimeout(pt); pt = setTimeout(()=>{ $('prev-frame').srcdoc = genHTML(true); }, 280); }
     dp();
 
     // ── Publish ───────────────────────────────────────────────────────────────
