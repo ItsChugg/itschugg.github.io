@@ -71,7 +71,7 @@ function wireNavbar() {
 if (document.querySelector('.navbar')) {
   wireNavbar();
 } else {
-  fetch('/components/navbar/navbar.html?v=6')
+  fetch('/components/navbar/navbar.html?v=7')
     .then(res => res.text())
     .then(html => {
       document.body.insertAdjacentHTML('afterbegin', html);
