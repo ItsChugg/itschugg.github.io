@@ -588,8 +588,9 @@
           try {
             const url = await uploadImage(file);
             if (row) {
-              URL.revokeObjectURL(row.previewSrc);
-              row.previewSrc = '';
+              // Keep previewSrc (blob URL) alive so the preview stays visible
+              // while the real GitHub URL is still deploying (~60s).
+              // row.previewSrc intentionally NOT revoked here.
               row.src = url;
               renderSecImgs(s);
               dp();
