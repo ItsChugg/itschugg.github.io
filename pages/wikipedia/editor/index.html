@@ -44,7 +44,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      max-width: 200px;
+      max-width: 210px;
     }
     .editor-body {
       flex: 1;
@@ -64,7 +64,7 @@
       color: var(--text-muted);
     }
     .f-label small { font-family: var(--font-mono); font-size: 0.61rem; letter-spacing: 0; color: var(--text-faint); }
-    .f-input, .f-textarea {
+    .f-input, .f-textarea, .f-select {
       background: var(--bg);
       border: var(--border);
       color: var(--text);
@@ -75,8 +75,9 @@
       box-sizing: border-box;
       resize: vertical;
     }
-    .f-input:focus, .f-textarea:focus { outline: none; border-color: var(--amber-dim); }
+    .f-input:focus, .f-textarea:focus, .f-select:focus { outline: none; border-color: var(--amber-dim); }
     .f-textarea { min-height: 72px; }
+    .f-select { appearance: none; cursor: pointer; }
 
     /* ── Collapsible ── */
     .collapsible-head {
@@ -100,11 +101,7 @@
       flex-direction: column;
       gap: 7px;
     }
-    .sec-item-top {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
+    .sec-item-top { display: flex; align-items: center; gap: 7px; }
     .sec-item-top input {
       flex: 1;
       background: none;
@@ -127,18 +124,18 @@
       flex-direction: column;
       gap: 5px;
     }
-    .img-item-top { display: flex; gap: 5px; align-items: center; }
-    .img-item-top input {
+    .img-item-row { display: flex; gap: 5px; align-items: center; }
+    .img-item-row input {
       flex: 1;
       background: var(--bg);
       border: var(--border);
       color: var(--text);
       font-family: var(--font-mono);
-      font-size: 0.74rem;
+      font-size: 0.73rem;
       padding: 4px 7px;
       min-width: 0;
     }
-    .img-item-top input:focus { outline: none; border-color: var(--amber-dim); }
+    .img-item-row input:focus { outline: none; border-color: var(--amber-dim); }
     .img-align-row { display: flex; gap: 5px; }
     .align-btn {
       flex: 1;
@@ -152,8 +149,25 @@
       transition: all 0.12s;
     }
     .align-btn.on { color: var(--amber); border-color: var(--amber-dim); background: var(--amber-faint); }
+    .btn-upload {
+      background: none;
+      border: var(--border);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      padding: 4px 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: color 0.12s, border-color 0.12s;
+    }
+    .btn-upload:hover:not(:disabled) { color: var(--amber); border-color: var(--amber-dim); }
+    .btn-upload:disabled { opacity: 0.4; cursor: not-allowed; }
+    .img-status { font-size: 0.67rem; color: var(--text-muted); min-height: 14px; }
+    .img-status.ok  { color: var(--amber); }
+    .img-status.err { color: #ff5555; }
 
-    /* ── Infobox / seealso rows ── */
+    /* ── Infobox / see-also rows ── */
     .kv-row, .sa-row { display: flex; gap: 6px; align-items: center; }
     .kv-row input, .sa-row input {
       flex: 1;
@@ -167,7 +181,7 @@
     }
     .kv-row input:focus, .sa-row input:focus { outline: none; border-color: var(--amber-dim); }
 
-    /* ── Style buttons ── */
+    /* ── Style toggles ── */
     .style-btn-row { display: flex; gap: 5px; }
     .style-btn {
       flex: 1;
@@ -182,7 +196,7 @@
     }
     .style-btn.on { color: var(--amber); border-color: var(--amber-dim); background: var(--amber-faint); }
 
-    /* ── Buttons ── */
+    /* ── Misc buttons ── */
     .btn-remove {
       background: none; border: none;
       color: var(--text-muted); cursor: pointer;
@@ -192,8 +206,7 @@
     .btn-remove:hover { color: #ff5555; }
     .btn-add {
       align-self: flex-start;
-      background: none;
-      border: var(--border);
+      background: none; border: var(--border);
       color: var(--text-muted);
       font-family: var(--font-mono);
       font-size: 0.7rem;
@@ -206,8 +219,7 @@
     /* ── Categories ── */
     .cat-grid { display: flex; flex-wrap: wrap; gap: 6px; }
     .cat-btn {
-      background: none;
-      border: var(--border);
+      background: none; border: var(--border);
       color: var(--text-muted);
       font-family: var(--font-mono);
       font-size: 0.7rem;
@@ -221,15 +233,12 @@
     .editor-footer {
       padding: 11px 18px;
       border-top: var(--border);
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: flex; align-items: center; gap: 12px;
       flex-shrink: 0;
       background: var(--bg-panel);
     }
     .btn-publish {
-      background: none;
-      border: var(--border);
+      background: none; border: var(--border);
       color: var(--amber);
       font-family: var(--font-head);
       font-size: 0.78rem;
@@ -240,27 +249,18 @@
     }
     .btn-publish:hover:not(:disabled) { box-shadow: var(--glow-sm); background: var(--amber-faint); }
     .btn-publish:disabled { opacity: 0.35; cursor: not-allowed; }
-    .pub-status { font-size: 0.72rem; color: var(--text-muted); }
+    .pub-status { font-size: 0.72rem; color: var(--text-muted); flex: 1; }
     .pub-status.ok  { color: var(--amber); }
     .pub-status.err { color: #ff5555; }
 
     /* ── Preview ── */
-    .preview-panel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+    .preview-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
     .preview-header {
-      padding: 11px 18px;
-      border-bottom: var(--border);
+      padding: 11px 18px; border-bottom: var(--border);
       font-family: var(--font-head);
-      font-size: 0.65rem;
-      letter-spacing: 0.12em;
+      font-size: 0.65rem; letter-spacing: 0.12em;
       color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       flex-shrink: 0;
     }
     .preview-url { font-family: var(--font-mono); font-size: 0.61rem; color: var(--text-faint); }
@@ -282,6 +282,20 @@
       <div class="editor-body">
 
         <div class="f-group">
+          <div class="f-label">PARENT SECTION</div>
+          <select class="f-select" id="f-parent">
+            <option value="pages/wikipedia">Wikipedia (root)</option>
+            <option value="pages/wikipedia/anomalies">Anomalies</option>
+            <option value="pages/wikipedia/elements">Elements</option>
+            <option value="pages/wikipedia/magic">Magic</option>
+            <option value="pages/wikipedia/species">Species</option>
+            <option value="pages/wikipedia/technology">Technology</option>
+            <option value="pages/wikipedia/systems">Unique Systems</option>
+            <option value="pages/wikipedia/characters">Unique Characters</option>
+          </select>
+        </div>
+
+        <div class="f-group">
           <div class="f-label">TITLE</div>
           <input class="f-input" id="f-title" type="text" placeholder="Article title…" autocomplete="off" />
         </div>
@@ -296,7 +310,6 @@
           <textarea class="f-textarea" id="f-lead" placeholder="Opening summary…" style="min-height:78px;"></textarea>
         </div>
 
-        <!-- Infobox -->
         <div class="f-group">
           <div class="f-label collapsible-head" id="ib-head">
             <span class="collapsible-caret">▶</span> INFOBOX
@@ -307,14 +320,12 @@
           </div>
         </div>
 
-        <!-- Sections -->
         <div class="f-group">
           <div class="f-label">SECTIONS</div>
           <div id="sec-list" style="display:flex;flex-direction:column;gap:8px;"></div>
           <button class="btn-add" id="sec-add">+ ADD SECTION</button>
         </div>
 
-        <!-- See Also -->
         <div class="f-group">
           <div class="f-label collapsible-head" id="sa-head">
             <span class="collapsible-caret">▶</span> SEE ALSO
@@ -325,13 +336,11 @@
           </div>
         </div>
 
-        <!-- Categories -->
         <div class="f-group">
           <div class="f-label">CATEGORIES</div>
           <div class="cat-grid" id="cat-grid"></div>
         </div>
 
-        <!-- Page Style -->
         <div class="f-group">
           <div class="f-label collapsible-head" id="ps-head">
             <span class="collapsible-caret">▶</span> PAGE STYLE
@@ -352,7 +361,7 @@
           </div>
         </div>
 
-      </div><!-- editor-body -->
+      </div>
 
       <div class="editor-footer">
         <button class="btn-publish" id="btn-pub">PUBLISH</button>
@@ -372,9 +381,7 @@
   </div>
 
   <script>
-    // ── Auth guard ────────────────────────────────────────────────────────────
     const REPO      = 'ItsChugg/itschugg.github.io';
-    const ALLOWLIST = ['ItsChugg', 'zmbprotocol'];
     const CATS      = ['Anomalies','Biology','Elements','Magic','Sapient','Species','Technology','Unique Characters','Unique Systems'];
 
     function getSession() {
@@ -387,40 +394,50 @@
     const session = getSession();
     if (!session) location.href = '/login/?returnTo=' + encodeURIComponent(location.pathname);
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-    const $  = id => document.getElementById(id);
-    let uid  = 0;
+    const $   = id => document.getElementById(id);
+    let uid   = 0;
     const nid = () => ++uid;
     function slugify(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
     function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     function toB64(s) { return btoa(unescape(encodeURIComponent(s))); }
 
-    // ── State ─────────────────────────────────────────────────────────────────
-    // sections: [{id, h, c, imgs:[{id,src,alt,align}]}]
     let sections = [], ibRows = [], saRows = [], activeCats = new Set();
-    let bodySize  = 'md';  // sm | md | lg
-    let headScale = 'md';  // sm | md | lg
-    let slugLocked = false;
+    let bodySize = 'md', headScale = 'md', slugLocked = false;
 
-    // ── Title / slug wiring ───────────────────────────────────────────────────
+    // ── Parent / title / slug ─────────────────────────────────────────────────
+    $('f-parent').addEventListener('change', () => { syncSlugDisplay(); dp(); });
     $('f-title').addEventListener('input', () => {
       if (!slugLocked) $('f-slug').value = slugify($('f-title').value);
       syncSlugDisplay(); dp();
     });
     $('f-slug').addEventListener('input', () => {
-      // Replace spaces with dashes in real time
-      const raw   = $('f-slug').value;
-      const clean = raw.replace(/ /g, '-');
+      const raw = $('f-slug').value, clean = raw.replace(/ /g,'-');
       if (clean !== raw) $('f-slug').value = clean;
       slugLocked = !!$('f-slug').value;
       syncSlugDisplay(); dp();
     });
     $('f-lead').addEventListener('input', dp);
 
+    function getParent()   { return $('f-parent').value; }
+    function getSlug()     { return $('f-slug').value || slugify($('f-title').value); }
+    function getFullPath() { return getParent() + '/' + getSlug(); }
+
     function syncSlugDisplay() {
-      const s = $('f-slug').value || slugify($('f-title').value);
-      $('hdr-slug').textContent = s ? '/pages/evolutionary/' + s + '/' : '';
-      $('prev-url').textContent = s ? 'itschu.gg/pages/evolutionary/' + s + '/' : '';
+      const fp = getFullPath();
+      $('hdr-slug').textContent = fp ? '/'+fp+'/' : '';
+      $('prev-url').textContent = fp ? 'itschu.gg/'+fp+'/' : '';
+    }
+
+    function buildBreadcrumb(title) {
+      const parts = getParent().split('/').filter(Boolean);
+      let html = '<a href="/">HOME</a>';
+      let path = '';
+      parts.forEach(p => {
+        path += '/'+p;
+        html += `\n          <span class="sep">//</span>\n          <a href="${path}/">${p.toUpperCase()}</a>`;
+      });
+      html += `\n          <span class="sep">//</span>\n          ${esc(title).toUpperCase()}`;
+      return html;
     }
 
     // ── Categories ───────────────────────────────────────────────────────────
@@ -443,7 +460,7 @@
       });
     });
 
-    // ── Page Style ────────────────────────────────────────────────────────────
+    // ── Page style ────────────────────────────────────────────────────────────
     ['sm','md','lg'].forEach(v => {
       $('bs-'+v).addEventListener('click', () => {
         bodySize = v;
@@ -479,7 +496,7 @@
 
     // ── Sections ─────────────────────────────────────────────────────────────
     $('sec-add').addEventListener('click', () => {
-      sections.push({id:nid(), h:'', c:'', imgs:[]}); renderSec(); dp();
+      sections.push({id:nid(),h:'',c:'',imgs:[]}); renderSec(); dp();
     });
 
     function renderSec() {
@@ -491,27 +508,22 @@
             <input type="text" placeholder="Section heading…" value="${esc(s.h)}" data-id="${s.id}" data-f="h"/>
             <button class="btn-remove" data-id="${s.id}" data-t="sec">✕</button>
           </div>
-          <textarea class="f-textarea" placeholder="Body text. Separate paragraphs with a blank line." data-id="${s.id}" data-f="c" style="min-height:62px;">${esc(s.c)}</textarea>
+          <textarea class="f-textarea" placeholder="Body text. Blank line = new paragraph." data-id="${s.id}" data-f="c" style="min-height:62px;">${esc(s.c)}</textarea>
           <div id="simgs-${s.id}" style="display:flex;flex-direction:column;gap:5px;"></div>
-          <button class="btn-add sec-img-add" data-sid="${s.id}">+ ADD IMAGE</button>`;
+          <button class="btn-add" data-sid="${s.id}" data-t="addimg">+ ADD IMAGE</button>`;
         el.appendChild(d);
 
-        // Heading + content events
         d.querySelectorAll('[data-f]').forEach(i => i.addEventListener('input', e => {
           const sec = sections.find(x => x.id===+e.target.dataset.id);
           if (sec) sec[e.target.dataset.f] = e.target.value; dp();
         }));
-        // Remove section
         d.querySelector('[data-t="sec"]').addEventListener('click', e => {
           sections = sections.filter(x => x.id!==+e.target.dataset.id); renderSec(); dp();
         });
-        // Add image button
-        d.querySelector('.sec-img-add').addEventListener('click', e => {
+        d.querySelector('[data-t="addimg"]').addEventListener('click', e => {
           const sec = sections.find(x => x.id===+e.target.dataset.sid);
           if (sec) { sec.imgs.push({id:nid(),src:'',alt:'',align:'right'}); renderSec(); dp(); }
         });
-
-        // Render existing images
         renderSecImgs(s);
       });
     }
@@ -523,33 +535,92 @@
       s.imgs.forEach(img => {
         const d = document.createElement('div'); d.className = 'img-item';
         d.innerHTML = `
-          <div class="img-item-top">
-            <input placeholder="Image URL or /assets/…" value="${esc(img.src)}" data-imgid="${img.id}" data-f="src" />
-            <input placeholder="Alt text" value="${esc(img.alt)}" data-imgid="${img.id}" data-f="alt" style="max-width:100px;"/>
-            <button class="btn-remove" data-imgid="${img.id}" data-sid="${s.id}">✕</button>
+          <div class="img-item-row">
+            <input placeholder="URL or /assets/wiki/filename.png" value="${esc(img.src)}" data-imgid="${img.id}" data-f="src"/>
+            <button class="btn-upload" data-imgid="${img.id}" data-sid="${s.id}">↑ UPLOAD</button>
+            <input type="file" accept="image/*" style="display:none;" class="file-inp" data-imgid="${img.id}" data-sid="${s.id}"/>
+            <button class="btn-remove" data-imgid="${img.id}" data-sid="${s.id}" data-t="rmimg">✕</button>
+          </div>
+          <div class="img-item-row">
+            <input placeholder="Caption / alt text" value="${esc(img.alt)}" data-imgid="${img.id}" data-f="alt"/>
           </div>
           <div class="img-align-row">
             <button class="align-btn ${img.align==='left'?'on':''}" data-imgid="${img.id}" data-a="left">◄ LEFT</button>
             <button class="align-btn ${img.align==='right'?'on':''}" data-imgid="${img.id}" data-a="right">RIGHT ►</button>
-          </div>`;
+          </div>
+          <div class="img-status" id="imgst-${img.id}"></div>`;
         container.appendChild(d);
 
-        // Src/alt inputs
-        d.querySelectorAll('input').forEach(i => i.addEventListener('input', e => {
+        d.querySelectorAll('input[data-f]').forEach(i => i.addEventListener('input', e => {
           const row = s.imgs.find(x => x.id===+e.target.dataset.imgid);
           if (row) row[e.target.dataset.f] = e.target.value; dp();
         }));
-        // Align buttons
         d.querySelectorAll('.align-btn').forEach(b => b.addEventListener('click', e => {
           const row = s.imgs.find(x => x.id===+e.target.dataset.imgid);
           if (row) { row.align = e.target.dataset.a; renderSecImgs(s); dp(); }
         }));
-        // Remove image
-        d.querySelector('.btn-remove').addEventListener('click', e => {
+        d.querySelector('[data-t="rmimg"]').addEventListener('click', e => {
           const sec = sections.find(x => x.id===+e.target.dataset.sid);
           if (sec) { sec.imgs = sec.imgs.filter(x => x.id!==+e.target.dataset.imgid); renderSecImgs(sec); dp(); }
         });
+
+        // Upload flow
+        const uploadBtn = d.querySelector('.btn-upload');
+        const fileInp   = d.querySelector('.file-inp');
+        uploadBtn.addEventListener('click', () => fileInp.click());
+        fileInp.addEventListener('change', async () => {
+          const file = fileInp.files[0];
+          if (!file) return;
+          const imgId  = +fileInp.dataset.imgid;
+          const statusEl = $('imgst-'+imgId);
+          uploadBtn.disabled = true;
+          statusEl.className = 'img-status';
+          statusEl.textContent = 'Uploading…';
+          try {
+            const url = await uploadImage(file);
+            const row = s.imgs.find(x => x.id===imgId);
+            if (row) { row.src = url; renderSecImgs(s); dp(); }
+            const st = $('imgst-'+imgId);
+            if (st) { st.className='img-status ok'; st.textContent='Uploaded → '+url; }
+          } catch(err) {
+            statusEl.className = 'img-status err';
+            statusEl.textContent = 'Upload failed: '+err.message;
+            uploadBtn.disabled = false;
+          }
+          fileInp.value = '';
+        });
       });
+    }
+
+    // ── Image upload via GitHub API ───────────────────────────────────────────
+    async function uploadImage(file) {
+      const safe   = file.name.replace(/[^a-zA-Z0-9._-]/g,'-').replace(/-+/g,'-').toLowerCase();
+      const path   = 'assets/wiki/' + safe;
+      const apiUrl = `https://api.github.com/repos/${REPO}/contents/${path}`;
+
+      const b64 = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload  = e => res(e.target.result.split(',')[1]);
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+
+      let sha = null;
+      try {
+        const chk = await fetch(apiUrl, { headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json'} });
+        if (chk.ok) sha = (await chk.json()).sha;
+      } catch {}
+
+      const body = { message:`assets: upload ${safe}`, content:b64, branch:'main' };
+      if (sha) body.sha = sha;
+
+      const resp = await fetch(apiUrl, {
+        method:'PUT',
+        headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
+        body: JSON.stringify(body),
+      });
+      if (!resp.ok) throw new Error((await resp.json().catch(()=>({}))).message || resp.status);
+      return '/'+path;
     }
 
     // ── See Also ─────────────────────────────────────────────────────────────
@@ -559,7 +630,7 @@
       saRows.forEach(r => {
         const d = document.createElement('div'); d.className = 'sa-row';
         d.innerHTML = `
-          <input placeholder="/url/" value="${esc(r.url)}" data-id="${r.id}" data-f="url" style="max-width:100px;"/>
+          <input placeholder="/url/" value="${esc(r.url)}" data-id="${r.id}" data-f="url" style="max-width:90px;"/>
           <input placeholder="Label" value="${esc(r.label)}" data-id="${r.id}" data-f="label"/>
           <input placeholder="Description" value="${esc(r.desc)}" data-id="${r.id}" data-f="desc"/>
           <button class="btn-remove" data-id="${r.id}">✕</button>`;
@@ -575,23 +646,21 @@
     }
 
     // ── HTML generation ───────────────────────────────────────────────────────
-    const bodySzMap  = { sm:'0.82rem', md:'0.88rem', lg:'0.96rem' };
-    const headSzMap  = { sm:'0.82',   md:'1',        lg:'1.18'    };
+    const bodySzMap = { sm:'0.82rem', md:'0.88rem', lg:'0.96rem' };
+    const headSzMap = { sm:'0.82',   md:'1',        lg:'1.18'    };
 
     function genHTML() {
       const title = $('f-title').value.trim() || 'Untitled';
       const lead  = $('f-lead').value.trim();
       const cats  = [...activeCats];
 
-      // Page style override
-      const styleBlock = (bodySize!=='md' || headScale!=='md') ? `
+      const styleBlock = (bodySize!=='md'||headScale!=='md') ? `
   <style>
     .wiki-article p, .wiki-article li { font-size: ${bodySzMap[bodySize]}; }
     .wiki-article h1 { font-size: calc(${headSzMap[headScale]} * 1.4rem); }
     .wiki-article h2 { font-size: calc(${headSzMap[headScale]} * 0.95rem); }
   </style>` : '';
 
-      // Infobox
       const ibValid = ibRows.filter(r=>r.k);
       const infoboxHtml = ibValid.length ? `
         <div class="infobox">
@@ -601,7 +670,6 @@
           </table>
         </div>` : '';
 
-      // TOC
       const validSecs = sections.filter(s=>s.h||s.c);
       const tocHtml = validSecs.length > 1 ? `
         <div class="wiki-toc">
@@ -611,19 +679,15 @@
           </ol>
         </div>` : '';
 
-      // Sections
       const secHtml = validSecs.map(s => {
         const id = slugify(s.h||'section');
-
-        // Images
-        const imgHtml = s.imgs.filter(i=>i.src).map(i => `          <figure class="wiki-figure wiki-figure-${i.align}">
+        const imgHtml = s.imgs.filter(i=>i.src).map(i =>
+          `          <figure class="wiki-figure wiki-figure-${i.align}">
             <img src="${esc(i.src)}" alt="${esc(i.alt)}" />
-            ${i.alt ? `<figcaption>${esc(i.alt)}</figcaption>` : ''}
+            ${i.alt?`<figcaption>${esc(i.alt)}</figcaption>`:''}`+`
           </figure>`).join('\n');
-
         const paras = (s.c||'').split(/\n\n+/).filter(Boolean)
           .map(p=>`          <p>${esc(p.trim())}</p>`).join('\n');
-
         return `
         <hr class="wiki-rule">
 
@@ -635,7 +699,6 @@ ${paras}
         </section>`;
       }).join('\n');
 
-      // See Also
       const saValid = saRows.filter(r=>r.label);
       const saHtml = saValid.length ? `
         <div class="wiki-seealso">
@@ -645,7 +708,6 @@ ${paras}
           </ul>
         </div>` : '';
 
-      // Categories
       const catHtml = cats.length ? `
           <div class="wiki-meta-categories">
             <span class="wiki-meta-label">Categories</span>
@@ -671,11 +733,7 @@ ${paras}
       <main class="wiki-article">
 
         <div class="wiki-breadcrumb">
-          <a href="/">HOME</a>
-          <span class="sep">//</span>
-          <a href="/pages/evolutionary/">EVOLUTIONARY</a>
-          <span class="sep">//</span>
-          ${esc(title).toUpperCase()}
+          ${buildBreadcrumb(title)}
         </div>
 
         <h1>${esc(title)}</h1>
@@ -699,7 +757,7 @@ ${catHtml}
 
     // ── Live preview ──────────────────────────────────────────────────────────
     let pt = null;
-    function dp() { clearTimeout(pt); pt = setTimeout(() => { $('prev-frame').srcdoc = genHTML(); }, 280); }
+    function dp() { clearTimeout(pt); pt = setTimeout(()=>{ $('prev-frame').srcdoc = genHTML(); }, 280); }
     dp();
 
     // ── Publish ───────────────────────────────────────────────────────────────
@@ -707,7 +765,7 @@ ${catHtml}
       const btn    = $('btn-pub');
       const status = $('pub-status');
       const title  = $('f-title').value.trim();
-      const slug   = $('f-slug').value.trim() || slugify(title);
+      const slug   = getSlug();
 
       if (!title) { status.className='pub-status err'; status.textContent='Title is required.'; return; }
       if (!slug)  { status.className='pub-status err'; status.textContent='Slug is required.';  return; }
@@ -716,7 +774,7 @@ ${catHtml}
       status.className = 'pub-status';
       status.textContent = 'Publishing…';
 
-      const path   = `pages/evolutionary/${slug}/index.html`;
+      const path   = getFullPath() + '/index.html';
       const apiUrl = `https://api.github.com/repos/${REPO}/contents/${path}`;
       const html   = genHTML();
 
@@ -728,24 +786,23 @@ ${catHtml}
 
       const body = {
         message: sha ? `docs: update "${title}"` : `docs: add wiki page "${title}"`,
-        content: toB64(html),
-        branch: 'main',
+        content: toB64(html), branch:'main',
       };
       if (sha) body.sha = sha;
 
       try {
         const resp = await fetch(apiUrl, {
-          method: 'PUT',
-          headers: {'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
+          method:'PUT',
+          headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
           body: JSON.stringify(body),
         });
         if (resp.ok) {
           status.className = 'pub-status ok';
-          status.textContent = (sha?'Updated':'Published') + ` — live in ~60s at itschu.gg/pages/evolutionary/${slug}/`;
+          status.textContent = (sha?'Updated':'Published')+` — live in ~60s at itschu.gg/${getFullPath()}/`;
         } else {
           const err = await resp.json().catch(()=>({}));
           status.className = 'pub-status err';
-          status.textContent = 'GitHub error: ' + (err.message||resp.status);
+          status.textContent = 'GitHub error: '+(err.message||resp.status);
         }
       } catch {
         status.className = 'pub-status err';

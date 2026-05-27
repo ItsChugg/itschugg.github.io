@@ -1,11 +1,11 @@
-// Builds a collapsible sidebar from /pages/evolutionary/pages.json
+// Builds a collapsible sidebar from /pages/wikipedia/pages.json
 // and injects it into #sidebar-container.
 
 document.addEventListener('DOMContentLoaded', () => {
   const sidebar = document.getElementById('sidebar-container');
   if (!sidebar) return;
 
-  fetch('/pages/evolutionary/pages.json')
+  fetch('/pages/wikipedia/pages.json')
     .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
     .then(data => {
       const nav = document.createElement('nav');
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
       nav.appendChild(title);
 
       const currentPath = window.location.pathname;
-      const base = '/pages/evolutionary/';
+      const base = '/pages/wikipedia/';
 
       data.forEach(group => {
         // Category toggle button

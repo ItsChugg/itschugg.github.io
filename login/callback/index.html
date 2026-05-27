@@ -106,7 +106,7 @@
       if (!code) { fail('No authorization code received from GitHub.'); return; }
 
       // Decode returnTo from state (best-effort; lenient on CSRF since GH already validated)
-      let returnTo = '/pages/evolutionary/editor/';
+      let returnTo = '/pages/wikipedia/editor/';
       try { returnTo = JSON.parse(atob(state)).returnTo || returnTo; } catch {}
 
       log('Authorization code received', 'ok');
