@@ -660,6 +660,55 @@
       });
     }
 
+    // ── Editor state serialisation ────────────────────────────────────────────
+    function buildState() {
+      return {
+        v: 1,
+        parent:    getParent(),
+        title:     $('f-title').value.trim(),
+        slug:      getSlug(),
+        lead:      $('f-lead').value.trim(),
+        sections:  sections.map(s => ({
+          h: s.h, c: s.c,
+          imgs: s.imgs.map(i => ({ src: i.src, alt: i.alt, align: i.align }))
+        })),
+        ibRows:    ibRows.map(r => ({ k: r.k, v: r.v })),
+        saRows:    saRows.map(r => ({ url: r.url, label: r.label, desc: r.desc })),
+        activeCats: [...activeCats],
+        bodySize,
+        headScale,
+      };
+    }
+
+    function loadState(state) {
+      $('f-parent').value = state.parent || 'pages/wikipedia';
+      $('f-title').value  = state.title  || '';
+      $('f-slug').value   = state.slug   || '';
+      slugLocked = !!state.slug;
+      $('f-lead').value   = state.lead   || '';
+
+      bodySize  = state.bodySize  || 'md';
+      headScale = state.headScale || 'md';
+      ['sm','md','lg'].forEach(v => {
+        $('bs-'+v).classList.toggle('on', v === bodySize);
+        $('hs-'+v).classList.toggle('on', v === headScale);
+      });
+
+      ibRows = (state.ibRows || []).map(r => ({ id: nid(), k: r.k||'', v: r.v||'' }));
+      saRows = (state.saRows || []).map(r => ({ id: nid(), url: r.url||'', label: r.label||'', desc: r.desc||'' }));
+      sections = (state.sections || []).map(s => ({
+        id: nid(), h: s.h||'', c: s.c||'',
+        imgs: (s.imgs||[]).map(i => ({ id: nid(), src: i.src||'', alt: i.alt||'', align: i.align||'right', previewSrc: '' }))
+      }));
+
+      activeCats = new Set(state.activeCats || []);
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('on', activeCats.has(b.textContent)));
+
+      renderIB(); renderSec(); renderSA();
+      syncSlugDisplay();
+      dp();
+    }
+
     // ── HTML generation ───────────────────────────────────────────────────────
     const bodySzMap = { sm:'0.82rem', md:'0.88rem', lg:'0.96rem' };
     const headSzMap = { sm:'0.82',   md:'1',        lg:'1.18'    };
@@ -768,6 +817,19 @@ ${catHtml}
 
   <script src="/components/navbar/inject-navbar.js" defer><\/script>
   <script src="/components/sidebar/inject-sidebar.js" defer><\/script>
+  <script>
+(function(){
+  try {
+    var s = JSON.parse(localStorage.getItem('wiki_session')||'null');
+    if (!s || Date.now() > s.expires) return;
+    var a = document.createElement('a');
+    a.href = '/pages/wikipedia/editor/?edit=' + encodeURIComponent(location.pathname);
+    a.textContent = '✎ EDIT PAGE';
+    a.className = 'wiki-edit-btn';
+    document.body.appendChild(a);
+  } catch(e) {}
+})();
+  <\/script>
 </body>
 </html>`;
     }
@@ -791,35 +853,44 @@ ${catHtml}
       status.className = 'pub-status';
       status.textContent = 'Publishing…';
 
-      const path   = getFullPath() + '/index.html';
-      const apiUrl = `https://api.github.com/repos/${REPO}/contents/${path}`;
-      const html   = genHTML();
+      const fullPath   = getFullPath();
+      const htmlPath   = fullPath + '/index.html';
+      const statePath  = fullPath + '/editor-state.json';
+      const htmlApiUrl = `https://api.github.com/repos/${REPO}/contents/${htmlPath}`;
+      const stateApiUrl= `https://api.github.com/repos/${REPO}/contents/${statePath}`;
+      const html       = genHTML();
+      const stateJson  = JSON.stringify(buildState(), null, 2);
+      const isUpdate   = sha => sha ? `docs: update "${title}"` : `docs: add wiki page "${title}"`;
 
-      let sha = null;
+      // Fetch existing SHAs in parallel
+      let htmlSha = null, stateSha = null;
       try {
-        const chk = await fetch(apiUrl, { headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json'} });
-        if (chk.ok) sha = (await chk.json()).sha;
+        const [hChk, sChk] = await Promise.all([
+          fetch(htmlApiUrl,  { headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json'} }),
+          fetch(stateApiUrl, { headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json'} }),
+        ]);
+        if (hChk.ok) htmlSha  = (await hChk.json()).sha;
+        if (sChk.ok) stateSha = (await sChk.json()).sha;
       } catch {}
 
-      const body = {
-        message: sha ? `docs: update "${title}"` : `docs: add wiki page "${title}"`,
-        content: toB64(html), branch:'main',
-      };
-      if (sha) body.sha = sha;
+      const htmlBody  = { message: isUpdate(htmlSha),  content: toB64(html),      branch:'main' };
+      const stateBody = { message: isUpdate(stateSha), content: toB64(stateJson), branch:'main' };
+      if (htmlSha)  htmlBody.sha  = htmlSha;
+      if (stateSha) stateBody.sha = stateSha;
 
       try {
-        const resp = await fetch(apiUrl, {
-          method:'PUT',
-          headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
-          body: JSON.stringify(body),
-        });
-        if (resp.ok) {
+        // Write both files; state first so the edit button can always find it
+        const [stResp, htmlResp] = await Promise.all([
+          fetch(stateApiUrl, { method:'PUT', headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json','Content-Type':'application/json'}, body: JSON.stringify(stateBody) }),
+          fetch(htmlApiUrl,  { method:'PUT', headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json','Content-Type':'application/json'}, body: JSON.stringify(htmlBody)  }),
+        ]);
+        if (htmlResp.ok && stResp.ok) {
           status.className = 'pub-status ok';
-          status.textContent = (sha?'Updated':'Published')+` — live in ~60s at itschu.gg/${getFullPath()}/`;
+          status.textContent = (htmlSha?'Updated':'Published')+` — live in ~60s at itschu.gg/${fullPath}/`;
         } else {
-          const err = await resp.json().catch(()=>({}));
+          const errBody = await (htmlResp.ok ? stResp : htmlResp).json().catch(()=>({}));
           status.className = 'pub-status err';
-          status.textContent = 'GitHub error: '+(err.message||resp.status);
+          status.textContent = 'GitHub error: '+(errBody.message||'unknown');
         }
       } catch {
         status.className = 'pub-status err';
@@ -827,6 +898,30 @@ ${catHtml}
       }
       btn.disabled = false;
     });
+    // ── Load existing page via ?edit=/path/ ───────────────────────────────────
+    (async () => {
+      const editPath = new URLSearchParams(location.search).get('edit');
+      if (!editPath || !session) return;
+      const status = $('pub-status');
+      status.className = 'pub-status';
+      status.textContent = 'Loading page…';
+      try {
+        const clean  = editPath.replace(/^\/|\/$/g, '');
+        const apiUrl = `https://api.github.com/repos/${REPO}/contents/${clean}/editor-state.json`;
+        const resp   = await fetch(apiUrl, {
+          headers: { 'Authorization': `Bearer ${session.token}`, 'Accept': 'application/vnd.github+json' }
+        });
+        if (!resp.ok) throw new Error('No editor state found — page may have been created outside the editor.');
+        const data  = await resp.json();
+        const state = JSON.parse(atob(data.content.replace(/\n/g, '')));
+        loadState(state);
+        status.className = 'pub-status ok';
+        status.textContent = 'Page loaded — make your changes and republish.';
+      } catch(err) {
+        status.className = 'pub-status err';
+        status.textContent = 'Load failed: ' + err.message;
+      }
+    })();
   </script>
 </body>
 </html>

@@ -1146,6 +1146,30 @@ hr.wiki-rule {
   color: var(--amber-dim);
 }
 
+/* ── Wiki: edit button (logged-in users only, injected by JS) ────────────── */
+
+.wiki-edit-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--bg-panel);
+  border: var(--border);
+  color: var(--amber);
+  font-family: var(--font-head);
+  font-size: 0.68rem;
+  letter-spacing: 0.10em;
+  padding: 9px 18px;
+  text-decoration: none;
+  z-index: 999;
+  transition: box-shadow 0.15s, background 0.15s, color 0.15s;
+}
+
+.wiki-edit-btn:hover {
+  box-shadow: var(--glow-sm);
+  background: var(--amber-faint);
+  color: var(--amber-bright);
+}
+
 /* ── Scrollbar ───────────────────────────────────────────────────────────── */
 
 ::-webkit-scrollbar       { width: 5px; }
