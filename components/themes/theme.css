@@ -295,6 +295,22 @@ hr {
   text-shadow: var(--glow-sm);
 }
 
+.navbar-links a.navbar-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+.navbar-user-avatar {
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--amber-dim);
+  display: block;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
 /* ── Page wrapper ────────────────────────────────────────────────────────── */
 
 .page-wrapper {

@@ -6,14 +6,21 @@
 }());
 
 function wireNavbar() {
-  // Swap LOGIN link → username if a valid session exists
+  // Swap LOGIN link → avatar + username if a valid session exists
   const loginLink = document.getElementById('navbar-login-link');
   if (loginLink) {
     try {
       const s = JSON.parse(localStorage.getItem('wiki_session') || 'null');
       if (s && Date.now() < s.expires) {
-        loginLink.textContent = '> ' + s.username.toUpperCase();
-        loginLink.href        = '/login/';
+        const img = document.createElement('img');
+        img.src   = s.avatar;
+        img.alt   = s.username;
+        img.className = 'navbar-user-avatar';
+        loginLink.textContent = '';
+        loginLink.appendChild(img);
+        loginLink.appendChild(document.createTextNode(s.username.toUpperCase()));
+        loginLink.href      = '/login/';
+        loginLink.classList.add('navbar-user');
       }
     } catch {}
   }
