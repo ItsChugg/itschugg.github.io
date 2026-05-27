@@ -216,6 +216,22 @@
     }
     .btn-add:hover { color: var(--amber); border-color: var(--amber-dim); }
 
+    /* ── Parent presets ── */
+    .parent-presets { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+    .preset-btn {
+      background: none;
+      border: var(--border);
+      color: var(--text-faint);
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: color 0.12s, border-color 0.12s;
+      white-space: nowrap;
+    }
+    .preset-btn:hover { color: var(--amber); border-color: var(--amber-dim); }
+    .preset-btn.on    { color: var(--amber); border-color: var(--amber-dim); background: var(--amber-faint); }
+
     /* ── Categories ── */
     .cat-grid { display: flex; flex-wrap: wrap; gap: 6px; }
     .cat-btn {
@@ -282,17 +298,9 @@
       <div class="editor-body">
 
         <div class="f-group">
-          <div class="f-label">PARENT SECTION</div>
-          <select class="f-select" id="f-parent">
-            <option value="pages/wikipedia">Wikipedia (root)</option>
-            <option value="pages/wikipedia/anomalies">Anomalies</option>
-            <option value="pages/wikipedia/elements">Elements</option>
-            <option value="pages/wikipedia/magic">Magic</option>
-            <option value="pages/wikipedia/species">Species</option>
-            <option value="pages/wikipedia/technology">Technology</option>
-            <option value="pages/wikipedia/systems">Unique Systems</option>
-            <option value="pages/wikipedia/characters">Unique Characters</option>
-          </select>
+          <div class="f-label">PARENT PATH <small>(repo-relative, no leading slash)</small></div>
+          <input class="f-input" id="f-parent" type="text" value="pages/wikipedia" autocomplete="off" spellcheck="false" />
+          <div class="parent-presets" id="parent-presets"></div>
         </div>
 
         <div class="f-group">
@@ -404,8 +412,46 @@
     let sections = [], ibRows = [], saRows = [], activeCats = new Set();
     let bodySize = 'md', headScale = 'md', slugLocked = false;
 
+    // ── Parent presets ────────────────────────────────────────────────────────
+    const PRESETS = [
+      'pages/wikipedia',
+      'pages/wikipedia/anomalies',
+      'pages/wikipedia/elements',
+      'pages/wikipedia/magic',
+      'pages/wikipedia/species',
+      'pages/wikipedia/technology',
+      'pages/wikipedia/systems',
+      'pages/wikipedia/characters',
+    ];
+
+    function syncPresetHighlight() {
+      const val = $('f-parent').value.trim();
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('on', b.dataset.path === val));
+    }
+
+    PRESETS.forEach(p => {
+      const b = document.createElement('button');
+      b.className = 'preset-btn';
+      b.dataset.path = p;
+      // Show only the last segment (or "root") as the label
+      const parts = p.split('/');
+      b.textContent = parts.length <= 2 ? 'root' : parts[parts.length - 1];
+      b.title = p;
+      b.addEventListener('click', () => {
+        $('f-parent').value = p;
+        syncPresetHighlight();
+        syncSlugDisplay(); dp();
+      });
+      $('parent-presets').appendChild(b);
+    });
+
     // ── Parent / title / slug ─────────────────────────────────────────────────
-    $('f-parent').addEventListener('change', () => { syncSlugDisplay(); dp(); });
+    $('f-parent').addEventListener('input', () => {
+      // Strip leading slash as the user types
+      const v = $('f-parent').value;
+      if (v.startsWith('/')) $('f-parent').value = v.replace(/^\/+/, '');
+      syncPresetHighlight(); syncSlugDisplay(); dp();
+    });
     $('f-title').addEventListener('input', () => {
       if (!slugLocked) $('f-slug').value = slugify($('f-title').value);
       syncSlugDisplay(); dp();
@@ -418,7 +464,7 @@
     });
     $('f-lead').addEventListener('input', dp);
 
-    function getParent()   { return $('f-parent').value; }
+    function getParent()   { return $('f-parent').value.trim().replace(/\/+$/, ''); }
     function getSlug()     { return $('f-slug').value || slugify($('f-title').value); }
     function getFullPath() { return getParent() + '/' + getSlug(); }
 
@@ -705,6 +751,7 @@
       document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('on', activeCats.has(b.textContent)));
 
       renderIB(); renderSec(); renderSA();
+      syncPresetHighlight();
       syncSlugDisplay();
       dp();
     }
@@ -837,6 +884,7 @@ ${catHtml}
     // ── Live preview ──────────────────────────────────────────────────────────
     let pt = null;
     function dp() { clearTimeout(pt); pt = setTimeout(()=>{ $('prev-frame').srcdoc = genHTML(true); }, 280); }
+    syncPresetHighlight();
     dp();
 
     // ── Publish ───────────────────────────────────────────────────────────────
