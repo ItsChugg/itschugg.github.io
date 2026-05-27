@@ -316,8 +316,8 @@ hr {
 .page-wrapper {
   position: relative;
   z-index: 1;
-  max-width: 1200px;
-  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
   padding: 36px 40px;
 }
 
@@ -875,6 +875,45 @@ hr {
 
 .wiki-article h2:hover .wiki-anchor,
 .wiki-article h3:hover .wiki-anchor { opacity: 1; }
+
+/* ── Wiki: figures / images ──────────────────────────────────────────────── */
+
+.wiki-figure {
+  margin: 0 0 16px 0;
+  max-width: 280px;
+  font-size: 0;
+}
+.wiki-figure.wiki-figure-right {
+  float: right;
+  margin: 4px 0 16px 22px;
+}
+.wiki-figure.wiki-figure-left {
+  float: left;
+  margin: 4px 22px 16px 0;
+}
+.wiki-figure img {
+  width: 100%;
+  border: var(--border);
+  display: block;
+}
+.wiki-figure figcaption {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  padding: 4px 7px;
+  border: var(--border);
+  border-top: none;
+  line-height: 1.5;
+}
+@media (max-width: 600px) {
+  .wiki-figure,
+  .wiki-figure.wiki-figure-left,
+  .wiki-figure.wiki-figure-right {
+    float: none;
+    max-width: 100%;
+    margin: 0 0 16px 0;
+  }
+}
 
 /* ── Wiki: notice / stub box ─────────────────────────────────────────────── */
 
