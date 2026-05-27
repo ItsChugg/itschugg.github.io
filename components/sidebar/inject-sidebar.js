@@ -63,4 +63,16 @@ document.addEventListener('DOMContentLoaded', () => {
       sidebar.appendChild(nav);
     })
     .catch(err => console.error('Sidebar failed to load:', err));
+
+  // Inject edit button for logged-in users on any wiki page
+  try {
+    const s = JSON.parse(localStorage.getItem('wiki_session') || 'null');
+    if (s && Date.now() < s.expires) {
+      const a = document.createElement('a');
+      a.href = '/pages/wikipedia/editor/?edit=' + encodeURIComponent(window.location.pathname);
+      a.textContent = '✎ EDIT PAGE';
+      a.className = 'wiki-edit-btn';
+      document.body.appendChild(a);
+    }
+  } catch(e) {}
 });
