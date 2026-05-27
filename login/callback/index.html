@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Authenticating… — ITSCHU.GG</title>
+  <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=6" />
+  <style>
+    .auth-wrap {
+      max-width: 500px;
+      margin: 80px auto;
+      padding: 0 16px;
+    }
+    .auth-box {
+      background: var(--bg-panel);
+      border: var(--border);
+      padding: 40px;
+    }
+    .auth-title {
+      font-family: var(--font-head);
+      color: var(--amber);
+      font-size: 1.2rem;
+      letter-spacing: 0.12em;
+      margin-bottom: 14px;
+    }
+    .auth-status {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+    }
+    .auth-log {
+      margin-top: 18px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 2;
+      min-height: 40px;
+    }
+    .auth-log .ok  { color: var(--amber); }
+    .auth-log .err { color: #ff5555; }
+    .auth-error {
+      margin-top: 20px;
+      padding: 14px 16px;
+      border: 1px solid #ff5555;
+      color: #ff5555;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      display: none;
+    }
+    .auth-retry {
+      display: inline-block;
+      margin-top: 16px;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      text-decoration: none;
+      border: var(--border);
+      padding: 7px 18px;
+      transition: color 0.15s;
+    }
+    .auth-retry:hover { color: var(--amber); }
+  </style>
+</head>
+<body>
+
+  <div class="auth-wrap">
+    <div class="auth-box">
+      <div class="auth-title">> AUTHENTICATING</div>
+      <div class="auth-status" id="auth-status">Verifying credentials…</div>
+      <div class="auth-log"  id="auth-log"></div>
+      <div class="auth-error" id="auth-error">
+        <span id="auth-error-msg"></span><br>
+        <a class="auth-retry" href="/login/">← Back to login</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const WORKER_URL   = 'https://auth.itschu.gg';
+    const ALLOWLIST    = ['ItsChugg', 'zmbprotocol'];
+    const SESSION_HRS  = 8;
+
+    const $status = document.getElementById('auth-status');
+    const $log    = document.getElementById('auth-log');
+    const $errBox = document.getElementById('auth-error');
+    const $errMsg = document.getElementById('auth-error-msg');
+
+    function log(msg, type = '') {
+      $log.innerHTML += `<span class="${type}">&gt; ${msg}</span><br>`;
+    }
+    function fail(msg) {
+      $status.textContent = 'Authentication failed.';
+      $errMsg.textContent = msg;
+      $errBox.style.display = 'block';
+      log(msg, 'err');
+    }
+
+    async function doAuth() {
+      const params = new URLSearchParams(location.search);
+      const code   = params.get('code');
+      const state  = params.get('state');
+
+      if (params.get('error')) {
+        fail('GitHub denied the request: ' + (params.get('error_description') || params.get('error')));
+        return;
+      }
+      if (!code) { fail('No authorization code received from GitHub.'); return; }
+
+      // Decode returnTo from state (best-effort; lenient on CSRF since GH already validated)
+      let returnTo = '/pages/evolutionary/editor/';
+      try { returnTo = JSON.parse(atob(state)).returnTo || returnTo; } catch {}
+
+      log('Authorization code received', 'ok');
+      log('Exchanging token…');
+      $status.textContent = 'Exchanging token…';
+
+      // Exchange code → access token via Cloudflare Worker
+      let tokenData;
+      try {
+        const r = await fetch(WORKER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }),
+        });
+        tokenData = await r.json();
+      } catch (e) {
+        fail('Could not reach the auth server. Check your connection and try again.');
+        return;
+      }
+
+      if (!tokenData.access_token) {
+        fail('GitHub error: ' + (tokenData.error_description || tokenData.error || 'unknown'));
+        return;
+      }
+
+      log('Access token received', 'ok');
+      log('Fetching GitHub identity…');
+      $status.textContent = 'Verifying identity…';
+
+      // Fetch GitHub user profile
+      let user;
+      try {
+        const r = await fetch('https://api.github.com/user', {
+          headers: {
+            'Authorization': `Bearer ${tokenData.access_token}`,
+            'Accept': 'application/vnd.github+json',
+          },
+        });
+        user = await r.json();
+      } catch {
+        fail('Failed to fetch GitHub profile.');
+        return;
+      }
+
+      log(`Identity confirmed: ${user.login}`, 'ok');
+
+      // Allowlist check
+      if (!ALLOWLIST.map(u => u.toLowerCase()).includes(user.login.toLowerCase())) {
+        fail(`Access denied. "${user.login}" is not on the contributor list.`);
+        return;
+      }
+
+      log('Contributor verified', 'ok');
+      log('Session created — redirecting…', 'ok');
+      $status.textContent = 'Access granted. Redirecting…';
+
+      // Persist session
+      localStorage.setItem('wiki_session', JSON.stringify({
+        token:    tokenData.access_token,
+        username: user.login,
+        avatar:   user.avatar_url,
+        expires:  Date.now() + SESSION_HRS * 3600 * 1000,
+      }));
+      sessionStorage.removeItem('oauth_state');
+
+      setTimeout(() => { location.href = returnTo; }, 900);
+    }
+
+    doAuth();
+  </script>
+
+</body>
+</html>

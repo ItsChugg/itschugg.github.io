@@ -6,6 +6,18 @@
 }());
 
 function wireNavbar() {
+  // Swap LOGIN link → username if a valid session exists
+  const loginLink = document.getElementById('navbar-login-link');
+  if (loginLink) {
+    try {
+      const s = JSON.parse(localStorage.getItem('wiki_session') || 'null');
+      if (s && Date.now() < s.expires) {
+        loginLink.textContent = '> ' + s.username.toUpperCase();
+        loginLink.href        = '/login/';
+      }
+    } catch {}
+  }
+
   // Mark the current page's nav link as active
   const links = document.querySelectorAll('.navbar-links a');
   const path  = window.location.pathname;
