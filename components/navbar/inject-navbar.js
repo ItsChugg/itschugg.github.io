@@ -25,6 +25,18 @@ function wireNavbar() {
     } catch {}
   }
 
+  // Inject edit button on wiki article pages for logged-in users
+  try {
+    const s = JSON.parse(localStorage.getItem('wiki_session') || 'null');
+    if (s && Date.now() < s.expires && window.location.pathname.startsWith('/pages/wikipedia/')) {
+      const a = document.createElement('a');
+      a.href = '/pages/wikipedia/editor/?edit=' + encodeURIComponent(window.location.pathname);
+      a.textContent = '✎ EDIT PAGE';
+      a.className = 'wiki-edit-btn';
+      document.body.appendChild(a);
+    }
+  } catch {}
+
   // Mark the current page's nav link as active
   const links = document.querySelectorAll('.navbar-links a');
   const path  = window.location.pathname;
