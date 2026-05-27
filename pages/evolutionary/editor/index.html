@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wiki Editor — EVOLUTIONARY</title>
+  <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=7" />
+  <style>
+    body { overflow: hidden; }
+
+    .editor-layout {
+      display: flex;
+      height: calc(100vh - 48px);
+    }
+
+    /* ── Left panel ── */
+    .editor-panel {
+      width: 380px;
+      flex-shrink: 0;
+      background: var(--bg-panel);
+      border-right: var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .editor-header {
+      padding: 14px 18px;
+      border-bottom: var(--border);
+      font-family: var(--font-head);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      color: var(--amber);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .editor-header-slug {
+      font-size: 0.62rem;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 190px;
+    }
+    .editor-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ── Fields ── */
+    .f-group { display: flex; flex-direction: column; gap: 5px; }
+    .f-label {
+      font-family: var(--font-head);
+      font-size: 0.63rem;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+    }
+    .f-label small { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0; color: var(--text-faint); }
+    .f-input, .f-textarea {
+      background: var(--bg);
+      border: var(--border);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      padding: 7px 10px;
+      width: 100%;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+    .f-input:focus, .f-textarea:focus { outline: none; border-color: var(--amber-dim); }
+    .f-textarea { min-height: 72px; }
+
+    /* ── Collapsible ── */
+    .collapsible-head {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .collapsible-caret { font-size: 0.6rem; transition: transform 0.15s; display: inline-block; }
+    .collapsible-head.open .collapsible-caret { transform: rotate(90deg); }
+    .collapsible-body { display: none; flex-direction: column; gap: 7px; margin-top: 6px; }
+    .collapsible-body.open { display: flex; }
+
+    /* ── Section items ── */
+    .sec-item {
+      background: var(--bg);
+      border: var(--border);
+      padding: 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .sec-item-top {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .sec-item-top input {
+      flex: 1;
+      background: none;
+      border: none;
+      border-bottom: 1px solid var(--amber-dim);
+      color: var(--amber);
+      font-family: var(--font-head);
+      font-size: 0.75rem;
+      padding: 3px 2px;
+    }
+    .sec-item-top input:focus { outline: none; }
+    .sec-item-top input::placeholder { color: var(--text-faint); }
+
+    /* ── Infobox / seealso rows ── */
+    .kv-row, .sa-row { display: flex; gap: 6px; align-items: center; }
+    .kv-row input, .sa-row input {
+      flex: 1;
+      background: var(--bg);
+      border: var(--border);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 5px 8px;
+      min-width: 0;
+    }
+    .kv-row input:focus, .sa-row input:focus { outline: none; border-color: var(--amber-dim); }
+
+    /* ── Buttons ── */
+    .btn-remove {
+      background: none; border: none;
+      color: var(--text-muted); cursor: pointer;
+      font-size: 0.85rem; padding: 0 3px; line-height: 1;
+      transition: color 0.15s; flex-shrink: 0;
+    }
+    .btn-remove:hover { color: #ff5555; }
+    .btn-add {
+      align-self: flex-start;
+      background: none;
+      border: var(--border);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .btn-add:hover { color: var(--amber); border-color: var(--amber-dim); }
+
+    /* ── Categories ── */
+    .cat-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+    .cat-btn {
+      background: none;
+      border: var(--border);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .cat-btn.on { color: var(--amber); border-color: var(--amber-dim); background: var(--amber-faint); }
+
+    /* ── Footer ── */
+    .editor-footer {
+      padding: 12px 18px;
+      border-top: var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      background: var(--bg-panel);
+    }
+    .btn-publish {
+      background: none;
+      border: var(--border);
+      color: var(--amber);
+      font-family: var(--font-head);
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      padding: 9px 22px;
+      cursor: pointer;
+      transition: box-shadow 0.15s, background 0.15s;
+    }
+    .btn-publish:hover:not(:disabled) { box-shadow: var(--glow-sm); background: var(--amber-faint); }
+    .btn-publish:disabled { opacity: 0.35; cursor: not-allowed; }
+    .pub-status { font-size: 0.73rem; color: var(--text-muted); }
+    .pub-status.ok  { color: var(--amber); }
+    .pub-status.err { color: #ff5555; }
+
+    /* ── Preview ── */
+    .preview-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .preview-header {
+      padding: 12px 18px;
+      border-bottom: var(--border);
+      font-family: var(--font-head);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .preview-url { font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-faint); }
+    .preview-frame { flex: 1; border: none; background: var(--bg); width: 100%; }
+  </style>
+</head>
+<body>
+  <script src="/components/navbar/inject-navbar.js" defer></script>
+
+  <div class="editor-layout">
+
+    <!-- ── Left: form ── -->
+    <div class="editor-panel">
+      <div class="editor-header">
+        <span>> WIKI EDITOR</span>
+        <span class="editor-header-slug" id="hdr-slug"></span>
+      </div>
+
+      <div class="editor-body">
+
+        <div class="f-group">
+          <div class="f-label">TITLE</div>
+          <input class="f-input" id="f-title" type="text" placeholder="Article title…" autocomplete="off" />
+        </div>
+
+        <div class="f-group">
+          <div class="f-label">SLUG <small>(auto-generated from title)</small></div>
+          <input class="f-input" id="f-slug" type="text" placeholder="article-slug" autocomplete="off" />
+        </div>
+
+        <div class="f-group">
+          <div class="f-label">LEAD PARAGRAPH</div>
+          <textarea class="f-textarea" id="f-lead" placeholder="Opening summary…" style="min-height:80px;"></textarea>
+        </div>
+
+        <!-- Infobox -->
+        <div class="f-group">
+          <div class="f-label collapsible-head" id="ib-head">
+            <span class="collapsible-caret">▶</span> INFOBOX
+          </div>
+          <div class="collapsible-body" id="ib-body">
+            <div id="ib-rows"></div>
+            <button class="btn-add" id="ib-add">+ ADD ROW</button>
+          </div>
+        </div>
+
+        <!-- Sections -->
+        <div class="f-group">
+          <div class="f-label">SECTIONS</div>
+          <div id="sec-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+          <button class="btn-add" id="sec-add">+ ADD SECTION</button>
+        </div>
+
+        <!-- See Also -->
+        <div class="f-group">
+          <div class="f-label collapsible-head" id="sa-head">
+            <span class="collapsible-caret">▶</span> SEE ALSO
+          </div>
+          <div class="collapsible-body" id="sa-body">
+            <div id="sa-rows"></div>
+            <button class="btn-add" id="sa-add">+ ADD LINK</button>
+          </div>
+        </div>
+
+        <!-- Categories -->
+        <div class="f-group">
+          <div class="f-label">CATEGORIES</div>
+          <div class="cat-grid" id="cat-grid"></div>
+        </div>
+
+      </div><!-- editor-body -->
+
+      <div class="editor-footer">
+        <button class="btn-publish" id="btn-pub">PUBLISH</button>
+        <span class="pub-status" id="pub-status"></span>
+      </div>
+    </div>
+
+    <!-- ── Right: preview ── -->
+    <div class="preview-panel">
+      <div class="preview-header">
+        <span>LIVE PREVIEW</span>
+        <span class="preview-url" id="prev-url"></span>
+      </div>
+      <iframe class="preview-frame" id="prev-frame" sandbox="allow-same-origin"></iframe>
+    </div>
+
+  </div>
+
+  <script>
+    // ── Auth guard ────────────────────────────────────────────────────────────
+    const REPO = 'ItsChugg/itschugg.github.io';
+    const ALLOWLIST = ['ItsChugg', 'zmbprotocol'];
+    const CATS = ['Anomalies','Biology','Elements','Magic','Sapient','Species','Technology','Unique Characters','Unique Systems'];
+
+    function getSession() {
+      try {
+        const s = JSON.parse(localStorage.getItem('wiki_session') || 'null');
+        if (!s || Date.now() > s.expires) return null;
+        return s;
+      } catch { return null; }
+    }
+    const session = getSession();
+    if (!session) location.href = '/login/?returnTo=' + encodeURIComponent(location.pathname);
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    const $  = id => document.getElementById(id);
+    let uid  = 0;
+    const nid = () => ++uid;
+    function slugify(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
+    function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function toB64(s) { return btoa(unescape(encodeURIComponent(s))); }
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    let sections = [], ibRows = [], saRows = [], activeCats = new Set();
+    let slugLocked = false;
+
+    // ── Title / slug wiring ───────────────────────────────────────────────────
+    $('f-title').addEventListener('input', () => {
+      if (!slugLocked) $('f-slug').value = slugify($('f-title').value);
+      syncSlugDisplay(); dp();
+    });
+    $('f-slug').addEventListener('input', () => { slugLocked = !!$('f-slug').value; syncSlugDisplay(); dp(); });
+    $('f-lead').addEventListener('input', dp);
+
+    function syncSlugDisplay() {
+      const s = $('f-slug').value || slugify($('f-title').value);
+      $('hdr-slug').textContent = s ? '/pages/evolutionary/' + s + '/' : '';
+      $('prev-url').textContent = s ? 'itschu.gg/pages/evolutionary/' + s + '/' : '';
+    }
+
+    // ── Categories ───────────────────────────────────────────────────────────
+    CATS.forEach(c => {
+      const b = document.createElement('button');
+      b.className = 'cat-btn'; b.textContent = c;
+      b.addEventListener('click', () => {
+        activeCats.has(c) ? (activeCats.delete(c), b.classList.remove('on'))
+                          : (activeCats.add(c),    b.classList.add('on'));
+        dp();
+      });
+      $('cat-grid').appendChild(b);
+    });
+
+    // ── Collapsibles ─────────────────────────────────────────────────────────
+    ['ib','sa'].forEach(id => {
+      $(id+'-head').addEventListener('click', () => {
+        $(id+'-head').classList.toggle('open');
+        $(id+'-body').classList.toggle('open');
+      });
+    });
+
+    // ── Infobox ──────────────────────────────────────────────────────────────
+    $('ib-add').addEventListener('click', () => { ibRows.push({id:nid(),k:'',v:''}); renderIB(); dp(); });
+    function renderIB() {
+      const el = $('ib-rows'); el.innerHTML = '';
+      ibRows.forEach(r => {
+        const d = document.createElement('div'); d.className = 'kv-row';
+        d.innerHTML = `<input placeholder="Property" value="${esc(r.k)}" data-id="${r.id}" data-f="k"/>
+                       <input placeholder="Value"    value="${esc(r.v)}" data-id="${r.id}" data-f="v"/>
+                       <button class="btn-remove" data-id="${r.id}" data-t="ib">✕</button>`;
+        el.appendChild(d);
+        d.querySelectorAll('input').forEach(i => i.addEventListener('input', e => {
+          const row = ibRows.find(x => x.id === +e.target.dataset.id);
+          if (row) row[e.target.dataset.f] = e.target.value; dp();
+        }));
+        d.querySelector('.btn-remove').addEventListener('click', e => {
+          ibRows = ibRows.filter(x => x.id !== +e.target.dataset.id); renderIB(); dp();
+        });
+      });
+    }
+
+    // ── Sections ─────────────────────────────────────────────────────────────
+    $('sec-add').addEventListener('click', () => { sections.push({id:nid(),h:'',c:''}); renderSec(); dp(); });
+    function renderSec() {
+      const el = $('sec-list'); el.innerHTML = '';
+      sections.forEach(s => {
+        const d = document.createElement('div'); d.className = 'sec-item';
+        d.innerHTML = `<div class="sec-item-top">
+                         <input type="text" placeholder="Section heading…" value="${esc(s.h)}" data-id="${s.id}" data-f="h"/>
+                         <button class="btn-remove" data-id="${s.id}">✕</button>
+                       </div>
+                       <textarea class="f-textarea" placeholder="Body text. Separate paragraphs with a blank line." data-id="${s.id}" data-f="c" style="min-height:65px;">${esc(s.c)}</textarea>`;
+        el.appendChild(d);
+        d.querySelectorAll('[data-id]').forEach(i => i.addEventListener('input', e => {
+          const sec = sections.find(x => x.id === +e.target.dataset.id);
+          if (sec) sec[e.target.dataset.f] = e.target.value; dp();
+        }));
+        d.querySelector('.btn-remove').addEventListener('click', e => {
+          sections = sections.filter(x => x.id !== +e.target.dataset.id); renderSec(); dp();
+        });
+      });
+    }
+
+    // ── See Also ─────────────────────────────────────────────────────────────
+    $('sa-add').addEventListener('click', () => { saRows.push({id:nid(),url:'',label:'',desc:''}); renderSA(); dp(); });
+    function renderSA() {
+      const el = $('sa-rows'); el.innerHTML = '';
+      saRows.forEach(r => {
+        const d = document.createElement('div'); d.className = 'sa-row';
+        d.innerHTML = `<input placeholder="/url/" value="${esc(r.url)}" data-id="${r.id}" data-f="url" style="max-width:110px;"/>
+                       <input placeholder="Label" value="${esc(r.label)}" data-id="${r.id}" data-f="label"/>
+                       <input placeholder="Short description" value="${esc(r.desc)}" data-id="${r.id}" data-f="desc"/>
+                       <button class="btn-remove" data-id="${r.id}" data-t="sa">✕</button>`;
+        el.appendChild(d);
+        d.querySelectorAll('input').forEach(i => i.addEventListener('input', e => {
+          const row = saRows.find(x => x.id === +e.target.dataset.id);
+          if (row) row[e.target.dataset.f] = e.target.value; dp();
+        }));
+        d.querySelector('.btn-remove').addEventListener('click', e => {
+          saRows = saRows.filter(x => x.id !== +e.target.dataset.id); renderSA(); dp();
+        });
+      });
+    }
+
+    // ── HTML generation ───────────────────────────────────────────────────────
+    function genHTML() {
+      const title = $('f-title').value.trim() || 'Untitled';
+      const lead  = $('f-lead').value.trim();
+      const cats  = [...activeCats];
+
+      const infoboxHtml = ibRows.filter(r=>r.k).length ? `
+        <div class="infobox">
+          <div class="infobox-title">${esc(title)}</div>
+          <table>
+            ${ibRows.filter(r=>r.k).map(r=>`<tr><td>${esc(r.k)}</td><td>${esc(r.v)}</td></tr>`).join('\n            ')}
+          </table>
+        </div>
+` : '';
+
+      const validSecs = sections.filter(s => s.h || s.c);
+      const tocHtml = validSecs.length > 1 ? `
+        <div class="wiki-toc">
+          <div class="wiki-toc-title">Contents</div>
+          <ol>
+            ${validSecs.map(s=>`<li><a href="#${slugify(s.h||'section')}">${esc(s.h)}</a></li>`).join('\n            ')}
+          </ol>
+        </div>
+` : '';
+
+      const secHtml = validSecs.map(s => {
+        const id = slugify(s.h || 'section');
+        const paras = (s.c||'').split(/\n\n+/).filter(Boolean)
+          .map(p => `          <p>${esc(p.trim())}</p>`).join('\n');
+        return `
+        <hr class="wiki-rule">
+
+        <section>
+          <h2 id="${id}">${esc(s.h)} <a class="wiki-anchor" href="#${id}">§</a></h2>
+${paras}
+        </section>`;
+      }).join('\n');
+
+      const saHtml = saRows.filter(r=>r.label).length ? `
+        <div class="wiki-seealso">
+          <div class="wiki-seealso-title">See Also</div>
+          <ul>
+            ${saRows.filter(r=>r.label).map(r=>`<li><a href="${esc(r.url||'#')}">${esc(r.label)}</a>${r.desc?' — '+esc(r.desc):''}</li>`).join('\n            ')}
+          </ul>
+        </div>
+` : '';
+
+      const catHtml = cats.length ? `
+          <div class="wiki-meta-categories">
+            <span class="wiki-meta-label">Categories</span>
+            ${cats.map(c=>`<a class="wiki-cat-tag" href="#">${c}</a>`).join('\n            ')}
+          </div>` : '';
+
+      return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${esc(title)} — EVOLUTIONARY</title>
+  <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=7" />
+</head>
+<body>
+
+  <div class="page-wrapper">
+    <div class="wiki-layout">
+
+      <aside id="sidebar-container" class="subpage-bar"></aside>
+
+      <main class="wiki-article">
+
+        <div class="wiki-breadcrumb">
+          <a href="/">HOME</a>
+          <span class="sep">//</span>
+          <a href="/pages/evolutionary/">EVOLUTIONARY</a>
+          <span class="sep">//</span>
+          ${esc(title).toUpperCase()}
+        </div>
+
+        <h1>${esc(title)}</h1>
+${infoboxHtml}${tocHtml}
+        <p>${esc(lead)}</p>
+${secHtml}
+${saHtml}
+        <div class="wiki-meta">
+${catHtml}
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="/components/navbar/inject-navbar.js" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js" defer><\/script>
+</body>
+</html>`;
+    }
+
+    // ── Live preview ──────────────────────────────────────────────────────────
+    let pt = null;
+    function dp() { clearTimeout(pt); pt = setTimeout(() => { $('prev-frame').srcdoc = genHTML(); }, 280); }
+    dp();
+
+    // ── Publish ───────────────────────────────────────────────────────────────
+    $('btn-pub').addEventListener('click', async () => {
+      const btn    = $('btn-pub');
+      const status = $('pub-status');
+      const title  = $('f-title').value.trim();
+      const slug   = $('f-slug').value.trim() || slugify(title);
+
+      if (!title) { status.className='pub-status err'; status.textContent='Title is required.'; return; }
+      if (!slug)  { status.className='pub-status err'; status.textContent='Slug is required.';  return; }
+
+      btn.disabled = true;
+      status.className = 'pub-status';
+      status.textContent = 'Publishing…';
+
+      const path   = `pages/evolutionary/${slug}/index.html`;
+      const apiUrl = `https://api.github.com/repos/${REPO}/contents/${path}`;
+      const html   = genHTML();
+
+      // Check for existing file (need SHA to update)
+      let sha = null;
+      try {
+        const chk = await fetch(apiUrl, { headers:{ 'Authorization':`Bearer ${session.token}`, 'Accept':'application/vnd.github+json' } });
+        if (chk.ok) sha = (await chk.json()).sha;
+      } catch {}
+
+      const body = {
+        message: sha ? `docs: update "${title}"` : `docs: add wiki page "${title}"`,
+        content: toB64(html),
+        branch: 'main',
+      };
+      if (sha) body.sha = sha;
+
+      try {
+        const resp = await fetch(apiUrl, {
+          method: 'PUT',
+          headers: { 'Authorization':`Bearer ${session.token}`, 'Accept':'application/vnd.github+json', 'Content-Type':'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (resp.ok) {
+          status.className = 'pub-status ok';
+          status.textContent = (sha ? 'Updated' : 'Published') + ` — live in ~60s at itschu.gg/pages/evolutionary/${slug}/`;
+        } else {
+          const err = await resp.json().catch(()=>({}));
+          status.className = 'pub-status err';
+          status.textContent = 'GitHub error: ' + (err.message || resp.status);
+        }
+      } catch {
+        status.className = 'pub-status err';
+        status.textContent = 'Network error — try again.';
+      }
+
+      btn.disabled = false;
+    });
+  </script>
+</body>
+</html>

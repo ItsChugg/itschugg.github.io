@@ -149,10 +149,8 @@
 
     const session = getSession();
     if (session) {
-      document.getElementById('login-new').style.display    = 'none';
-      document.getElementById('login-already').style.display = 'block';
-      document.getElementById('login-avatar').src            = session.avatar;
-      document.getElementById('login-username').textContent  = '> ' + session.username;
+      // Already logged in — send to account page
+      location.replace('/account/');
     }
 
     document.getElementById('gh-login-btn').addEventListener('click', () => {
