@@ -94,7 +94,7 @@
 </head>
 <body>
 
-  <script src="/components/navbar/inject-navbar.js" defer></script>
+  <script src="/components/navbar/inject-navbar.js?v=2" defer></script>
 
   <div class="login-wrap">
     <div class="login-box">
@@ -154,7 +154,7 @@
     }
 
     document.getElementById('gh-login-btn').addEventListener('click', () => {
-      const returnTo = new URLSearchParams(location.search).get('returnTo') || '/wikipedia/editor/';
+      const returnTo = new URLSearchParams(location.search).get('returnTo') || '/account/';
       const state    = btoa(JSON.stringify({ nonce: crypto.randomUUID(), returnTo }));
       sessionStorage.setItem('oauth_state', state);
       location.href  = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&scope=${SCOPE}&state=${encodeURIComponent(state)}`;
