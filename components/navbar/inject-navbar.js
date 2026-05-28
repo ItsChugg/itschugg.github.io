@@ -45,6 +45,23 @@ function wireNavbar() {
     }
   } catch {}
 
+  // Wire up WIKIPEDIA dropdown click toggle (for mobile / keyboard nav)
+  const wikiDropdown = document.querySelector('.nav-dropdown');
+  const wikiTrigger  = document.querySelector('.nav-dropdown-trigger');
+  if (wikiDropdown && wikiTrigger) {
+    wikiTrigger.addEventListener('click', e => {
+      // On the hub page, clicking navigates. On other pages, toggle the dropdown.
+      if (window.location.pathname !== '/wikipedia/') {
+        e.preventDefault();
+        wikiDropdown.classList.toggle('open');
+      }
+    });
+    // Close dropdown when clicking anywhere outside
+    document.addEventListener('click', e => {
+      if (!wikiDropdown.contains(e.target)) wikiDropdown.classList.remove('open');
+    });
+  }
+
   // Mark the current page's nav link as active
   const links = document.querySelectorAll('.navbar-links a');
   const path  = window.location.pathname;
@@ -79,7 +96,7 @@ function wireNavbar() {
 if (document.querySelector('.navbar')) {
   wireNavbar();
 } else {
-  fetch('/components/navbar/navbar.html?v=8')
+  fetch('/components/navbar/navbar.html?v=9')
     .then(res => res.text())
     .then(html => {
       document.body.insertAdjacentHTML('afterbegin', html);
