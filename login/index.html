@@ -127,7 +127,7 @@
         <div class="login-username" id="login-username"></div>
         <div class="login-sub" style="margin-bottom:0">You are signed in.</div>
         <div class="login-actions">
-          <a href="/pages/wikipedia/editor/" class="login-btn">GO TO EDITOR</a>
+          <a href="/wikipedia/editor/" class="login-btn">GO TO EDITOR</a>
           <button class="btn-ghost" id="logout-btn">SIGN OUT</button>
         </div>
       </div>
@@ -154,7 +154,7 @@
     }
 
     document.getElementById('gh-login-btn').addEventListener('click', () => {
-      const returnTo = new URLSearchParams(location.search).get('returnTo') || '/pages/wikipedia/editor/';
+      const returnTo = new URLSearchParams(location.search).get('returnTo') || '/wikipedia/editor/';
       const state    = btoa(JSON.stringify({ nonce: crypto.randomUUID(), returnTo }));
       sessionStorage.setItem('oauth_state', state);
       location.href  = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&scope=${SCOPE}&state=${encodeURIComponent(state)}`;

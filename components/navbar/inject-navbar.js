@@ -25,13 +25,21 @@ function wireNavbar() {
     } catch {}
   }
 
-  // Inject edit button on wiki article pages for logged-in users
+  // Inject wiki action button for logged-in users
   try {
-    const s = JSON.parse(localStorage.getItem('wiki_session') || 'null');
-    if (s && Date.now() < s.expires && window.location.pathname.startsWith('/pages/wikipedia/')) {
+    const s    = JSON.parse(localStorage.getItem('wiki_session') || 'null');
+    const path = window.location.pathname;
+    if (s && Date.now() < s.expires && path.startsWith('/wikipedia/')) {
       const a = document.createElement('a');
-      a.href = '/pages/wikipedia/editor/?edit=' + encodeURIComponent(window.location.pathname);
-      a.textContent = '✎ EDIT PAGE';
+      if (path === '/wikipedia/') {
+        // Hub page — offer to create a new page
+        a.href      = '/wikipedia/editor/';
+        a.textContent = '+ CREATE PAGE';
+      } else {
+        // Article page — offer to edit
+        a.href      = '/wikipedia/editor/?edit=' + encodeURIComponent(path);
+        a.textContent = '✎ EDIT PAGE';
+      }
       a.className = 'wiki-edit-btn';
       document.body.appendChild(a);
     }
@@ -71,7 +79,7 @@ function wireNavbar() {
 if (document.querySelector('.navbar')) {
   wireNavbar();
 } else {
-  fetch('/components/navbar/navbar.html?v=7')
+  fetch('/components/navbar/navbar.html?v=8')
     .then(res => res.text())
     .then(html => {
       document.body.insertAdjacentHTML('afterbegin', html);
