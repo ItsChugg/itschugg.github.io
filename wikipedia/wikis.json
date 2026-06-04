@@ -3,5 +3,10 @@
     "name": "Evolutionary",
     "slug": "evolutionary",
     "description": "A fictional universe centered on science fiction, arcane biology, and natural selection."
+  },
+  {
+    "name": "test",
+    "slug": "test",
+    "description": "test"
   }
 ]
