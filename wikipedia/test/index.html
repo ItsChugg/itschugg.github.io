@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>test — ITSCHU.GG</title>
+  <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=6" />
+</head>
+<body>
+
+  <div class="page-wrapper">
+    <div class="wiki-layout">
+
+      <aside id="sidebar-container" class="subpage-bar"></aside>
+
+      <main class="wiki-article">
+
+        <div class="wiki-breadcrumb">
+          <a href="/">HOME</a>
+          <span class="sep">//</span>
+          <a href="/wikipedia/">WIKIPEDIA</a>
+          <span class="sep">//</span>
+          TEST
+        </div>
+
+        <h1>test</h1>
+        <p>test</p>
+
+        <hr class="wiki-rule">
+
+        <div class="wiki-stats">
+          <div class="wiki-stat">
+            <span class="wiki-stat-num">0</span>
+            <span class="wiki-stat-label">Articles</span>
+          </div>
+          <div class="wiki-stat">
+            <span class="wiki-stat-num">0</span>
+            <span class="wiki-stat-label">Categories</span>
+          </div>
+          <div class="wiki-stat">
+            <span class="wiki-stat-num">0</span>
+            <span class="wiki-stat-label">Species</span>
+          </div>
+          <div class="wiki-stat">
+            <span class="wiki-stat-num">∞</span>
+            <span class="wiki-stat-label">In Development</span>
+          </div>
+        </div>
+
+        <div class="wiki-hub-cols">
+          <div class="wiki-hub-box"></div>
+          <div class="wiki-hub-box">
+            <div class="wiki-hub-box-title">Quick Navigation</div>
+            <ul id="hub-quicknav-list"></ul>
+          </div>
+        </div>
+
+        <section>
+          <h2>Browse by Category</h2>
+          <div class="wiki-categories" id="hub-categories"></div>
+        </section>
+
+        <div class="wiki-meta">
+          <div class="wiki-meta-edited">test wiki — under active development.</div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    fetch('/wikipedia/test/pages.json')
+      .then(r => r.json())
+      .then(data => {
+        const nav  = document.getElementById('hub-quicknav-list');
+        const cats = document.getElementById('hub-categories');
+        data.forEach(g => {
+          if (nav) {
+            const li = document.createElement('li');
+            li.innerHTML = '<a href="#">' + g.category + '</a> — ' +
+              g.pages.slice(0, 3).map(p => p.title).join(', ');
+            nav.appendChild(li);
+          }
+          if (cats) {
+            const a = document.createElement('a');
+            a.className = 'wiki-category-card';
+            a.href = '#';
+            a.innerHTML = '<div class="cat-name">' + g.category + '</div>' +
+              '<div class="cat-count">' + g.pages.length +
+              ' article' + (g.pages.length === 1 ? '' : 's') + '</div>';
+            cats.appendChild(a);
+          }
+        });
+      });
+  </script>
+
+  <script src="/components/site-config.js?v=6"></script>
+  <script src="/components/navbar/inject-navbar.js?v=6" defer></script>
+  <script src="/components/sidebar/inject-sidebar.js?v=6" defer></script>
+</body>
+</html>
