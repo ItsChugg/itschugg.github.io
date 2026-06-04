@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Account — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=11" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=3" />
   <style>
     .acct-wrap {
       max-width: 520px;
@@ -84,6 +84,7 @@
   </style>
 </head>
 <body>
+  <script src="/components/site-config.js?v=3"></script>
   <script src="/components/navbar/inject-navbar.js?v=3" defer></script>
 
   <div class="acct-wrap">
@@ -105,15 +106,7 @@
   </div>
 
   <script>
-    function getSession() {
-      try {
-        const s = JSON.parse(localStorage.getItem('wiki_session') || 'null');
-        if (!s || Date.now() > s.expires) { localStorage.removeItem('wiki_session'); return null; }
-        return s;
-      } catch { return null; }
-    }
-
-    const session = getSession();
+    const session = SITE.getSession();
     if (!session) {
       location.href = '/login/?returnTo=/account/';
     } else {

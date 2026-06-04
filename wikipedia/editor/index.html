@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Wiki Editor — EVOLUTIONARY</title>
+  <title>Wiki Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=11" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=3" />
   <style>
     body { overflow: hidden; }
 
@@ -284,6 +284,8 @@
   </style>
 </head>
 <body>
+  <script src="/components/site-config.js?v=3"></script>
+  <script src="/components/wiki-utils.js?v=3"></script>
   <script src="/components/navbar/inject-navbar.js?v=3" defer></script>
 
   <div class="editor-layout">
@@ -291,7 +293,7 @@
     <!-- ── Left: form ── -->
     <div class="editor-panel">
       <div class="editor-header">
-        <span>> WIKI EDITOR</span>
+        <span id="hdr-title">> WIKI EDITOR</span>
         <span class="editor-header-slug" id="hdr-slug"></span>
       </div>
 
@@ -389,61 +391,62 @@
   </div>
 
   <script>
-    const REPO      = 'ItsChugg/itschugg.github.io';
-    const CATS      = ['Anomalies','Biology','Elements','Magic','Sapient','Species','Technology','Unique Characters','Unique Systems'];
+    // ── Shared config (from site-config.js?v=3 + wiki-utils.js) ──────────────────
+    const REPO    = SITE.REPO;
+    const session = SITE.getSession();
+    if (!session) location.href = '/login/?returnTo=' + encodeURIComponent(location.pathname + location.search);
+    const { slugify, esc, toB64 } = WIKI;
 
-    function getSession() {
-      try {
-        const s = JSON.parse(localStorage.getItem('wiki_session') || 'null');
-        if (!s || Date.now() > s.expires) return null;
-        return s;
-      } catch { return null; }
-    }
-    const session = getSession();
-    if (!session) location.href = '/login/?returnTo=' + encodeURIComponent(location.pathname);
+    const CATS = ['Anomalies','Biology','Elements','Magic','Sapient','Species','Technology','Unique Characters','Unique Systems'];
+
+    // ── Wiki context from URL params ─────────────────────────────────────────
+    const _params   = new URLSearchParams(location.search);
+    const _editPath = _params.get('edit') || '';
+    const wikiSlug  = _params.get('wiki') ||
+                      (_editPath ? _editPath.split('/').filter(Boolean)[1] : 'evolutionary');
+    document.getElementById('hdr-title').textContent = `> ${wikiSlug.toUpperCase()} EDITOR`;
 
     const $   = id => document.getElementById(id);
     let uid   = 0;
     const nid = () => ++uid;
-    function slugify(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
-    function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-    function toB64(s) { return btoa(unescape(encodeURIComponent(s))); }
 
     let sections = [], ibRows = [], saRows = [], activeCats = new Set();
     let bodySize = 'md', headScale = 'md', slugLocked = false;
 
-    // ── Parent presets ────────────────────────────────────────────────────────
-    const PRESETS = [
-      'wikipedia',
-      'wikipedia/evolutionary/anomalies',
-      'wikipedia/evolutionary/elements',
-      'wikipedia/evolutionary/magic',
-      'wikipedia/evolutionary/species',
-      'wikipedia/evolutionary/technology',
-      'wikipedia/evolutionary/systems',
-      'wikipedia/evolutionary/characters',
-    ];
+    // ── Parent presets (built from wiki's pages.json) ─────────────────────────
+    const wikiRoot = `wikipedia/${wikiSlug}`;
+    $('f-parent').value = wikiRoot;
 
     function syncPresetHighlight() {
       const val = $('f-parent').value.trim();
       document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('on', b.dataset.path === val));
     }
 
-    PRESETS.forEach(p => {
+    function buildPresetBtn(path) {
       const b = document.createElement('button');
-      b.className = 'preset-btn';
-      b.dataset.path = p;
-      // Show only the last segment (or "root") as the label
-      const parts = p.split('/');
-      b.textContent = parts.length <= 2 ? 'root' : parts[parts.length - 1];
-      b.title = p;
+      b.className    = 'preset-btn';
+      b.dataset.path = path;
+      const parts    = path.split('/');
+      b.textContent  = parts.length <= 2 ? 'root' : parts[parts.length - 1];
+      b.title        = path;
       b.addEventListener('click', () => {
-        $('f-parent').value = p;
-        syncPresetHighlight();
-        syncSlugDisplay(); dp();
+        $('f-parent').value = path;
+        syncPresetHighlight(); syncSlugDisplay(); dp();
       });
       $('parent-presets').appendChild(b);
-    });
+    }
+
+    buildPresetBtn(wikiRoot); // root preset always shown
+    // Fetch wiki's pages.json to build category presets
+    fetch(`/wikipedia/${wikiSlug}/pages.json`)
+      .then(r => r.json())
+      .then(data => {
+        // Derive unique directory names from page file paths
+        const dirs = [...new Set(data.flatMap(g => g.pages.map(p => p.file.split('/')[0])))];
+        dirs.forEach(d => buildPresetBtn(`${wikiRoot}/${d}`));
+        syncPresetHighlight();
+      })
+      .catch(() => {}); // silently skip if no pages.json yet
 
     // ── Parent / title / slug ─────────────────────────────────────────────────
     $('f-parent').addEventListener('input', () => {
@@ -727,7 +730,7 @@
     }
 
     function loadState(state) {
-      $('f-parent').value = state.parent || 'wikipedia';
+      $('f-parent').value = state.parent || wikiRoot;
       $('f-title').value  = state.title  || '';
       $('f-slug').value   = state.slug   || '';
       slugLocked = !!state.slug;
@@ -834,7 +837,7 @@ ${paras}
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${esc(title)} — EVOLUTIONARY</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=11" />${styleBlock}
+  <link rel="stylesheet" href="/components/themes/theme.css?v=3" />${styleBlock}
 </head>
 <body>
 
@@ -862,21 +865,9 @@ ${catHtml}
     </div>
   </div>
 
+  <script src="/components/site-config.js?v=3"><\/script>
   <script src="/components/navbar/inject-navbar.js?v=3" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js" defer><\/script>
-  <script>
-(function(){
-  try {
-    var s = JSON.parse(localStorage.getItem('wiki_session')||'null');
-    if (!s || Date.now() > s.expires) return;
-    var a = document.createElement('a');
-    a.href = '/wikipedia/evolutionary/editor/?edit=' + encodeURIComponent(location.pathname);
-    a.textContent = '✎ EDIT PAGE';
-    a.className = 'wiki-edit-btn';
-    document.body.appendChild(a);
-  } catch(e) {}
-})();
-  <\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=3" defer><\/script>
 </body>
 </html>`;
     }
@@ -948,7 +939,7 @@ ${catHtml}
     });
     // ── Load existing page via ?edit=/path/ ───────────────────────────────────
     (async () => {
-      const editPath = new URLSearchParams(location.search).get('edit');
+      const editPath = _editPath;
       if (!editPath || !session) return;
       const status = $('pub-status');
       status.className = 'pub-status';

@@ -1,0 +1,5 @@
+#!/bin/sh
+# Auto-stamp build version before every commit.
+# Enable once with:  git config core.hooksPath .githooks
+node build.js
+git add -A

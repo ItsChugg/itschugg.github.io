@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hub Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=11" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=3" />
   <style>
     body { overflow: hidden; }
     .editor-layout { display: flex; height: calc(100vh - 48px); }
@@ -72,6 +72,8 @@
   </style>
 </head>
 <body>
+  <script src="/components/site-config.js?v=3"></script>
+  <script src="/components/wiki-utils.js?v=3"></script>
   <script src="/components/navbar/inject-navbar.js?v=3" defer></script>
 
   <div class="editor-layout">
@@ -139,17 +141,10 @@
   </div>
 
   <script>
-    const REPO = 'ItsChugg/itschugg.github.io';
-
-    function getSession() {
-      try {
-        const s = JSON.parse(localStorage.getItem('wiki_session') || 'null');
-        if (!s || Date.now() > s.expires) return null;
-        return s;
-      } catch { return null; }
-    }
-    const session = getSession();
+    const REPO    = SITE.REPO;
+    const session = SITE.getSession();
     if (!session) location.href = '/login/?returnTo=' + encodeURIComponent(location.pathname + location.search);
+    const { slugify, esc, toB64 } = WIKI;
 
     const $ = id => document.getElementById(id);
 
@@ -226,112 +221,8 @@
       dp();
     }
 
-    // ── Lead → <p> tags ──────────────────────────────────────────────────────
-    function leadToHtml(text) {
-      return text.split(/\n\n+/).filter(Boolean)
-        .map(p => `<p>${p.trim().replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>')}</p>`)
-        .join('\n        ');
-    }
-
-    // ── HTML generation ───────────────────────────────────────────────────────
-    function genHubHTML(state, slug) {
-      const title   = esc(state.title || 'Untitled');
-      const leadHtml = leadToHtml(state.lead || '');
-      const statsHtml = (state.stats||[]).filter(s=>s.label).map(s =>
-        `<div class="wiki-stat"><span class="wiki-stat-num">${esc(s.num)}</span><span class="wiki-stat-label">${esc(s.label)}</span></div>`
-      ).join('\n          ');
-      const ft = state.featured || {};
-      const featHtml = ft.title ? `
-          <div class="wiki-hub-box">
-            <div class="wiki-hub-box-title">Featured Article — ${esc(ft.title)}</div>
-            <p style="font-size:0.83rem;line-height:1.75;"><strong><a href="${esc(ft.link||'#')}">${esc(ft.title)}</a></strong> ${esc(ft.excerpt)}</p>
-            <p style="font-size:0.78rem;margin-top:8px;"><a href="${esc(ft.link||'#')}">Read full article &rarr;</a></p>
-          </div>` : '<div class="wiki-hub-box"></div>';
-
-      return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${title} — ITSCHU.GG</title>
-  <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=11" />
-</head>
-<body>
-
-  <div class="page-wrapper">
-    <div class="wiki-layout">
-
-      <aside id="sidebar-container" class="subpage-bar"></aside>
-
-      <main class="wiki-article">
-
-        <div class="wiki-breadcrumb">
-          <a href="/">HOME</a>
-          <span class="sep">//</span>
-          <a href="/wikipedia/">WIKIPEDIA</a>
-          <span class="sep">//</span>
-          ${title.toUpperCase()}
-        </div>
-
-        <h1>${title}</h1>
-        ${leadHtml}
-
-        <hr class="wiki-rule">
-
-        <div class="wiki-stats">
-          ${statsHtml}
-        </div>
-
-        <div class="wiki-hub-cols">
-          ${featHtml}
-          <div class="wiki-hub-box" id="hub-quicknav">
-            <div class="wiki-hub-box-title">Quick Navigation</div>
-            <ul id="quicknav-list"></ul>
-          </div>
-        </div>
-
-        <section>
-          <h2>Browse by Category</h2>
-          <div class="wiki-categories" id="hub-categories"></div>
-        </section>
-
-        <div class="wiki-meta">
-          <div class="wiki-meta-edited">${esc(state.footerNote||'')}</div>
-        </div>
-
-      </main>
-    </div>
-  </div>
-
-  <script>
-    fetch('/wikipedia/${slug}/pages.json')
-      .then(r => r.json())
-      .then(data => {
-        const navList = document.getElementById('quicknav-list');
-        const catGrid = document.getElementById('hub-categories');
-        data.forEach(g => {
-          if (navList) {
-            const li = document.createElement('li');
-            li.innerHTML = '<a href="#">' + g.category + '</a> — ' + g.pages.slice(0,3).map(p=>p.title).join(', ');
-            navList.appendChild(li);
-          }
-          if (catGrid) {
-            const a = document.createElement('a');
-            a.className = 'wiki-category-card';
-            a.href = '#';
-            a.innerHTML = '<div class="cat-name">' + g.category + '</div><div class="cat-count">' + g.pages.length + ' article' + (g.pages.length===1?'':'s') + '</div>';
-            catGrid.appendChild(a);
-          }
-        });
-      });
-  <\/script>
-
-  <script src="/components/navbar/inject-navbar.js?v=3" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js" defer><\/script>
-</body>
-</html>`;
-    }
+    // ── HTML generation — delegated to WIKI.genHubHTML ───────────────────────
+    function genHubHTML(state, slug) { return WIKI.genHubHTML(state, slug); }
 
     // ── Live preview ──────────────────────────────────────────────────────────
     let pt = null;

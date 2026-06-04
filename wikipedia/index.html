@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wikipedia — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=11" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=3" />
   <style>
     .wiki-hub-grid {
       display: grid;
@@ -63,6 +63,7 @@
   </style>
 </head>
 <body>
+  <script src="/components/site-config.js?v=3"></script>
   <script src="/components/navbar/inject-navbar.js?v=3" defer></script>
 
   <div class="page-wrapper">
@@ -74,46 +75,7 @@
     </div>
   </div>
 
-  <script>
-    const ALLOWED = ['ItsChugg', 'zmbprotocol'];
-
-    function getSession() {
-      try {
-        const s = JSON.parse(localStorage.getItem('wiki_session') || 'null');
-        if (!s || Date.now() > s.expires) return null;
-        return s;
-      } catch { return null; }
-    }
-
-    fetch('/wikipedia/wikis.json')
-      .then(r => r.json())
-      .then(wikis => {
-        const grid    = document.getElementById('wiki-grid');
-        const session = getSession();
-
-        wikis.forEach(w => {
-          const a = document.createElement('a');
-          a.className = 'wiki-hub-card';
-          a.href      = '/wikipedia/' + w.slug + '/';
-          a.innerHTML = `<div class="wiki-hub-card-name">${w.name}</div>
-                         <div class="wiki-hub-card-desc">${w.description}</div>`;
-          grid.appendChild(a);
-        });
-
-        // Show "Create new Wikipedia" card for authorised users
-        if (session && ALLOWED.includes(session.username)) {
-          const btn = document.createElement('a');
-          btn.className = 'wiki-hub-card create';
-          btn.href      = '/wikipedia/new/';
-          btn.innerHTML = `<div class="wiki-hub-card-name">+</div>
-                           <div class="wiki-hub-card-desc">Create a new Wikipedia</div>`;
-          grid.appendChild(btn);
-        }
-      })
-      .catch(() => {
-        document.getElementById('wiki-grid').innerHTML =
-          '<p style="color:var(--text-muted);font-size:0.8rem;">Could not load wikis.</p>';
-      });
-  </script>
+  <script src="/components/wiki-utils.js?v=3"></script>
+  <script>WIKI.renderWikiGrid('wiki-grid');</script>
 </body>
 </html>

@@ -1,67 +1,69 @@
+/**
+ * inject-navbar.js — Fetches and injects the shared navbar, wires theme
+ * swatches, swaps the LOGIN link for a user avatar when signed in, and
+ * injects wiki edit/create buttons on relevant pages.
+ *
+ * Requires site-config.js?v=3 to be loaded first (uses SITE.getSession).
+ */
+
 // Apply saved theme before first paint to prevent flash.
-// 'dark' is the default (no data-theme attribute = dark mode via :root).
 (function () {
-  var t = localStorage.getItem('itschu-theme');
+  const t = localStorage.getItem('itschu-theme');
   if (t && t !== 'dark') document.documentElement.setAttribute('data-theme', t);
 }());
 
 function wireNavbar() {
-  // Swap LOGIN link → avatar + username if a valid session exists
+  const session = SITE.getSession();
+
+  // ── Swap LOGIN → avatar + username when signed in ─────────────────────────
   const loginLink = document.getElementById('navbar-login-link');
-  if (loginLink) {
-    try {
-      const s = JSON.parse(localStorage.getItem('wiki_session') || 'null');
-      if (s && Date.now() < s.expires) {
-        const img = document.createElement('img');
-        img.src   = s.avatar;
-        img.alt   = s.username;
-        img.className = 'navbar-user-avatar';
-        loginLink.textContent = '';
-        loginLink.appendChild(img);
-        loginLink.appendChild(document.createTextNode(s.username.toUpperCase()));
-        loginLink.href      = '/login/';
-        loginLink.classList.add('navbar-user');
-      }
-    } catch {}
+  if (loginLink && session) {
+    const img     = document.createElement('img');
+    img.src       = session.avatar;
+    img.alt       = session.username;
+    img.className = 'navbar-user-avatar';
+    loginLink.textContent = '';
+    loginLink.appendChild(img);
+    loginLink.appendChild(document.createTextNode(session.username.toUpperCase()));
+    loginLink.href = '/account/';
+    loginLink.classList.add('navbar-user');
   }
 
-  // Inject wiki action button for logged-in users
-  try {
-    const s    = JSON.parse(localStorage.getItem('wiki_session') || 'null');
-    const path = window.location.pathname;
-    if (s && Date.now() < s.expires) {
-      const a = document.createElement('a');
-      // Article page inside a wiki: /wikipedia/{slug}/something/
-      if (/^\/wikipedia\/[^/]+\/.+/.test(path)) {
-        // Derive which wiki's editor to use from the slug segment
-        const slug = path.split('/')[2];
-        a.href      = '/wikipedia/' + slug + '/editor/?edit=' + encodeURIComponent(path);
-        a.textContent = '✎ EDIT PAGE';
-        a.className = 'wiki-edit-btn';
-        document.body.appendChild(a);
-      }
-      // Wiki hub page: /wikipedia/{slug}/
-      else if (/^\/wikipedia\/[^/]+\/$/.test(path)) {
-        const slug = path.split('/')[2];
-        a.href      = '/wikipedia/hub-editor/?wiki=' + slug;
-        a.textContent = '✎ EDIT HOME';
-        a.className = 'wiki-edit-btn';
-        document.body.appendChild(a);
+  // ── Wiki action buttons (only for signed-in users) ────────────────────────
+  if (session) {
+    const path  = window.location.pathname;
+    const parts = path.split('/').filter(Boolean);
+    // parts[0] = 'wikipedia', parts[1] = wiki slug, parts[2+] = article path
+
+    if (parts[0] === 'wikipedia' && parts[1]) {
+      const slug = parts[1];
+      const btn  = document.createElement('a');
+      btn.className = 'wiki-edit-btn';
+
+      if (parts.length >= 3) {
+        // Article page inside a wiki
+        btn.href      = `/wikipedia/editor/?wiki=${slug}&edit=${encodeURIComponent(path)}`;
+        btn.textContent = '✎ EDIT PAGE';
+        document.body.appendChild(btn);
+      } else if (parts.length === 2) {
+        // Wiki hub page: /wikipedia/{slug}/
+        btn.href      = `/wikipedia/hub-editor/?wiki=${slug}`;
+        btn.textContent = '✎ EDIT HOME';
+        document.body.appendChild(btn);
       }
     }
-  } catch {}
+  }
 
-  // Mark the current page's nav link as active
-  const links = document.querySelectorAll('.navbar-links a');
-  const path  = window.location.pathname;
-  links.forEach(a => {
+  // ── Mark active nav link ──────────────────────────────────────────────────
+  const path = window.location.pathname;
+  document.querySelectorAll('.navbar-links a').forEach(a => {
     const href = a.getAttribute('href');
     if (href === '/' ? path === '/' : path.startsWith(href)) {
       a.classList.add('active');
     }
   });
 
-  // Wire up theme swatches
+  // ── Theme swatches ────────────────────────────────────────────────────────
   const currentTheme = localStorage.getItem('itschu-theme') || 'dark';
   document.querySelectorAll('.swatch').forEach(s => {
     s.classList.toggle('active', s.dataset.theme === currentTheme);
@@ -73,19 +75,18 @@ function wireNavbar() {
         document.documentElement.setAttribute('data-theme', name);
       }
       localStorage.setItem('itschu-theme', name);
-      document.querySelectorAll('.swatch').forEach(sw => {
-        sw.classList.toggle('active', sw.dataset.theme === name);
-      });
+      document.querySelectorAll('.swatch').forEach(sw =>
+        sw.classList.toggle('active', sw.dataset.theme === name)
+      );
     });
   });
 }
 
-// If the navbar is already inlined in the page (e.g. globe), skip the fetch
-// and just wire up the interactive bits.
+// Skip fetch if navbar is already inlined (e.g. globe viewer).
 if (document.querySelector('.navbar')) {
   wireNavbar();
 } else {
-  fetch('/components/navbar/navbar.html?v=11')
+  fetch('/components/navbar/navbar.html?v=3')
     .then(res => res.text())
     .then(html => {
       document.body.insertAdjacentHTML('afterbegin', html);

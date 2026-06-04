@@ -1,0 +1,10 @@
+{
+  "name": "itschu.gg",
+  "version": "1.0.0",
+  "buildId": 3,
+  "description": "itschu.gg static website",
+  "scripts": {
+    "build": "node build.js",
+    "deploy": "node build.js && git add -A && git commit -m \"build: v$(node -p \\\"require('./package.json').buildId\\\")\" && git push"
+  }
+}
