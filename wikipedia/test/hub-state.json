@@ -1,0 +1,29 @@
+{
+  "v": 1,
+  "title": "test",
+  "lead": "test",
+  "stats": [
+    {
+      "num": "0",
+      "label": "Articles"
+    },
+    {
+      "num": "0",
+      "label": "Categories"
+    },
+    {
+      "num": "0",
+      "label": "Species"
+    },
+    {
+      "num": "∞",
+      "label": "In Development"
+    }
+  ],
+  "featured": {
+    "title": "",
+    "link": "",
+    "excerpt": ""
+  },
+  "footerNote": "test wiki — under active development."
+}
