@@ -443,7 +443,7 @@ hr {
   display: grid;
   grid-template-columns: 1fr 360px;
   gap: 18px;
-  align-items: start;
+  align-items: stretch;
 }
 
 @media (max-width: 820px) {

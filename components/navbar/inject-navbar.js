@@ -43,8 +43,8 @@ function wireNavbar() {
       // Wiki hub page: /wikipedia/{slug}/
       else if (/^\/wikipedia\/[^/]+\/$/.test(path)) {
         const slug = path.split('/')[2];
-        a.href      = '/wikipedia/' + slug + '/editor/';
-        a.textContent = '+ CREATE PAGE';
+        a.href      = '/wikipedia/hub-editor/?wiki=' + slug;
+        a.textContent = '✎ EDIT HOME';
         a.className = 'wiki-edit-btn';
         document.body.appendChild(a);
       }
@@ -85,7 +85,7 @@ function wireNavbar() {
 if (document.querySelector('.navbar')) {
   wireNavbar();
 } else {
-  fetch('/components/navbar/navbar.html?v=10')
+  fetch('/components/navbar/navbar.html?v=11')
     .then(res => res.text())
     .then(html => {
       document.body.insertAdjacentHTML('afterbegin', html);

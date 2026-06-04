@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hub Editor — ITSCHU.GG</title>
+  <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=11" />
+  <style>
+    body { overflow: hidden; }
+    .editor-layout { display: flex; height: calc(100vh - 48px); }
+
+    .editor-panel {
+      width: 390px; flex-shrink: 0;
+      background: var(--bg-panel); border-right: var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .editor-header {
+      padding: 13px 18px; border-bottom: var(--border);
+      font-family: var(--font-head); font-size: 0.78rem;
+      letter-spacing: 0.12em; color: var(--amber);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .editor-header-slug {
+      font-size: 0.61rem; letter-spacing: 0.03em;
+      color: var(--text-muted); font-family: var(--font-mono);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;
+    }
+    .editor-body {
+      flex: 1; overflow-y: auto; padding: 14px 18px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .f-group  { display: flex; flex-direction: column; gap: 5px; }
+    .f-label  { font-family: var(--font-head); font-size: 0.62rem; letter-spacing: 0.12em; color: var(--text-muted); }
+    .f-input, .f-textarea {
+      background: var(--bg); border: var(--border); color: var(--text);
+      font-family: var(--font-mono); font-size: 0.8rem; padding: 7px 10px;
+      width: 100%; box-sizing: border-box; resize: vertical;
+    }
+    .f-input:focus, .f-textarea:focus { outline: none; border-color: var(--amber-dim); }
+    .f-textarea { min-height: 72px; }
+
+    .stat-row { display: grid; grid-template-columns: 80px 1fr; gap: 6px; }
+
+    .editor-footer {
+      padding: 11px 18px; border-top: var(--border);
+      display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+      background: var(--bg-panel);
+    }
+    .btn-publish {
+      background: none; border: var(--border); color: var(--amber);
+      font-family: var(--font-head); font-size: 0.78rem;
+      letter-spacing: 0.1em; padding: 8px 20px; cursor: pointer;
+      transition: box-shadow 0.15s, background 0.15s;
+    }
+    .btn-publish:hover:not(:disabled) { box-shadow: var(--glow-sm); background: var(--amber-faint); }
+    .btn-publish:disabled { opacity: 0.35; cursor: not-allowed; }
+    .pub-status { font-size: 0.72rem; color: var(--text-muted); flex: 1; }
+    .pub-status.ok  { color: var(--amber); }
+    .pub-status.err { color: #ff5555; }
+
+    .preview-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .preview-header {
+      padding: 11px 18px; border-bottom: var(--border);
+      font-family: var(--font-head); font-size: 0.65rem;
+      letter-spacing: 0.12em; color: var(--text-muted);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .preview-url { font-family: var(--font-mono); font-size: 0.61rem; color: var(--text-faint); }
+    .preview-frame { flex: 1; border: none; background: var(--bg); width: 100%; }
+  </style>
+</head>
+<body>
+  <script src="/components/navbar/inject-navbar.js?v=2" defer></script>
+
+  <div class="editor-layout">
+
+    <!-- Left: form -->
+    <div class="editor-panel">
+      <div class="editor-header">
+        <span>> HUB EDITOR</span>
+        <span class="editor-header-slug" id="hdr-wiki"></span>
+      </div>
+
+      <div class="editor-body">
+
+        <div class="f-group">
+          <div class="f-label">WIKI</div>
+          <input class="f-input" id="f-wiki" type="text" placeholder="slug (e.g. evolutionary)" autocomplete="off" spellcheck="false" />
+        </div>
+
+        <div class="f-group">
+          <div class="f-label">TITLE</div>
+          <input class="f-input" id="f-title" type="text" placeholder="Display name…" autocomplete="off" />
+        </div>
+
+        <div class="f-group">
+          <div class="f-label">LEAD <small style="font-family:var(--font-mono);font-size:0.61rem;color:var(--text-faint);">(blank line = new paragraph)</small></div>
+          <textarea class="f-textarea" id="f-lead" style="min-height:110px;" placeholder="Introductory paragraphs…"></textarea>
+        </div>
+
+        <div class="f-group">
+          <div class="f-label">STATS</div>
+          <div style="display:flex;flex-direction:column;gap:5px;" id="stats-rows">
+            <!-- 4 rows injected by JS -->
+          </div>
+        </div>
+
+        <div class="f-group">
+          <div class="f-label">FEATURED ARTICLE</div>
+          <input class="f-input" id="f-feat-title" type="text" placeholder="Article title…" autocomplete="off" />
+          <input class="f-input" id="f-feat-link"  type="text" placeholder="/wikipedia/slug/article/" autocomplete="off" style="margin-top:5px;" />
+          <textarea class="f-textarea" id="f-feat-excerpt" style="min-height:90px;margin-top:5px;" placeholder="Short excerpt…"></textarea>
+        </div>
+
+        <div class="f-group">
+          <div class="f-label">FOOTER NOTE</div>
+          <input class="f-input" id="f-footer" type="text" placeholder="e.g. This wiki is under active development." />
+        </div>
+
+      </div>
+
+      <div class="editor-footer">
+        <button class="btn-publish" id="btn-pub">PUBLISH</button>
+        <span class="pub-status" id="pub-status"></span>
+      </div>
+    </div>
+
+    <!-- Right: preview -->
+    <div class="preview-panel">
+      <div class="preview-header">
+        <span>LIVE PREVIEW</span>
+        <span class="preview-url" id="prev-url"></span>
+      </div>
+      <iframe class="preview-frame" id="prev-frame" sandbox="allow-same-origin"></iframe>
+    </div>
+
+  </div>
+
+  <script>
+    const REPO = 'ItsChugg/itschugg.github.io';
+
+    function getSession() {
+      try {
+        const s = JSON.parse(localStorage.getItem('wiki_session') || 'null');
+        if (!s || Date.now() > s.expires) return null;
+        return s;
+      } catch { return null; }
+    }
+    const session = getSession();
+    if (!session) location.href = '/login/?returnTo=' + encodeURIComponent(location.pathname + location.search);
+
+    const $ = id => document.getElementById(id);
+
+    // Default 4 stats
+    let stats = [
+      { num: '', label: 'Articles' },
+      { num: '', label: 'Categories' },
+      { num: '', label: 'Species' },
+      { num: '', label: 'In Development' },
+    ];
+
+    function renderStats() {
+      const el = $('stats-rows');
+      el.innerHTML = '';
+      stats.forEach((s, i) => {
+        const row = document.createElement('div');
+        row.className = 'stat-row';
+        row.innerHTML = `
+          <input class="f-input" placeholder="Value" value="${esc(s.num)}" data-i="${i}" data-f="num" />
+          <input class="f-input" placeholder="Label" value="${esc(s.label)}" data-i="${i}" data-f="label" />`;
+        row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', e => {
+          stats[+e.target.dataset.i][e.target.dataset.f] = e.target.value; dp();
+        }));
+        el.appendChild(row);
+      });
+    }
+    renderStats();
+
+    // Wire all inputs to live preview
+    ['f-wiki','f-title','f-lead','f-feat-title','f-feat-link','f-feat-excerpt','f-footer']
+      .forEach(id => $(id)?.addEventListener('input', dp));
+
+    $('f-wiki').addEventListener('input', () => {
+      const slug = $('f-wiki').value.trim();
+      $('hdr-wiki').textContent = slug ? '/wikipedia/'+slug+'/' : '';
+      $('prev-url').textContent  = slug ? 'itschu.gg/wikipedia/'+slug+'/' : '';
+      dp();
+    });
+
+    function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function toB64(s) { return btoa(unescape(encodeURIComponent(s))); }
+
+    function buildState() {
+      return {
+        v: 1,
+        title:   $('f-title').value.trim(),
+        lead:    $('f-lead').value,
+        stats:   stats.map(s => ({ num: s.num, label: s.label })),
+        featured: {
+          title:   $('f-feat-title').value.trim(),
+          link:    $('f-feat-link').value.trim(),
+          excerpt: $('f-feat-excerpt').value.trim(),
+        },
+        footerNote: $('f-footer').value.trim(),
+      };
+    }
+
+    function loadState(state, slug) {
+      $('f-wiki').value         = slug;
+      $('hdr-wiki').textContent = '/wikipedia/'+slug+'/';
+      $('prev-url').textContent  = 'itschu.gg/wikipedia/'+slug+'/';
+      $('f-title').value        = state.title  || '';
+      $('f-lead').value         = state.lead   || '';
+      $('f-feat-title').value   = state.featured?.title   || '';
+      $('f-feat-link').value    = state.featured?.link    || '';
+      $('f-feat-excerpt').value = state.featured?.excerpt || '';
+      $('f-footer').value       = state.footerNote || '';
+      if (state.stats?.length) {
+        stats = state.stats.map(s => ({ num: s.num||'', label: s.label||'' }));
+        // Pad to 4
+        while (stats.length < 4) stats.push({ num: '', label: '' });
+        renderStats();
+      }
+      dp();
+    }
+
+    // ── Lead → <p> tags ──────────────────────────────────────────────────────
+    function leadToHtml(text) {
+      return text.split(/\n\n+/).filter(Boolean)
+        .map(p => `<p>${p.trim().replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>')}</p>`)
+        .join('\n        ');
+    }
+
+    // ── HTML generation ───────────────────────────────────────────────────────
+    function genHubHTML(state, slug) {
+      const title   = esc(state.title || 'Untitled');
+      const leadHtml = leadToHtml(state.lead || '');
+      const statsHtml = (state.stats||[]).filter(s=>s.label).map(s =>
+        `<div class="wiki-stat"><span class="wiki-stat-num">${esc(s.num)}</span><span class="wiki-stat-label">${esc(s.label)}</span></div>`
+      ).join('\n          ');
+      const ft = state.featured || {};
+      const featHtml = ft.title ? `
+          <div class="wiki-hub-box">
+            <div class="wiki-hub-box-title">Featured Article — ${esc(ft.title)}</div>
+            <p style="font-size:0.83rem;line-height:1.75;"><strong><a href="${esc(ft.link||'#')}">${esc(ft.title)}</a></strong> ${esc(ft.excerpt)}</p>
+            <p style="font-size:0.78rem;margin-top:8px;"><a href="${esc(ft.link||'#')}">Read full article &rarr;</a></p>
+          </div>` : '<div class="wiki-hub-box"></div>';
+
+      return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title} — ITSCHU.GG</title>
+  <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=11" />
+</head>
+<body>
+
+  <div class="page-wrapper">
+    <div class="wiki-layout">
+
+      <aside id="sidebar-container" class="subpage-bar"></aside>
+
+      <main class="wiki-article">
+
+        <div class="wiki-breadcrumb">
+          <a href="/">HOME</a>
+          <span class="sep">//</span>
+          <a href="/wikipedia/">WIKIPEDIA</a>
+          <span class="sep">//</span>
+          ${title.toUpperCase()}
+        </div>
+
+        <h1>${title}</h1>
+        ${leadHtml}
+
+        <hr class="wiki-rule">
+
+        <div class="wiki-stats">
+          ${statsHtml}
+        </div>
+
+        <div class="wiki-hub-cols">
+          ${featHtml}
+          <div class="wiki-hub-box" id="hub-quicknav">
+            <div class="wiki-hub-box-title">Quick Navigation</div>
+            <ul id="quicknav-list"></ul>
+          </div>
+        </div>
+
+        <section>
+          <h2>Browse by Category</h2>
+          <div class="wiki-categories" id="hub-categories"></div>
+        </section>
+
+        <div class="wiki-meta">
+          <div class="wiki-meta-edited">${esc(state.footerNote||'')}</div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    fetch('/wikipedia/${slug}/pages.json')
+      .then(r => r.json())
+      .then(data => {
+        const navList = document.getElementById('quicknav-list');
+        const catGrid = document.getElementById('hub-categories');
+        data.forEach(g => {
+          if (navList) {
+            const li = document.createElement('li');
+            li.innerHTML = '<a href="#">' + g.category + '</a> — ' + g.pages.slice(0,3).map(p=>p.title).join(', ');
+            navList.appendChild(li);
+          }
+          if (catGrid) {
+            const a = document.createElement('a');
+            a.className = 'wiki-category-card';
+            a.href = '#';
+            a.innerHTML = '<div class="cat-name">' + g.category + '</div><div class="cat-count">' + g.pages.length + ' article' + (g.pages.length===1?'':'s') + '</div>';
+            catGrid.appendChild(a);
+          }
+        });
+      });
+  <\/script>
+
+  <script src="/components/navbar/inject-navbar.js?v=2" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js" defer><\/script>
+</body>
+</html>`;
+    }
+
+    // ── Live preview ──────────────────────────────────────────────────────────
+    let pt = null;
+    function dp() {
+      clearTimeout(pt);
+      pt = setTimeout(() => {
+        const slug = $('f-wiki').value.trim() || 'wiki';
+        $('prev-frame').srcdoc = genHubHTML(buildState(), slug);
+      }, 280);
+    }
+    dp();
+
+    // ── Publish ───────────────────────────────────────────────────────────────
+    $('btn-pub').addEventListener('click', async () => {
+      const slug   = $('f-wiki').value.trim();
+      const state  = buildState();
+      const btn    = $('btn-pub');
+      const status = $('pub-status');
+
+      if (!slug)        { status.className='pub-status err'; status.textContent='Wiki slug is required.'; return; }
+      if (!state.title) { status.className='pub-status err'; status.textContent='Title is required.';     return; }
+
+      btn.disabled = true;
+      status.className = 'pub-status';
+      status.textContent = 'Publishing…';
+
+      const htmlPath  = `wikipedia/${slug}/index.html`;
+      const statePath = `wikipedia/${slug}/hub-state.json`;
+      const htmlApi   = `https://api.github.com/repos/${REPO}/contents/${htmlPath}`;
+      const stateApi  = `https://api.github.com/repos/${REPO}/contents/${statePath}`;
+      const html      = genHubHTML(state, slug);
+      const stateJson = JSON.stringify(state, null, 2);
+      const hdrs      = { 'Authorization': `Bearer ${session.token}`, 'Accept': 'application/vnd.github+json' };
+
+      let htmlSha = null, stateSha = null;
+      try {
+        const [hc, sc] = await Promise.all([fetch(htmlApi, {headers:hdrs}), fetch(stateApi, {headers:hdrs})]);
+        if (hc.ok) htmlSha  = (await hc.json()).sha;
+        if (sc.ok) stateSha = (await sc.json()).sha;
+      } catch {}
+
+      const hBody = { message: `wiki: update "${state.title}" hub`, content: toB64(html),      branch:'main' };
+      const sBody = { message: `wiki: save hub state for "${slug}"`, content: toB64(stateJson), branch:'main' };
+      if (htmlSha)  hBody.sha  = htmlSha;
+      if (stateSha) sBody.sha  = stateSha;
+
+      try {
+        const [hr, sr] = await Promise.all([
+          fetch(htmlApi,  { method:'PUT', headers:{...hdrs,'Content-Type':'application/json'}, body:JSON.stringify(hBody) }),
+          fetch(stateApi, { method:'PUT', headers:{...hdrs,'Content-Type':'application/json'}, body:JSON.stringify(sBody) }),
+        ]);
+        if (hr.ok && sr.ok) {
+          status.className = 'pub-status ok';
+          status.textContent = `Published — live in ~60s at itschu.gg/wikipedia/${slug}/`;
+        } else {
+          const err = await (hr.ok ? sr : hr).json().catch(()=>({}));
+          status.className = 'pub-status err';
+          status.textContent = 'GitHub error: ' + (err.message || 'unknown');
+        }
+      } catch {
+        status.className = 'pub-status err';
+        status.textContent = 'Network error — try again.';
+      }
+      btn.disabled = false;
+    });
+
+    // ── Load on ?wiki= ────────────────────────────────────────────────────────
+    (async () => {
+      const slug = new URLSearchParams(location.search).get('wiki');
+      if (!slug || !session) return;
+      const status = $('pub-status');
+      status.className = 'pub-status';
+      status.textContent = 'Loading…';
+      try {
+        const api  = `https://api.github.com/repos/${REPO}/contents/wikipedia/${slug}/hub-state.json`;
+        const resp = await fetch(api, { headers: { 'Authorization': `Bearer ${session.token}`, 'Accept': 'application/vnd.github+json' } });
+        if (!resp.ok) throw new Error('No hub state found — fill in the form and publish to create one.');
+        const data  = await resp.json();
+        const state = JSON.parse(atob(data.content.replace(/\n/g, '')));
+        loadState(state, slug);
+        status.className = 'pub-status ok';
+        status.textContent = 'Loaded — make changes and republish.';
+      } catch(err) {
+        // Pre-fill the slug at least
+        $('f-wiki').value = slug;
+        $('hdr-wiki').textContent = '/wikipedia/'+slug+'/';
+        $('prev-url').textContent  = 'itschu.gg/wikipedia/'+slug+'/';
+        dp();
+        status.className = 'pub-status';
+        status.textContent = err.message;
+      }
+    })();
+  </script>
+</body>
+</html>

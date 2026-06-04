@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=10" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=11" />
 </head>
 <body>
   <div id="navbar-container"></div>
@@ -83,9 +83,9 @@
 
       </div>
 
-      <!-- Right column -->
-      <div>
-        <div class="panel">
+      <!-- Right column — stretched to match left -->
+      <div style="display:flex; flex-direction:column;">
+        <div class="panel" style="flex:1;">
           <div class="panel-label">WELCOME</div>
           <p>
             You can find a bunch of stuff about me and my projects here.
@@ -98,8 +98,8 @@
 
     </div>
 
-    <!-- Wikis -->
-    <div class="panel" style="margin-top:18px;">
+    <!-- Wikis (margin-bottom of the grid panels provides the top gap) -->
+    <div class="panel">
       <div class="panel-label">WIKIS</div>
       <div class="wiki-hub-grid" id="home-wiki-grid"></div>
     </div>
@@ -109,10 +109,7 @@
 
   </div>
 
-  <div id="terminal-bg" aria-hidden="true"></div>
-
   <script src="/components/navbar/inject-navbar.js?v=2" defer></script>
-  <script src="/components/terminal/terminal-bg.js" defer></script>
   <script>
     const WIKI_ALLOWED = ['ItsChugg', 'zmbprotocol'];
     function getHomeSession() {
