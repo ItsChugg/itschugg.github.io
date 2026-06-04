@@ -3,135 +3,117 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EVOLUTIONARY — ITSCHUGG.GG</title>
+  <title>Wikipedia — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=9" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=10" />
+  <style>
+    .wiki-hub-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 6px;
+    }
+    .wiki-hub-card {
+      display: block;
+      background: var(--bg-panel);
+      border: var(--border);
+      padding: 22px 20px 20px;
+      min-height: 140px;
+      text-decoration: none;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+      position: relative;
+    }
+    .wiki-hub-card:hover {
+      border-color: var(--amber);
+      box-shadow: var(--glow-md);
+      background: var(--bg-hover);
+    }
+    .wiki-hub-card-name {
+      font-family: var(--font-head);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: var(--amber);
+      text-shadow: var(--glow-sm);
+      margin-bottom: 10px;
+    }
+    .wiki-hub-card-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .wiki-hub-card.create {
+      border-style: dashed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+    }
+    .wiki-hub-card.create .wiki-hub-card-name {
+      color: var(--text-muted);
+      font-size: 1.4rem;
+      letter-spacing: 0;
+      margin-bottom: 6px;
+    }
+    .wiki-hub-card.create .wiki-hub-card-desc { font-size: 0.72rem; }
+    .wiki-hub-card.create:hover .wiki-hub-card-name { color: var(--amber); }
+  </style>
 </head>
 <body>
+  <script src="/components/navbar/inject-navbar.js?v=2" defer></script>
 
   <div class="page-wrapper">
-    <div class="wiki-layout">
-
-      <aside id="sidebar-container" class="subpage-bar"></aside>
-
-      <main class="wiki-article">
-
-        <div class="wiki-breadcrumb">
-          <a href="/">HOME</a>
-          <span class="sep">//</span>
-          EVOLUTIONARY
-        </div>
-
-        <h1>Evolutionary</h1>
-
-        <p>
-          <strong>Evolutionary</strong> is a fictional universe developed by Russell G. Rinaldo and
-          associates, centered on the intersecting themes of science fiction, arcane biology, and
-          the relentless mechanics of natural selection. It draws heavily from games and works such
-          as <em>Stellaris</em>, <em>Spore</em>, and <em>Dune</em>, blending hard sci-fi cosmology
-          with organic magic systems. The universe is under active development and subject to change.
-        </p>
-        <p>
-          Civilizations rise and fall across a vast cosmos shaped by the peculiar properties of
-          <a href="/wikipedia/prion/">Prion</a>, the forces of elemental magic, and
-          the pressures of evolutionary biology. No two star systems are alike; the local Prion
-          field determines what forms of magic — if any — are accessible to the species that live there.
-        </p>
-
-        <hr class="wiki-rule">
-
-        <div class="wiki-stats">
-          <div class="wiki-stat">
-            <span class="wiki-stat-num">20+</span>
-            <span class="wiki-stat-label">Articles</span>
-          </div>
-          <div class="wiki-stat">
-            <span class="wiki-stat-num">7</span>
-            <span class="wiki-stat-label">Categories</span>
-          </div>
-          <div class="wiki-stat">
-            <span class="wiki-stat-num">3+</span>
-            <span class="wiki-stat-label">Species</span>
-          </div>
-          <div class="wiki-stat">
-            <span class="wiki-stat-num">∞</span>
-            <span class="wiki-stat-label">In Development</span>
-          </div>
-        </div>
-
-        <div class="wiki-hub-cols">
-
-          <div class="wiki-hub-box">
-            <div class="wiki-hub-box-title">Featured Article — Prion</div>
-            <p style="font-size:0.83rem;line-height:1.75;">
-              <strong><a href="/wikipedia/prion/">Prion</a></strong> is a protein-like
-              substance discovered across the known universe, serving as the energetic and
-              metaphysical fuel for what is commonly recognized as "magic." Its biochemical
-              structure varies by region, but its core property — an innate connection to arcane
-              phenomena — remains consistent. Only biologically organic beings can harness Prion
-              to its full extent, placing Prion-utilizing species at the forefront of magical evolution.
-            </p>
-            <p style="font-size:0.78rem;margin-top:8px;"><a href="/wikipedia/prion/">Read full article →</a></p>
-          </div>
-
-          <div class="wiki-hub-box">
-            <div class="wiki-hub-box-title">Quick Navigation</div>
-            <ul>
-              <li><a href="#">Anomalies</a> — Diseased Space</li>
-              <li><a href="#">Elements</a> — Periodic Matter, Dark Matter, Ambrosia</li>
-              <li><a href="#">Magic</a> — Ichor, Hyperlanes, Wormholes</li>
-              <li><a href="/wikipedia/species/sapient/">Species</a> — Sapient life forms</li>
-              <li><a href="#">Technology</a> — Ichor Drive, Tectonic Generator</li>
-              <li><a href="#">Unique Systems</a> — Lacus Magna, Essentia, Voloid</li>
-              <li><a href="#">Unique Characters</a> — Dr. Rin, Mizu Vermont, Rivers</li>
-            </ul>
-          </div>
-
-        </div>
-
-        <section>
-          <h2>Browse by Category</h2>
-          <div class="wiki-categories">
-            <a class="wiki-category-card" href="#">
-              <div class="cat-name">Anomalies</div>
-              <div class="cat-count">1 article — Unexplained spatial phenomena</div>
-            </a>
-            <a class="wiki-category-card" href="#">
-              <div class="cat-name">Elements</div>
-              <div class="cat-count">3 articles — Fundamental and exotic matter</div>
-            </a>
-            <a class="wiki-category-card" href="#">
-              <div class="cat-name">Magic</div>
-              <div class="cat-count">3 articles — Prion-based arcane systems</div>
-            </a>
-            <a class="wiki-category-card" href="/wikipedia/species/sapient/">
-              <div class="cat-name">Species</div>
-              <div class="cat-count">5 articles — Known sapient life forms</div>
-            </a>
-            <a class="wiki-category-card" href="#">
-              <div class="cat-name">Technology</div>
-              <div class="cat-count">3 articles — Interstellar and arcane tech</div>
-            </a>
-            <a class="wiki-category-card" href="#">
-              <div class="cat-name">Unique Systems</div>
-              <div class="cat-count">3 articles — Notable star systems</div>
-            </a>
-            <a class="wiki-category-card" href="#">
-              <div class="cat-name">Unique Characters</div>
-              <div class="cat-count">3 articles — Named individuals of significance</div>
-            </a>
-          </div>
-        </section>
-
-        <div class="wiki-meta">
-          <div class="wiki-meta-edited">This wiki is under active development. Content may be incomplete or subject to change.</div>
-        </div>
-
-      </main>
+    <div class="panel">
+      <div class="panel-label">WIKIS</div>
+      <div class="wiki-hub-grid" id="wiki-grid">
+        <!-- Cards injected by JS -->
+      </div>
     </div>
   </div>
 
-  <script src="/components/navbar/inject-navbar.js?v=2" defer></script>
-  <script src="/components/sidebar/inject-sidebar.js" defer></script>
+  <script>
+    const ALLOWED = ['ItsChugg', 'zmbprotocol'];
+
+    function getSession() {
+      try {
+        const s = JSON.parse(localStorage.getItem('wiki_session') || 'null');
+        if (!s || Date.now() > s.expires) return null;
+        return s;
+      } catch { return null; }
+    }
+
+    fetch('/wikipedia/wikis.json')
+      .then(r => r.json())
+      .then(wikis => {
+        const grid    = document.getElementById('wiki-grid');
+        const session = getSession();
+
+        wikis.forEach(w => {
+          const a = document.createElement('a');
+          a.className = 'wiki-hub-card';
+          a.href      = '/wikipedia/' + w.slug + '/';
+          a.innerHTML = `<div class="wiki-hub-card-name">${w.name}</div>
+                         <div class="wiki-hub-card-desc">${w.description}</div>`;
+          grid.appendChild(a);
+        });
+
+        // Show "Create new Wikipedia" card for authorised users
+        if (session && ALLOWED.includes(session.username)) {
+          const btn = document.createElement('a');
+          btn.className = 'wiki-hub-card create';
+          btn.href      = '/wikipedia/new/';
+          btn.innerHTML = `<div class="wiki-hub-card-name">+</div>
+                           <div class="wiki-hub-card-desc">Create a new Wikipedia</div>`;
+          grid.appendChild(btn);
+        }
+      })
+      .catch(() => {
+        document.getElementById('wiki-grid').innerHTML =
+          '<p style="color:var(--text-muted);font-size:0.8rem;">Could not load wikis.</p>';
+      });
+  </script>
 </body>
 </html>

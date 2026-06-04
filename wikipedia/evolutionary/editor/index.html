@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wiki Editor — EVOLUTIONARY</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=9" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=10" />
   <style>
     body { overflow: hidden; }
 
@@ -415,13 +415,13 @@
     // ── Parent presets ────────────────────────────────────────────────────────
     const PRESETS = [
       'wikipedia',
-      'wikipedia/anomalies',
-      'wikipedia/elements',
-      'wikipedia/magic',
-      'wikipedia/species',
-      'wikipedia/technology',
-      'wikipedia/systems',
-      'wikipedia/characters',
+      'wikipedia/evolutionary/anomalies',
+      'wikipedia/evolutionary/elements',
+      'wikipedia/evolutionary/magic',
+      'wikipedia/evolutionary/species',
+      'wikipedia/evolutionary/technology',
+      'wikipedia/evolutionary/systems',
+      'wikipedia/evolutionary/characters',
     ];
 
     function syncPresetHighlight() {
@@ -834,7 +834,7 @@ ${paras}
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${esc(title)} — EVOLUTIONARY</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=9" />${styleBlock}
+  <link rel="stylesheet" href="/components/themes/theme.css?v=10" />${styleBlock}
 </head>
 <body>
 
@@ -870,7 +870,7 @@ ${catHtml}
     var s = JSON.parse(localStorage.getItem('wiki_session')||'null');
     if (!s || Date.now() > s.expires) return;
     var a = document.createElement('a');
-    a.href = '/wikipedia/editor/?edit=' + encodeURIComponent(location.pathname);
+    a.href = '/wikipedia/evolutionary/editor/?edit=' + encodeURIComponent(location.pathname);
     a.textContent = '✎ EDIT PAGE';
     a.className = 'wiki-edit-btn';
     document.body.appendChild(a);

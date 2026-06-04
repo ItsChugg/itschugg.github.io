@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New Wikipedia — ITSCHU.GG</title>
+  <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=10" />
+  <style>
+    .new-wiki-wrap { max-width: 520px; margin: 60px auto; padding: 0 16px; }
+    .new-wiki-box  { background: var(--bg-panel); border: var(--border); }
+    .new-wiki-head {
+      padding: 14px 24px; border-bottom: var(--border);
+      font-family: var(--font-head); font-size: 0.75rem;
+      letter-spacing: 0.12em; color: var(--amber);
+    }
+    .new-wiki-body { padding: 28px 24px; display: flex; flex-direction: column; gap: 16px; }
+    .new-wiki-foot {
+      padding: 16px 24px; border-top: var(--border);
+      display: flex; gap: 10px; align-items: center;
+    }
+    .btn-create {
+      background: none; border: var(--border);
+      color: var(--amber); font-family: var(--font-head);
+      font-size: 0.75rem; letter-spacing: 0.1em;
+      padding: 9px 22px; cursor: pointer;
+      transition: box-shadow 0.15s, background 0.15s;
+    }
+    .btn-create:hover:not(:disabled) { box-shadow: var(--glow-sm); background: var(--amber-faint); }
+    .btn-create:disabled { opacity: 0.35; cursor: not-allowed; }
+    .create-status { font-size: 0.72rem; color: var(--text-muted); flex: 1; }
+    .create-status.ok  { color: var(--amber); }
+    .create-status.err { color: #ff5555; }
+  </style>
+</head>
+<body>
+  <script src="/components/navbar/inject-navbar.js?v=2" defer></script>
+
+  <div class="new-wiki-wrap">
+    <div class="new-wiki-box">
+      <div class="new-wiki-head">> CREATE NEW WIKIPEDIA</div>
+      <div class="new-wiki-body">
+        <div class="f-group">
+          <div class="f-label" style="font-family:var(--font-head);font-size:0.62rem;letter-spacing:0.12em;color:var(--text-muted);">NAME</div>
+          <input class="f-input" id="f-name" type="text" placeholder="e.g. Midas" autocomplete="off"
+            style="background:var(--bg);border:var(--border);color:var(--text);font-family:var(--font-mono);font-size:0.8rem;padding:7px 10px;width:100%;box-sizing:border-box;" />
+        </div>
+        <div class="f-group">
+          <div class="f-label" style="font-family:var(--font-head);font-size:0.62rem;letter-spacing:0.12em;color:var(--text-muted);">SLUG <small style="font-family:var(--font-mono);font-size:0.61rem;color:var(--text-faint);">(auto-filled from name)</small></div>
+          <input class="f-input" id="f-slug" type="text" placeholder="e.g. midas" autocomplete="off" spellcheck="false"
+            style="background:var(--bg);border:var(--border);color:var(--text);font-family:var(--font-mono);font-size:0.8rem;padding:7px 10px;width:100%;box-sizing:border-box;" />
+        </div>
+        <div class="f-group">
+          <div class="f-label" style="font-family:var(--font-head);font-size:0.62rem;letter-spacing:0.12em;color:var(--text-muted);">SHORT DESCRIPTION</div>
+          <textarea id="f-desc" placeholder="One or two sentences about this universe…"
+            style="background:var(--bg);border:var(--border);color:var(--text);font-family:var(--font-mono);font-size:0.8rem;padding:7px 10px;width:100%;box-sizing:border-box;min-height:72px;resize:vertical;"></textarea>
+        </div>
+      </div>
+      <div class="new-wiki-foot">
+        <button class="btn-create" id="btn-create">CREATE</button>
+        <span class="create-status" id="create-status"></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const REPO    = 'ItsChugg/itschugg.github.io';
+    const ALLOWED = ['ItsChugg', 'zmbprotocol'];
+
+    function getSession() {
+      try {
+        const s = JSON.parse(localStorage.getItem('wiki_session') || 'null');
+        if (!s || Date.now() > s.expires) return null;
+        return s;
+      } catch { return null; }
+    }
+
+    const session = getSession();
+    if (!session || !ALLOWED.includes(session.username)) {
+      location.href = '/login/?returnTo=' + encodeURIComponent(location.pathname);
+    }
+
+    function slugify(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+    function toB64(s)   { return btoa(unescape(encodeURIComponent(s))); }
+
+    let slugLocked = false;
+    document.getElementById('f-name').addEventListener('input', e => {
+      if (!slugLocked) document.getElementById('f-slug').value = slugify(e.target.value);
+    });
+    document.getElementById('f-slug').addEventListener('input', e => {
+      const clean = e.target.value.replace(/ /g, '-');
+      if (clean !== e.target.value) e.target.value = clean;
+      slugLocked = !!e.target.value;
+    });
+
+    async function ghPut(path, content, message) {
+      const apiUrl = `https://api.github.com/repos/${REPO}/contents/${path}`;
+      let sha = null;
+      try {
+        const chk = await fetch(apiUrl, { headers: { 'Authorization': `Bearer ${session.token}`, 'Accept': 'application/vnd.github+json' } });
+        if (chk.ok) sha = (await chk.json()).sha;
+      } catch {}
+      const body = { message, content: toB64(content), branch: 'main' };
+      if (sha) body.sha = sha;
+      const resp = await fetch(apiUrl, { method: 'PUT', headers: { 'Authorization': `Bearer ${session.token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).message || resp.status);
+    }
+
+    document.getElementById('btn-create').addEventListener('click', async () => {
+      const name = document.getElementById('f-name').value.trim();
+      const slug = document.getElementById('f-slug').value.trim() || slugify(name);
+      const desc = document.getElementById('f-desc').value.trim();
+      const btn  = document.getElementById('btn-create');
+      const stat = document.getElementById('create-status');
+
+      if (!name) { stat.className = 'create-status err'; stat.textContent = 'Name is required.'; return; }
+      if (!slug) { stat.className = 'create-status err'; stat.textContent = 'Slug is required.';  return; }
+
+      btn.disabled = true;
+      stat.className = 'create-status';
+      stat.textContent = 'Creating…';
+
+      try {
+        // 1. Create a minimal hub index.html for the new wiki
+        const hubHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${name} — ITSCHU.GG</title>
+  <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=10" />
+</head>
+<body>
+  <script src="/components/navbar/inject-navbar.js?v=2" defer><\\/script>
+  <div class="page-wrapper">
+    <div class="wiki-layout">
+      <aside id="sidebar-container" class="subpage-bar"></aside>
+      <main class="wiki-article">
+        <div class="wiki-breadcrumb"><a href="/">HOME</a> <span class="sep">//</span> <a href="/wikipedia/">WIKIPEDIA</a> <span class="sep">//</span> ${name.toUpperCase()}</div>
+        <h1>${name}</h1>
+        <p>${desc || 'This wiki is under construction.'}</p>
+      </main>
+    </div>
+  </div>
+  <script src="/components/sidebar/inject-sidebar.js" defer><\\/script>
+</body>
+</html>`;
+
+        // 2. Empty pages.json for the new wiki
+        const pagesJson = '[]';
+
+        // 3. Read + update wikis.json
+        const wikisUrl  = `https://api.github.com/repos/${REPO}/contents/wikipedia/wikis.json`;
+        const wikisResp = await fetch(wikisUrl, { headers: { 'Authorization': `Bearer ${session.token}`, 'Accept': 'application/vnd.github+json' } });
+        if (!wikisResp.ok) throw new Error('Could not read wikis.json');
+        const wikisData = await wikisResp.json();
+        const wikis     = JSON.parse(atob(wikisData.content.replace(/\n/g, '')));
+        if (wikis.find(w => w.slug === slug)) throw new Error(`A wiki with slug "${slug}" already exists.`);
+        wikis.push({ name, slug, description: desc });
+        const newWikisJson = JSON.stringify(wikis, null, 2);
+
+        // Write all three in sequence (wikis.json last so it's the confirmation)
+        await ghPut(`wikipedia/${slug}/index.html`, hubHtml, `wiki: create "${name}" hub`);
+        await ghPut(`wikipedia/${slug}/pages.json`, pagesJson, `wiki: init "${name}" pages.json`);
+
+        // Update wikis.json with its current SHA
+        const wikisBody = { message: `wiki: register "${name}"`, content: toB64(newWikisJson), branch: 'main', sha: wikisData.sha };
+        const wResp = await fetch(wikisUrl, { method: 'PUT', headers: { 'Authorization': `Bearer ${session.token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify(wikisBody) });
+        if (!wResp.ok) throw new Error('Failed to register wiki in wikis.json');
+
+        stat.className = 'create-status ok';
+        stat.textContent = `Created! Live in ~60s — `;
+        const link = document.createElement('a');
+        link.href = '/wikipedia/' + slug + '/';
+        link.textContent = 'itschu.gg/wikipedia/' + slug + '/';
+        stat.appendChild(link);
+      } catch(err) {
+        stat.className = 'create-status err';
+        stat.textContent = 'Error: ' + err.message;
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

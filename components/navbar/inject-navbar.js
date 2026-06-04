@@ -29,38 +29,27 @@ function wireNavbar() {
   try {
     const s    = JSON.parse(localStorage.getItem('wiki_session') || 'null');
     const path = window.location.pathname;
-    if (s && Date.now() < s.expires && path.startsWith('/wikipedia/')) {
+    if (s && Date.now() < s.expires) {
       const a = document.createElement('a');
-      if (path === '/wikipedia/') {
-        // Hub page — offer to create a new page
-        a.href      = '/wikipedia/editor/';
-        a.textContent = '+ CREATE PAGE';
-      } else {
-        // Article page — offer to edit
-        a.href      = '/wikipedia/editor/?edit=' + encodeURIComponent(path);
+      // Article page inside a wiki: /wikipedia/{slug}/something/
+      if (/^\/wikipedia\/[^/]+\/.+/.test(path)) {
+        // Derive which wiki's editor to use from the slug segment
+        const slug = path.split('/')[2];
+        a.href      = '/wikipedia/' + slug + '/editor/?edit=' + encodeURIComponent(path);
         a.textContent = '✎ EDIT PAGE';
+        a.className = 'wiki-edit-btn';
+        document.body.appendChild(a);
       }
-      a.className = 'wiki-edit-btn';
-      document.body.appendChild(a);
+      // Wiki hub page: /wikipedia/{slug}/
+      else if (/^\/wikipedia\/[^/]+\/$/.test(path)) {
+        const slug = path.split('/')[2];
+        a.href      = '/wikipedia/' + slug + '/editor/';
+        a.textContent = '+ CREATE PAGE';
+        a.className = 'wiki-edit-btn';
+        document.body.appendChild(a);
+      }
     }
   } catch {}
-
-  // Wire up WIKIPEDIA dropdown click toggle (for mobile / keyboard nav)
-  const wikiDropdown = document.querySelector('.nav-dropdown');
-  const wikiTrigger  = document.querySelector('.nav-dropdown-trigger');
-  if (wikiDropdown && wikiTrigger) {
-    wikiTrigger.addEventListener('click', e => {
-      // On the hub page, clicking navigates. On other pages, toggle the dropdown.
-      if (window.location.pathname !== '/wikipedia/') {
-        e.preventDefault();
-        wikiDropdown.classList.toggle('open');
-      }
-    });
-    // Close dropdown when clicking anywhere outside
-    document.addEventListener('click', e => {
-      if (!wikiDropdown.contains(e.target)) wikiDropdown.classList.remove('open');
-    });
-  }
 
   // Mark the current page's nav link as active
   const links = document.querySelectorAll('.navbar-links a');
@@ -96,7 +85,7 @@ function wireNavbar() {
 if (document.querySelector('.navbar')) {
   wireNavbar();
 } else {
-  fetch('/components/navbar/navbar.html?v=9')
+  fetch('/components/navbar/navbar.html?v=10')
     .then(res => res.text())
     .then(html => {
       document.body.insertAdjacentHTML('afterbegin', html);

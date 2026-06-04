@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=9" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=10" />
 </head>
 <body>
   <div id="navbar-container"></div>
@@ -98,6 +98,12 @@
 
     </div>
 
+    <!-- Wikis -->
+    <div class="panel" style="margin-top:18px;">
+      <div class="panel-label">WIKIS</div>
+      <div class="wiki-hub-grid" id="home-wiki-grid"></div>
+    </div>
+
     <!-- Divider between content and terminal -->
     <div class="terminal-divider"></div>
 
@@ -107,5 +113,36 @@
 
   <script src="/components/navbar/inject-navbar.js?v=2" defer></script>
   <script src="/components/terminal/terminal-bg.js" defer></script>
+  <script>
+    const WIKI_ALLOWED = ['ItsChugg', 'zmbprotocol'];
+    function getHomeSession() {
+      try {
+        const s = JSON.parse(localStorage.getItem('wiki_session') || 'null');
+        return (s && Date.now() < s.expires) ? s : null;
+      } catch { return null; }
+    }
+    fetch('/wikipedia/wikis.json')
+      .then(r => r.json())
+      .then(wikis => {
+        const grid    = document.getElementById('home-wiki-grid');
+        const session = getHomeSession();
+        wikis.forEach(w => {
+          const a = document.createElement('a');
+          a.className = 'wiki-hub-card';
+          a.href      = '/wikipedia/' + w.slug + '/';
+          a.innerHTML = `<div class="wiki-hub-card-name">${w.name}</div>
+                         <div class="wiki-hub-card-desc">${w.description}</div>`;
+          grid.appendChild(a);
+        });
+        if (session && WIKI_ALLOWED.includes(session.username)) {
+          const btn = document.createElement('a');
+          btn.className = 'wiki-hub-card create';
+          btn.href      = '/wikipedia/new/';
+          btn.innerHTML = `<div class="wiki-hub-card-name">+</div>
+                           <div class="wiki-hub-card-desc">Create a new Wikipedia</div>`;
+          grid.appendChild(btn);
+        }
+      });
+  </script>
 </body>
 </html>

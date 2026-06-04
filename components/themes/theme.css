@@ -1199,6 +1199,68 @@ hr.wiki-rule {
   background: var(--amber-faint);
 }
 
+/* ── Wiki hub cards ──────────────────────────────────────────────────────── */
+
+.wiki-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.wiki-hub-card {
+  display: block;
+  background: var(--bg-panel);
+  border: var(--border);
+  padding: 22px 20px 20px;
+  min-height: 140px;
+  text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.wiki-hub-card:hover {
+  border-color: var(--amber);
+  box-shadow: var(--glow-md);
+  background: var(--bg-hover);
+}
+
+.wiki-hub-card-name {
+  font-family: var(--font-head);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--amber);
+  text-shadow: var(--glow-sm);
+  margin-bottom: 10px;
+}
+
+.wiki-hub-card-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.wiki-hub-card.create {
+  border-style: dashed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.wiki-hub-card.create .wiki-hub-card-name {
+  font-size: 1.6rem;
+  letter-spacing: 0;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  text-shadow: none;
+}
+
+.wiki-hub-card.create .wiki-hub-card-desc { font-size: 0.72rem; }
+.wiki-hub-card.create:hover .wiki-hub-card-name { color: var(--amber); text-shadow: var(--glow-sm); }
+
 /* ── Wiki: edit button (logged-in users only, injected by JS) ────────────── */
 
 .wiki-edit-btn {

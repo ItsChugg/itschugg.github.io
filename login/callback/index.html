@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Authenticating… — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=9" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=10" />
   <style>
     .auth-wrap {
       max-width: 500px;
@@ -106,7 +106,7 @@
       if (!code) { fail('No authorization code received from GitHub.'); return; }
 
       // Decode returnTo from state (best-effort; lenient on CSRF since GH already validated)
-      let returnTo = '/wikipedia/editor/';
+      let returnTo = '/wikipedia/evolutionary/editor/';
       try { returnTo = JSON.parse(atob(state)).returnTo || returnTo; } catch {}
 
       log('Authorization code received', 'ok');
