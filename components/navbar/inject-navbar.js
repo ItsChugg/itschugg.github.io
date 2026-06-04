@@ -3,7 +3,7 @@
  * dark/light toggle + colour theme dropdown, swaps LOGIN for an avatar
  * when signed in, and injects wiki edit buttons on relevant pages.
  *
- * Requires site-config.js?v=7 to be loaded synchronously first (uses SITE.getSession).
+ * Requires site-config.js?v=8 to be loaded synchronously first (uses SITE.getSession).
  */
 
 // Apply saved theme before first paint to prevent flash.
@@ -43,15 +43,21 @@ function wireNavbar() {
       btn.className = 'wiki-edit-btn';
 
       if (parts.length >= 3) {
-        // Article page inside a wiki
+        // Article page — single EDIT PAGE button
         btn.href      = `/wikipedia/editor/?wiki=${slug}&edit=${encodeURIComponent(path)}`;
         btn.textContent = '✎ EDIT PAGE';
         document.body.appendChild(btn);
       } else if (parts.length === 2) {
-        // Wiki hub page: /wikipedia/{slug}/
-        btn.href      = `/wikipedia/hub-editor/?wiki=${slug}`;
-        btn.textContent = '✎ EDIT HOME';
+        // Wiki hub page — CREATE PAGE (primary) + EDIT HOME (stacked above it)
+        btn.href      = `/wikipedia/editor/?wiki=${slug}`;
+        btn.textContent = '+ CREATE PAGE';
         document.body.appendChild(btn);
+
+        const editBtn = document.createElement('a');
+        editBtn.href      = `/wikipedia/hub-editor/?wiki=${slug}`;
+        editBtn.textContent = '✎ EDIT HOME';
+        editBtn.className = 'wiki-edit-btn wiki-edit-btn-alt';
+        document.body.appendChild(editBtn);
       }
     }
   }
@@ -121,7 +127,7 @@ function wireNavbar() {
 if (document.querySelector('.navbar')) {
   wireNavbar();
 } else {
-  fetch('/components/navbar/navbar.html?v=7')
+  fetch('/components/navbar/navbar.html?v=8')
     .then(res => res.text())
     .then(html => {
       document.body.insertAdjacentHTML('afterbegin', html);

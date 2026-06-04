@@ -1392,6 +1392,11 @@ hr.wiki-rule {
   color: var(--amber-bright);
 }
 
+/* Second action button on hub pages — sits above the first */
+.wiki-edit-btn.wiki-edit-btn-alt {
+  bottom: 68px;
+}
+
 /* ── Scrollbar ───────────────────────────────────────────────────────────── */
 
 ::-webkit-scrollbar       { width: 5px; }
