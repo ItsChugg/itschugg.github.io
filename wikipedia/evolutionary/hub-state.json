@@ -2,16 +2,12 @@
   "v": 1,
   "title": "Evolutionary",
   "lead": "**Evolutionary** is a fictional universe developed by Russell G. Rinaldo and associates, centered on the intersecting themes of science fiction, arcane biology, and the relentless mechanics of natural selection. It draws heavily from games and works such as *Stellaris*, *Spore*, and *Dune*, blending hard sci-fi cosmology with organic magic systems. The universe is under active development and subject to change.\n\nCivilizations rise and fall across a vast cosmos shaped by the peculiar properties of Prion, the forces of elemental magic, and the pressures of evolutionary biology. No two star systems are alike; the local Prion field determines what forms of magic — if any — are accessible to the species that live there.",
-  "stats": [
-    { "num": "20+", "label": "Articles" },
-    { "num": "7",   "label": "Categories" },
-    { "num": "3+",  "label": "Species" },
-    { "num": "∞",   "label": "In Development" }
+  "featured": [
+    {
+      "title": "Prion",
+      "link": "/wikipedia/evolutionary/prion/",
+      "excerpt": "Prion is a protein-like substance discovered across the known universe, serving as the energetic and metaphysical fuel for what is commonly recognized as \"magic.\" Its biochemical structure varies by region, but its core property — an innate connection to arcane phenomena — remains consistent. Only biologically organic beings can harness Prion to its full extent, placing Prion-utilizing species at the forefront of magical evolution."
+    }
   ],
-  "featured": {
-    "title": "Prion",
-    "link": "/wikipedia/evolutionary/prion/",
-    "excerpt": "Prion is a protein-like substance discovered across the known universe, serving as the energetic and metaphysical fuel for what is commonly recognized as \"magic.\" Its biochemical structure varies by region, but its core property — an innate connection to arcane phenomena — remains consistent. Only biologically organic beings can harness Prion to its full extent, placing Prion-utilizing species at the forefront of magical evolution."
-  },
   "footerNote": "This wiki is under active development. Content may be incomplete or subject to change."
 }

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wiki Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=6" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=7" />
   <style>
     body { overflow: hidden; }
 
@@ -284,9 +284,9 @@
   </style>
 </head>
 <body>
-  <script src="/components/site-config.js?v=6"></script>
-  <script src="/components/wiki-utils.js?v=6"></script>
-  <script src="/components/navbar/inject-navbar.js?v=6" defer></script>
+  <script src="/components/site-config.js?v=7"></script>
+  <script src="/components/wiki-utils.js?v=7"></script>
+  <script src="/components/navbar/inject-navbar.js?v=7" defer></script>
 
   <div class="editor-layout">
 
@@ -375,6 +375,7 @@
 
       <div class="editor-footer">
         <button class="btn-publish" id="btn-pub">PUBLISH</button>
+        <button class="btn-danger" id="btn-del">DELETE PAGE</button>
         <span class="pub-status" id="pub-status"></span>
       </div>
     </div>
@@ -391,7 +392,7 @@
   </div>
 
   <script>
-    // ── Shared config (from site-config.js?v=6 + wiki-utils.js) ──────────────────
+    // ── Shared config (from site-config.js?v=7 + wiki-utils.js) ──────────────────
     const REPO    = SITE.REPO;
     const session = SITE.getSession();
     if (!session) location.href = '/login/?returnTo=' + encodeURIComponent(location.pathname + location.search);
@@ -837,7 +838,7 @@ ${paras}
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${esc(title)} — EVOLUTIONARY</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=6" />${styleBlock}
+  <link rel="stylesheet" href="/components/themes/theme.css?v=7" />${styleBlock}
 </head>
 <body>
 
@@ -865,9 +866,9 @@ ${catHtml}
     </div>
   </div>
 
-  <script src="/components/site-config.js?v=6"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=6" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=6" defer><\/script>
+  <script src="/components/site-config.js?v=7"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=7" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=7" defer><\/script>
 </body>
 </html>`;
     }
@@ -937,6 +938,35 @@ ${catHtml}
       }
       btn.disabled = false;
     });
+
+    // ── Delete page ───────────────────────────────────────────────────────────
+    .addEventListener('click', async () => {
+      const title = .value.trim() || 'this page';
+      const slug  = getSlug();
+      if (!slug) { .className='pub-status err'; .textContent='No page to delete.'; return; }
+      if (!confirm()) return;
+
+      const btn    = ;
+      const status = ;
+      btn.disabled = true; .disabled = true;
+      status.className = 'pub-status';
+      status.textContent = 'Deleting…';
+      try {
+        const fp = getFullPath();
+        await Promise.all([
+          WIKI.ghDelete(,       ),
+          WIKI.ghDelete(, ),
+        ]);
+        status.className = 'pub-status ok';
+        status.textContent = ;
+        setTimeout(() => location.href = '/wikipedia/' + wikiSlug + '/', 2000);
+      } catch(err) {
+        status.className = 'pub-status err';
+        status.textContent = 'Delete failed: ' + err.message;
+        btn.disabled = false; .disabled = false;
+      }
+    });
+
     // ── Load existing page via ?edit=/path/ ───────────────────────────────────
     (async () => {
       const editPath = _editPath;

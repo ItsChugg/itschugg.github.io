@@ -1,6 +1,6 @@
 /**
- * wiki-utils.js?v=6 — Shared utilities for wiki editing and rendering.
- * Requires site-config.js?v=6 to be loaded first (uses SITE.REPO, SITE.getSession).
+ * wiki-utils.js?v=7 — Shared utilities for wiki editing and rendering.
+ * Requires site-config.js?v=7 to be loaded first (uses SITE.REPO, SITE.getSession).
  *
  * Exposes: window.WIKI = { slugify, esc, toB64, ghPut, renderWikiGrid, genHubHTML }
  */
@@ -21,7 +21,7 @@
     return btoa(unescape(encodeURIComponent(s)));
   }
 
-  // ── GitHub API helper ───────────────────────────────────────────────────────
+  // ── GitHub API helpers ──────────────────────────────────────────────────────
 
   /** PUT a file to GitHub. Fetches the existing SHA automatically. */
   async function ghPut(filePath, content, message) {
@@ -49,6 +49,29 @@
       throw new Error(err.message || String(resp.status));
     }
     return resp.json();
+  }
+
+  /** DELETE a file from GitHub. Silently skips if file doesn't exist. */
+  async function ghDelete(filePath, message) {
+    const session = SITE.getSession();
+    if (!session) throw new Error('Not authenticated');
+    const url  = `https://api.github.com/repos/${SITE.REPO}/contents/${filePath}`;
+    const hdrs = {
+      'Authorization': `Bearer ${session.token}`,
+      'Accept':        'application/vnd.github+json'
+    };
+    const chk = await fetch(url, { headers: hdrs });
+    if (!chk.ok) return; // Already gone — that's fine
+    const sha  = (await chk.json()).sha;
+    const resp = await fetch(url, {
+      method:  'DELETE',
+      headers: { ...hdrs, 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ message, sha, branch: 'main' })
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.message || String(resp.status));
+    }
   }
 
   // ── Wiki card grid ──────────────────────────────────────────────────────────
@@ -101,31 +124,31 @@
 
   /**
    * Generates a complete wiki hub index.html for the given state + wiki slug.
-   * Version strings (theme.css?v=6 inject-navbar.js?v=6 inject-sidebar.js?v=6
+   * Version strings (theme.css?v=7 inject-navbar.js?v=7 inject-sidebar.js?v=7
    * are updated automatically by `node build.js`.
    */
   function genHubHTML(state, slug) {
-    const title     = esc(state.title || 'Untitled');
-    const leadHtml  = leadToHtml(state.lead || '');
-    const statsHtml = (state.stats || []).filter(s => s.label).map(s =>
-      `<div class="wiki-stat">
-            <span class="wiki-stat-num">${esc(s.num)}</span>
-            <span class="wiki-stat-label">${esc(s.label)}</span>
-          </div>`
-    ).join('\n          ');
+    const title    = esc(state.title || 'Untitled');
+    const leadHtml = leadToHtml(state.lead || '');
 
-    const ft       = state.featured || {};
-    const featHtml = ft.title ? `
+    // Normalise featured: support old single-object and new array format
+    const featArr = Array.isArray(state.featured)
+      ? state.featured.filter(f => f.title)
+      : (state.featured?.title ? [state.featured] : []);
+
+    const featHtml = featArr.length
+      ? featArr.map(f => `
           <div class="wiki-hub-box">
-            <div class="wiki-hub-box-title">Featured Article — ${esc(ft.title)}</div>
+            <div class="wiki-hub-box-title">Featured — ${esc(f.title)}</div>
             <p style="font-size:0.83rem;line-height:1.75;">
-              <strong><a href="${esc(ft.link || '#')}">${esc(ft.title)}</a></strong>
-              ${esc(ft.excerpt)}
+              <strong><a href="${esc(f.link || '#')}">${esc(f.title)}</a></strong>
+              ${esc(f.excerpt)}
             </p>
             <p style="font-size:0.78rem;margin-top:8px;">
-              <a href="${esc(ft.link || '#')}">Read full article &rarr;</a>
+              <a href="${esc(f.link || '#')}">Read full article &rarr;</a>
             </p>
-          </div>` : '<div class="wiki-hub-box"></div>';
+          </div>`).join('\n')
+      : '';
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -134,7 +157,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${title} — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=6" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=7" />
 </head>
 <body>
 
@@ -158,17 +181,18 @@
 
         <hr class="wiki-rule">
 
-        <div class="wiki-stats">
-          ${statsHtml}
-        </div>
-
-        <div class="wiki-hub-cols">
-          ${featHtml}
-          <div class="wiki-hub-box">
-            <div class="wiki-hub-box-title">Quick Navigation</div>
-            <ul id="hub-quicknav-list"></ul>
+        <div class="wiki-stats wiki-stats-sm">
+          <div class="wiki-stat">
+            <span class="wiki-stat-num" id="stat-pages">—</span>
+            <span class="wiki-stat-label">Pages</span>
+          </div>
+          <div class="wiki-stat">
+            <span class="wiki-stat-num" id="stat-cats">—</span>
+            <span class="wiki-stat-label">Categories</span>
           </div>
         </div>
+
+        ${featHtml}
 
         <section>
           <h2>Browse by Category</h2>
@@ -187,36 +211,31 @@
     fetch('/wikipedia/${slug}/pages.json')
       .then(r => r.json())
       .then(data => {
-        const nav  = document.getElementById('hub-quicknav-list');
-        const cats = document.getElementById('hub-categories');
-        data.forEach(g => {
-          if (nav) {
-            const li = document.createElement('li');
-            li.innerHTML = '<a href="#">' + g.category + '</a> — ' +
-              g.pages.slice(0, 3).map(p => p.title).join(', ');
-            nav.appendChild(li);
-          }
-          if (cats) {
-            const a = document.createElement('a');
-            a.className = 'wiki-category-card';
-            a.href = '#';
-            a.innerHTML = '<div class="cat-name">' + g.category + '</div>' +
-              '<div class="cat-count">' + g.pages.length +
-              ' article' + (g.pages.length === 1 ? '' : 's') + '</div>';
-            cats.appendChild(a);
-          }
+        var sp = document.getElementById('stat-pages');
+        var sc = document.getElementById('stat-cats');
+        if (sp) sp.textContent = data.reduce(function(n, g) { return n + g.pages.length; }, 0);
+        if (sc) sc.textContent = data.length;
+        var cats = document.getElementById('hub-categories');
+        if (cats) data.forEach(function(g) {
+          var a = document.createElement('a');
+          a.className = 'wiki-category-card';
+          a.href = '#';
+          a.innerHTML = '<div class="cat-name">' + g.category + '</div><div class="cat-count">' +
+            g.pages.length + ' article' + (g.pages.length === 1 ? '' : 's') + '</div>';
+          cats.appendChild(a);
         });
-      });
+      })
+      .catch(function() {});
   <\/script>
 
-  <script src="/components/site-config.js?v=6"></script>
-  <script src="/components/navbar/inject-navbar.js?v=6" defer></script>
-  <script src="/components/sidebar/inject-sidebar.js?v=6" defer></script>
+  <script src="/components/site-config.js?v=7"></script>
+  <script src="/components/navbar/inject-navbar.js?v=7" defer></script>
+  <script src="/components/sidebar/inject-sidebar.js?v=7" defer></script>
 </body>
 </html>`;
   }
 
   // ── Export ──────────────────────────────────────────────────────────────────
-  window.WIKI = { slugify, esc, toB64, ghPut, renderWikiGrid, genHubHTML, leadToHtml };
+  window.WIKI = { slugify, esc, toB64, ghPut, ghDelete, renderWikiGrid, genHubHTML, leadToHtml };
 
 }());

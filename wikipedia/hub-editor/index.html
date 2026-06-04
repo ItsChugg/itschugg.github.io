@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hub Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=6" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=7" />
   <style>
     body { overflow: hidden; }
     .editor-layout { display: flex; height: calc(100vh - 48px); }
@@ -41,7 +41,16 @@
     .f-input:focus, .f-textarea:focus { outline: none; border-color: var(--amber-dim); }
     .f-textarea { min-height: 72px; }
 
-    .stat-row { display: grid; grid-template-columns: 80px 1fr; gap: 6px; }
+    /* Featured article rows (reuse article-editor patterns) */
+    .sec-item { background:var(--bg); border:var(--border); padding:9px; display:flex; flex-direction:column; gap:6px; }
+    .sec-item-top { display:flex; align-items:center; gap:7px; }
+    .sec-item-top input { flex:1; background:none; border:none; border-bottom:1px solid var(--amber-dim); color:var(--amber); font-family:var(--font-head); font-size:0.75rem; padding:3px 2px; }
+    .sec-item-top input:focus { outline:none; }
+    .sec-item-top input::placeholder { color:var(--text-faint); }
+    .btn-remove { background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.82rem; padding:0 3px; line-height:1; transition:color 0.15s; flex-shrink:0; }
+    .btn-remove:hover { color:#ff5555; }
+    .btn-add { align-self:flex-start; background:none; border:var(--border); color:var(--text-muted); font-family:var(--font-mono); font-size:0.7rem; padding:4px 11px; cursor:pointer; transition:color 0.15s, border-color 0.15s; }
+    .btn-add:hover { color:var(--amber); border-color:var(--amber-dim); }
 
     .editor-footer {
       padding: 11px 18px; border-top: var(--border);
@@ -72,9 +81,9 @@
   </style>
 </head>
 <body>
-  <script src="/components/site-config.js?v=6"></script>
-  <script src="/components/wiki-utils.js?v=6"></script>
-  <script src="/components/navbar/inject-navbar.js?v=6" defer></script>
+  <script src="/components/site-config.js?v=7"></script>
+  <script src="/components/wiki-utils.js?v=7"></script>
+  <script src="/components/navbar/inject-navbar.js?v=7" defer></script>
 
   <div class="editor-layout">
 
@@ -103,17 +112,9 @@
         </div>
 
         <div class="f-group">
-          <div class="f-label">STATS</div>
-          <div style="display:flex;flex-direction:column;gap:5px;" id="stats-rows">
-            <!-- 4 rows injected by JS -->
-          </div>
-        </div>
-
-        <div class="f-group">
-          <div class="f-label">FEATURED ARTICLE</div>
-          <input class="f-input" id="f-feat-title" type="text" placeholder="Article title…" autocomplete="off" />
-          <input class="f-input" id="f-feat-link"  type="text" placeholder="/wikipedia/slug/article/" autocomplete="off" style="margin-top:5px;" />
-          <textarea class="f-textarea" id="f-feat-excerpt" style="min-height:90px;margin-top:5px;" placeholder="Short excerpt…"></textarea>
+          <div class="f-label">FEATURED ARTICLES <small style="font-family:var(--font-mono);font-size:0.61rem;color:var(--text-faint);">(stats auto-count from pages)</small></div>
+          <div id="feat-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+          <button class="btn-add" id="feat-add">+ ADD FEATURED ARTICLE</button>
         </div>
 
         <div class="f-group">
@@ -125,6 +126,7 @@
 
       <div class="editor-footer">
         <button class="btn-publish" id="btn-pub">PUBLISH</button>
+        <button class="btn-danger"  id="btn-del-wiki">DELETE WIKI</button>
         <span class="pub-status" id="pub-status"></span>
       </div>
     </div>
@@ -144,38 +146,47 @@
     const REPO    = SITE.REPO;
     const session = SITE.getSession();
     if (!session) location.href = '/login/?returnTo=' + encodeURIComponent(location.pathname + location.search);
-    const { slugify, esc, toB64 } = WIKI;
+    const { esc, toB64 } = WIKI;
 
     const $ = id => document.getElementById(id);
+    let uid = 0; const nid = () => ++uid;
 
-    // Default 4 stats
-    let stats = [
-      { num: '', label: 'Articles' },
-      { num: '', label: 'Categories' },
-      { num: '', label: 'Species' },
-      { num: '', label: 'In Development' },
-    ];
+    // ── Featured articles list ────────────────────────────────────────────────
+    let featuredItems = [{ id: nid(), title: '', link: '', excerpt: '' }];
 
-    function renderStats() {
-      const el = $('stats-rows');
+    function renderFeatured() {
+      const el = $('feat-list');
       el.innerHTML = '';
-      stats.forEach((s, i) => {
-        const row = document.createElement('div');
-        row.className = 'stat-row';
-        row.innerHTML = `
-          <input class="f-input" placeholder="Value" value="${esc(s.num)}" data-i="${i}" data-f="num" />
-          <input class="f-input" placeholder="Label" value="${esc(s.label)}" data-i="${i}" data-f="label" />`;
-        row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', e => {
-          stats[+e.target.dataset.i][e.target.dataset.f] = e.target.value; dp();
+      featuredItems.forEach(item => {
+        const d = document.createElement('div');
+        d.className = 'sec-item';
+        d.innerHTML = `
+          <div class="sec-item-top">
+            <input type="text" placeholder="Article title…" value="${esc(item.title)}" data-id="${item.id}" data-f="title" />
+            <button class="btn-remove" data-id="${item.id}">✕</button>
+          </div>
+          <input class="f-input" placeholder="/wikipedia/slug/article/" value="${esc(item.link)}" data-id="${item.id}" data-f="link" style="margin-top:4px;" />
+          <textarea class="f-textarea" placeholder="Short excerpt…" data-id="${item.id}" data-f="excerpt" style="min-height:60px;margin-top:4px;">${esc(item.excerpt)}</textarea>`;
+        d.querySelectorAll('[data-f]').forEach(i => i.addEventListener('input', e => {
+          const row = featuredItems.find(x => x.id === +e.target.dataset.id);
+          if (row) row[e.target.dataset.f] = e.target.value; dp();
         }));
-        el.appendChild(row);
+        d.querySelector('.btn-remove').addEventListener('click', e => {
+          featuredItems = featuredItems.filter(x => x.id !== +e.target.dataset.id);
+          renderFeatured(); dp();
+        });
+        el.appendChild(d);
       });
     }
-    renderStats();
+    renderFeatured();
 
-    // Wire all inputs to live preview
-    ['f-wiki','f-title','f-lead','f-feat-title','f-feat-link','f-feat-excerpt','f-footer']
-      .forEach(id => $(id)?.addEventListener('input', dp));
+    $('feat-add').addEventListener('click', () => {
+      featuredItems.push({ id: nid(), title: '', link: '', excerpt: '' });
+      renderFeatured(); dp();
+    });
+
+    // Wire text inputs to live preview
+    ['f-wiki','f-title','f-lead','f-footer'].forEach(id => $(id)?.addEventListener('input', dp));
 
     $('f-wiki').addEventListener('input', () => {
       const slug = $('f-wiki').value.trim();
@@ -187,14 +198,9 @@
     function buildState() {
       return {
         v: 1,
-        title:   $('f-title').value.trim(),
-        lead:    $('f-lead').value,
-        stats:   stats.map(s => ({ num: s.num, label: s.label })),
-        featured: {
-          title:   $('f-feat-title').value.trim(),
-          link:    $('f-feat-link').value.trim(),
-          excerpt: $('f-feat-excerpt').value.trim(),
-        },
+        title:      $('f-title').value.trim(),
+        lead:       $('f-lead').value,
+        featured:   featuredItems.map(f => ({ title: f.title, link: f.link, excerpt: f.excerpt })),
         footerNote: $('f-footer').value.trim(),
       };
     }
@@ -205,21 +211,17 @@
       $('prev-url').textContent  = 'itschu.gg/wikipedia/'+slug+'/';
       $('f-title').value        = state.title  || '';
       $('f-lead').value         = state.lead   || '';
-      $('f-feat-title').value   = state.featured?.title   || '';
-      $('f-feat-link').value    = state.featured?.link    || '';
-      $('f-feat-excerpt').value = state.featured?.excerpt || '';
       $('f-footer').value       = state.footerNote || '';
-      if (state.stats?.length) {
-        stats = state.stats.map(s => ({ num: s.num||'', label: s.label||'' }));
-        // Pad to 4
-        while (stats.length < 4) stats.push({ num: '', label: '' });
-        renderStats();
-      }
+      // Normalise featured: support old single-object and new array format
+      const arr = Array.isArray(state.featured)
+        ? state.featured
+        : (state.featured?.title ? [state.featured] : []);
+      featuredItems = arr.length
+        ? arr.map(f => ({ id: nid(), title: f.title||'', link: f.link||'', excerpt: f.excerpt||'' }))
+        : [{ id: nid(), title: '', link: '', excerpt: '' }];
+      renderFeatured();
       dp();
     }
-
-    // ── HTML generation — delegated to WIKI.genHubHTML ───────────────────────
-    function genHubHTML(state, slug) { return WIKI.genHubHTML(state, slug); }
 
     // ── Live preview ──────────────────────────────────────────────────────────
     let pt = null;
@@ -284,6 +286,51 @@
         status.textContent = 'Network error — try again.';
       }
       btn.disabled = false;
+    });
+
+    // ── Delete wiki ───────────────────────────────────────────────────────────
+    $('btn-del-wiki').addEventListener('click', async () => {
+      const slug  = $('f-wiki').value.trim();
+      const title = $('f-title').value.trim() || slug;
+      const status = $('pub-status');
+      if (!slug) { status.className='pub-status err'; status.textContent='Enter a wiki slug first.'; return; }
+
+      const typed = prompt(
+        `This will permanently delete the "${title}" Wikipedia and remove it from the wiki list.\n\n` +
+        `Article files will remain on disk but be inaccessible. ` +
+        `Type "${slug}" to confirm deletion:`
+      );
+      if (typed === null) return; // cancelled
+      if (typed !== slug) { alert('Slug did not match — deletion cancelled.'); return; }
+
+      const btn = $('btn-del-wiki');
+      btn.disabled = true;
+      $('btn-pub').disabled = true;
+      status.className = 'pub-status';
+      status.textContent = 'Deleting…';
+      try {
+        await Promise.all([
+          WIKI.ghDelete(`wikipedia/${slug}/index.html`,     `wiki: delete "${title}" hub`),
+          WIKI.ghDelete(`wikipedia/${slug}/hub-state.json`, `wiki: delete "${title}" hub state`),
+          WIKI.ghDelete(`wikipedia/${slug}/pages.json`,     `wiki: delete "${title}" pages`),
+        ]);
+        // Remove from wikis.json
+        const wikisUrl  = `https://api.github.com/repos/${REPO}/contents/wikipedia/wikis.json`;
+        const wikisResp = await fetch(wikisUrl, { headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json'} });
+        if (wikisResp.ok) {
+          const wd    = await wikisResp.json();
+          const wikis = JSON.parse(atob(wd.content.replace(/\n/g,'')));
+          const body  = { message:`wiki: deregister "${title}"`, content: toB64(JSON.stringify(wikis.filter(w=>w.slug!==slug),null,2)), sha:wd.sha, branch:'main' };
+          await fetch(wikisUrl, { method:'PUT', headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json','Content-Type':'application/json'}, body:JSON.stringify(body) });
+        }
+        status.className = 'pub-status ok';
+        status.textContent = `"${title}" deleted — redirecting…`;
+        setTimeout(() => location.href = '/wikipedia/', 2000);
+      } catch(err) {
+        status.className = 'pub-status err';
+        status.textContent = 'Delete failed: ' + err.message;
+        btn.disabled = false; $('btn-pub').disabled = false;
+      }
     });
 
     // ── Load on ?wiki= ────────────────────────────────────────────────────────
