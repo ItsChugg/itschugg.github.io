@@ -5,66 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wikipedia — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=3" />
-  <style>
-    .wiki-hub-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 16px;
-      margin-top: 6px;
-    }
-    .wiki-hub-card {
-      display: block;
-      background: var(--bg-panel);
-      border: var(--border);
-      padding: 22px 20px 20px;
-      min-height: 140px;
-      text-decoration: none;
-      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
-      position: relative;
-    }
-    .wiki-hub-card:hover {
-      border-color: var(--amber);
-      box-shadow: var(--glow-md);
-      background: var(--bg-hover);
-    }
-    .wiki-hub-card-name {
-      font-family: var(--font-head);
-      font-size: 0.85rem;
-      font-weight: 700;
-      letter-spacing: 0.10em;
-      text-transform: uppercase;
-      color: var(--amber);
-      text-shadow: var(--glow-sm);
-      margin-bottom: 10px;
-    }
-    .wiki-hub-card-desc {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      line-height: 1.6;
-    }
-    .wiki-hub-card.create {
-      border-style: dashed;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      cursor: pointer;
-    }
-    .wiki-hub-card.create .wiki-hub-card-name {
-      color: var(--text-muted);
-      font-size: 1.4rem;
-      letter-spacing: 0;
-      margin-bottom: 6px;
-    }
-    .wiki-hub-card.create .wiki-hub-card-desc { font-size: 0.72rem; }
-    .wiki-hub-card.create:hover .wiki-hub-card-name { color: var(--amber); }
-  </style>
+  <link rel="stylesheet" href="/components/themes/theme.css?v=4" />
 </head>
 <body>
-  <script src="/components/site-config.js?v=3"></script>
-  <script src="/components/navbar/inject-navbar.js?v=3" defer></script>
+  <script src="/components/site-config.js?v=4"></script>
+  <script src="/components/navbar/inject-navbar.js?v=4" defer></script>
 
   <div class="page-wrapper">
     <div class="panel">
@@ -75,7 +20,7 @@
     </div>
   </div>
 
-  <script src="/components/wiki-utils.js?v=3"></script>
+  <script src="/components/wiki-utils.js?v=4"></script>
   <script>WIKI.renderWikiGrid('wiki-grid');</script>
 </body>
 </html>

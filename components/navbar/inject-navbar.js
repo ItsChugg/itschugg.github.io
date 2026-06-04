@@ -3,7 +3,7 @@
  * swatches, swaps the LOGIN link for a user avatar when signed in, and
  * injects wiki edit/create buttons on relevant pages.
  *
- * Requires site-config.js?v=3 to be loaded first (uses SITE.getSession).
+ * Requires site-config.js?v=4 to be loaded first (uses SITE.getSession).
  */
 
 // Apply saved theme before first paint to prevent flash.
@@ -86,7 +86,7 @@ function wireNavbar() {
 if (document.querySelector('.navbar')) {
   wireNavbar();
 } else {
-  fetch('/components/navbar/navbar.html?v=3')
+  fetch('/components/navbar/navbar.html?v=4')
     .then(res => res.text())
     .then(html => {
       document.body.insertAdjacentHTML('afterbegin', html);

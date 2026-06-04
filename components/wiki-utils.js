@@ -1,6 +1,6 @@
 /**
- * wiki-utils.js?v=3 — Shared utilities for wiki editing and rendering.
- * Requires site-config.js?v=3 to be loaded first (uses SITE.REPO, SITE.getSession).
+ * wiki-utils.js?v=4 — Shared utilities for wiki editing and rendering.
+ * Requires site-config.js?v=4 to be loaded first (uses SITE.REPO, SITE.getSession).
  *
  * Exposes: window.WIKI = { slugify, esc, toB64, ghPut, renderWikiGrid, genHubHTML }
  */
@@ -101,7 +101,7 @@
 
   /**
    * Generates a complete wiki hub index.html for the given state + wiki slug.
-   * Version strings (theme.css?v=3 inject-navbar.js?v=3 inject-sidebar.js?v=3
+   * Version strings (theme.css?v=4 inject-navbar.js?v=4 inject-sidebar.js?v=4
    * are updated automatically by `node build.js`.
    */
   function genHubHTML(state, slug) {
@@ -134,7 +134,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${title} — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=3" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=4" />
 </head>
 <body>
 
@@ -209,9 +209,9 @@
       });
   <\/script>
 
-  <script src="/components/site-config.js?v=3"></script>
-  <script src="/components/navbar/inject-navbar.js?v=3" defer></script>
-  <script src="/components/sidebar/inject-sidebar.js?v=3" defer></script>
+  <script src="/components/site-config.js?v=4"></script>
+  <script src="/components/navbar/inject-navbar.js?v=4" defer></script>
+  <script src="/components/sidebar/inject-sidebar.js?v=4" defer></script>
 </body>
 </html>`;
   }
