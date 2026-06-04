@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>New Wikipedia — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=4" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=5" />
   <style>
     .new-wiki-wrap { max-width: 520px; margin: 60px auto; padding: 0 16px; }
     .new-wiki-box  { background: var(--bg-panel); border: var(--border); }
@@ -34,27 +34,27 @@
   </style>
 </head>
 <body>
-  <script src="/components/site-config.js?v=4"></script>
-  <script src="/components/wiki-utils.js?v=4"></script>
-  <script src="/components/navbar/inject-navbar.js?v=4" defer></script>
+  <script src="/components/site-config.js?v=5"></script>
+  <script src="/components/wiki-utils.js?v=5"></script>
+  <script src="/components/navbar/inject-navbar.js?v=5" defer></script>
 
   <div class="new-wiki-wrap">
     <div class="new-wiki-box">
-      <div class="new-wiki-head">> CREATE NEW WIKIPEDIA</div>
+      <div class="new-wiki-head">CREATE NEW WIKIPEDIA</div>
       <div class="new-wiki-body">
         <div class="f-group">
           <div class="f-label" style="font-family:var(--font-head);font-size:0.62rem;letter-spacing:0.12em;color:var(--text-muted);">NAME</div>
-          <input class="f-input" id="f-name" type="text" placeholder="e.g. Midas" autocomplete="off"
+          <input class="f-input" id="f-name" type="text" placeholder="The name of your Wikipedia." autocomplete="off"
             style="background:var(--bg);border:var(--border);color:var(--text);font-family:var(--font-mono);font-size:0.8rem;padding:7px 10px;width:100%;box-sizing:border-box;" />
         </div>
         <div class="f-group">
           <div class="f-label" style="font-family:var(--font-head);font-size:0.62rem;letter-spacing:0.12em;color:var(--text-muted);">SLUG <small style="font-family:var(--font-mono);font-size:0.61rem;color:var(--text-faint);">(auto-filled from name)</small></div>
-          <input class="f-input" id="f-slug" type="text" placeholder="e.g. midas" autocomplete="off" spellcheck="false"
+          <input class="f-input" id="f-slug" type="text" placeholder="A short unique identifier, e.g. midas or starcrossed." autocomplete="off" spellcheck="false"
             style="background:var(--bg);border:var(--border);color:var(--text);font-family:var(--font-mono);font-size:0.8rem;padding:7px 10px;width:100%;box-sizing:border-box;" />
         </div>
         <div class="f-group">
           <div class="f-label" style="font-family:var(--font-head);font-size:0.62rem;letter-spacing:0.12em;color:var(--text-muted);">SHORT DESCRIPTION</div>
-          <textarea id="f-desc" placeholder="One or two sentences about this universe…"
+          <textarea id="f-desc" placeholder="A short description of what this Wikipedia is about."
             style="background:var(--bg);border:var(--border);color:var(--text);font-family:var(--font-mono);font-size:0.8rem;padding:7px 10px;width:100%;box-sizing:border-box;min-height:72px;resize:vertical;"></textarea>
         </div>
       </div>

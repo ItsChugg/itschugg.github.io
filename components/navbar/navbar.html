@@ -1,13 +1,24 @@
 <nav class="navbar">
   <span class="navbar-brand">ITSCHU.GG</span>
-  <div class="theme-swatches">
-    <button class="swatch" data-theme="dark"  title="Dark"></button>
-    <button class="swatch" data-theme="light" title="Light"></button>
-    <button class="swatch" data-theme="amber" title="Amber"></button>
-    <button class="swatch" data-theme="red"   title="Red"></button>
-    <button class="swatch" data-theme="green" title="Green"></button>
-    <button class="swatch" data-theme="blue"  title="Blue"></button>
+
+  <div class="theme-switcher">
+    <!-- Dark ↔ Light toggle -->
+    <label class="theme-toggle" title="Toggle light / dark mode">
+      <input type="checkbox" id="dark-light-toggle" />
+      <span class="toggle-track"><span class="toggle-thumb"></span></span>
+    </label>
+    <!-- Colour theme dropdown -->
+    <div class="theme-extras">
+      <button class="theme-extras-btn" id="theme-extras-btn" title="Colour themes">▾</button>
+      <div class="theme-extras-menu" id="theme-extras-menu">
+        <button class="swatch" data-theme="amber" title="Amber"></button>
+        <button class="swatch" data-theme="red"   title="Red"></button>
+        <button class="swatch" data-theme="green" title="Green"></button>
+        <button class="swatch" data-theme="blue"  title="Blue"></button>
+      </div>
+    </div>
   </div>
+
   <ul class="navbar-links">
     <li><a href="/">HOME</a></li>
     <li><a href="/wikipedia/">WIKIPEDIA</a></li>

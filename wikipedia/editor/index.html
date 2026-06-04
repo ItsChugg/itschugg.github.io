@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wiki Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=4" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=5" />
   <style>
     body { overflow: hidden; }
 
@@ -284,9 +284,9 @@
   </style>
 </head>
 <body>
-  <script src="/components/site-config.js?v=4"></script>
-  <script src="/components/wiki-utils.js?v=4"></script>
-  <script src="/components/navbar/inject-navbar.js?v=4" defer></script>
+  <script src="/components/site-config.js?v=5"></script>
+  <script src="/components/wiki-utils.js?v=5"></script>
+  <script src="/components/navbar/inject-navbar.js?v=5" defer></script>
 
   <div class="editor-layout">
 
@@ -391,7 +391,7 @@
   </div>
 
   <script>
-    // ── Shared config (from site-config.js?v=4 + wiki-utils.js) ──────────────────
+    // ── Shared config (from site-config.js?v=5 + wiki-utils.js) ──────────────────
     const REPO    = SITE.REPO;
     const session = SITE.getSession();
     if (!session) location.href = '/login/?returnTo=' + encodeURIComponent(location.pathname + location.search);
@@ -837,7 +837,7 @@ ${paras}
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${esc(title)} — EVOLUTIONARY</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=4" />${styleBlock}
+  <link rel="stylesheet" href="/components/themes/theme.css?v=5" />${styleBlock}
 </head>
 <body>
 
@@ -865,9 +865,9 @@ ${catHtml}
     </div>
   </div>
 
-  <script src="/components/site-config.js?v=4"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=4" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=4" defer><\/script>
+  <script src="/components/site-config.js?v=5"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=5" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=5" defer><\/script>
 </body>
 </html>`;
     }
