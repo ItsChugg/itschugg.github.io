@@ -3,7 +3,7 @@
  * dark/light toggle + colour theme dropdown, swaps LOGIN for an avatar
  * when signed in, and injects wiki edit buttons on relevant pages.
  *
- * Requires site-config.js?v=8 to be loaded synchronously first (uses SITE.getSession).
+ * Requires site-config.js?v=9 to be loaded synchronously first (uses SITE.getSession).
  */
 
 // Apply saved theme before first paint to prevent flash.
@@ -127,7 +127,7 @@ function wireNavbar() {
 if (document.querySelector('.navbar')) {
   wireNavbar();
 } else {
-  fetch('/components/navbar/navbar.html?v=8')
+  fetch('/components/navbar/navbar.html?v=9')
     .then(res => res.text())
     .then(html => {
       document.body.insertAdjacentHTML('afterbegin', html);

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hub Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=8" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=9" />
   <style>
     body { overflow: hidden; }
     .editor-layout { display: flex; height: calc(100vh - 48px); }
@@ -81,9 +81,9 @@
   </style>
 </head>
 <body>
-  <script src="/components/site-config.js?v=8"></script>
-  <script src="/components/wiki-utils.js?v=8"></script>
-  <script src="/components/navbar/inject-navbar.js?v=8" defer></script>
+  <script src="/components/site-config.js?v=9"></script>
+  <script src="/components/wiki-utils.js?v=9"></script>
+  <script src="/components/navbar/inject-navbar.js?v=9" defer></script>
 
   <div class="editor-layout">
 
@@ -137,7 +137,7 @@
         <span>LIVE PREVIEW</span>
         <span class="preview-url" id="prev-url"></span>
       </div>
-      <iframe class="preview-frame" id="prev-frame" sandbox="allow-same-origin"></iframe>
+      <iframe class="preview-frame" id="prev-frame" sandbox="allow-same-origin allow-scripts"></iframe>
     </div>
 
   </div>
@@ -228,8 +228,16 @@
     function dp() {
       clearTimeout(pt);
       pt = setTimeout(() => {
-        const slug = $('f-wiki').value.trim() || 'wiki';
-        $('prev-frame').srcdoc = WIKI.genHubHTML(buildState(), slug);
+        try {
+          const slug = $('f-wiki').value.trim() || 'wiki';
+          // Inject <base> so /absolute/paths in srcdoc resolve to this origin
+          const base = `<base href="${window.location.origin}/" />`;
+          const html = WIKI.genHubHTML(buildState(), slug)
+            .replace('<head>', '<head>\n  ' + base);
+          $('prev-frame').srcdoc = html;
+        } catch (err) {
+          console.error('Hub preview failed:', err);
+        }
       }, 280);
     }
     dp();
