@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wiki Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=5" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=6" />
   <style>
     body { overflow: hidden; }
 
@@ -284,16 +284,16 @@
   </style>
 </head>
 <body>
-  <script src="/components/site-config.js?v=5"></script>
-  <script src="/components/wiki-utils.js?v=5"></script>
-  <script src="/components/navbar/inject-navbar.js?v=5" defer></script>
+  <script src="/components/site-config.js?v=6"></script>
+  <script src="/components/wiki-utils.js?v=6"></script>
+  <script src="/components/navbar/inject-navbar.js?v=6" defer></script>
 
   <div class="editor-layout">
 
     <!-- ── Left: form ── -->
     <div class="editor-panel">
       <div class="editor-header">
-        <span id="hdr-title">> WIKI EDITOR</span>
+        <span id="hdr-title">WIKI EDITOR</span>
         <span class="editor-header-slug" id="hdr-slug"></span>
       </div>
 
@@ -391,7 +391,7 @@
   </div>
 
   <script>
-    // ── Shared config (from site-config.js?v=5 + wiki-utils.js) ──────────────────
+    // ── Shared config (from site-config.js?v=6 + wiki-utils.js) ──────────────────
     const REPO    = SITE.REPO;
     const session = SITE.getSession();
     if (!session) location.href = '/login/?returnTo=' + encodeURIComponent(location.pathname + location.search);
@@ -404,7 +404,7 @@
     const _editPath = _params.get('edit') || '';
     const wikiSlug  = _params.get('wiki') ||
                       (_editPath ? _editPath.split('/').filter(Boolean)[1] : 'evolutionary');
-    document.getElementById('hdr-title').textContent = `> ${wikiSlug.toUpperCase()} EDITOR`;
+    document.getElementById('hdr-title').textContent = `${wikiSlug.toUpperCase()} EDITOR`;
 
     const $   = id => document.getElementById(id);
     let uid   = 0;
@@ -837,7 +837,7 @@ ${paras}
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${esc(title)} — EVOLUTIONARY</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=5" />${styleBlock}
+  <link rel="stylesheet" href="/components/themes/theme.css?v=6" />${styleBlock}
 </head>
 <body>
 
@@ -865,9 +865,9 @@ ${catHtml}
     </div>
   </div>
 
-  <script src="/components/site-config.js?v=5"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=5" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=5" defer><\/script>
+  <script src="/components/site-config.js?v=6"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=6" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=6" defer><\/script>
 </body>
 </html>`;
     }
