@@ -2,28 +2,12 @@
   "v": 1,
   "title": "peanut slug",
   "lead": "grey apple bottom jeans with the burrrrrr",
-  "stats": [
+  "featured": [
     {
-      "num": "0",
-      "label": "Articles"
-    },
-    {
-      "num": "0",
-      "label": "Categories"
-    },
-    {
-      "num": "0",
-      "label": "Species"
-    },
-    {
-      "num": "∞",
-      "label": "In Development"
+      "title": "Feature Article, Chugg has been banned from his community for violating Guild ToS",
+      "link": "",
+      "excerpt": "Blame Chugg"
     }
   ],
-  "featured": {
-    "title": "",
-    "link": "",
-    "excerpt": ""
-  },
-  "footerNote": "peanut slug wiki — under active development."
+  "footerNote": "peanut slug wiki â under active development."
 }
