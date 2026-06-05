@@ -1,5 +1,5 @@
 /**
- * site-config.js?v=10 — Site-wide constants and shared session helper.
+ * site-config.js?v=11 — Site-wide constants and shared session helper.
  * Load this BEFORE inject-navbar.js and any inline scripts that need SITE.
  *
  * Exposes: window.SITE = { REPO, ALLOWED, getSession() }
@@ -7,7 +7,7 @@
 (function () {
   window.SITE = {
     REPO:    'ItsChugg/itschugg.github.io',
-    ALLOWED: ['ItsChugg', 'zmbprotocol'],
+    ALLOWED: ['ItsChugg', 'zmbprotocol', 'Zachary-N-Kaleno'],
 
     /** Returns the current session object or null if expired / missing. */
     getSession() {
