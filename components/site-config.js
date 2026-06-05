@@ -1,5 +1,5 @@
 /**
- * site-config.js?v=11 — Site-wide constants and shared session helper.
+ * site-config.js?v=12 — Site-wide constants and shared session helper.
  * Load this BEFORE inject-navbar.js and any inline scripts that need SITE.
  *
  * Exposes: window.SITE = { REPO, ALLOWED, getSession() }

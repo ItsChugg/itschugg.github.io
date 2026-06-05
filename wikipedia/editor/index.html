@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wiki Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=11" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=12" />
   <style>
     body { overflow: hidden; }
 
@@ -284,9 +284,9 @@
   </style>
 </head>
 <body>
-  <script src="/components/site-config.js?v=11"></script>
-  <script src="/components/wiki-utils.js?v=11"></script>
-  <script src="/components/navbar/inject-navbar.js?v=11" defer></script>
+  <script src="/components/site-config.js?v=12"></script>
+  <script src="/components/wiki-utils.js?v=12"></script>
+  <script src="/components/navbar/inject-navbar.js?v=12" defer></script>
 
   <div class="editor-layout">
 
@@ -386,13 +386,13 @@
         <span>LIVE PREVIEW</span>
         <span class="preview-url" id="prev-url"></span>
       </div>
-      <iframe class="preview-frame" id="prev-frame" sandbox="allow-same-origin"></iframe>
+      <iframe class="preview-frame" id="prev-frame" sandbox="allow-same-origin allow-scripts"></iframe>
     </div>
 
   </div>
 
   <script>
-    // ── Shared config (from site-config.js?v=11 + wiki-utils.js) ──────────────────
+    // ── Shared config (from site-config.js?v=12 + wiki-utils.js) ──────────────────
     const REPO    = SITE.REPO;
     const session = SITE.getSession();
     if (!session) location.href = '/login/?returnTo=' + encodeURIComponent(location.pathname + location.search);
@@ -838,7 +838,7 @@ ${paras}
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${esc(title)} — EVOLUTIONARY</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=11" />${styleBlock}
+  <link rel="stylesheet" href="/components/themes/theme.css?v=12" />${styleBlock}
 </head>
 <body>
 
@@ -866,16 +866,27 @@ ${catHtml}
     </div>
   </div>
 
-  <script src="/components/site-config.js?v=11"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=11" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=11" defer><\/script>
+  <script src="/components/site-config.js?v=12"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=12" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=12" defer><\/script>
 </body>
 </html>`;
     }
 
     // ── Live preview ──────────────────────────────────────────────────────────
     let pt = null;
-    function dp() { clearTimeout(pt); pt = setTimeout(()=>{ $('prev-frame').srcdoc = genHTML(true); }, 280); }
+    function dp() {
+      clearTimeout(pt);
+      pt = setTimeout(() => {
+        try {
+          const base = `<base href="${window.location.origin}/" />`;
+          const html = genHTML(true).replace('<head>', '<head>\n  ' + base);
+          $('prev-frame').srcdoc = html;
+        } catch(err) {
+          console.error('Article preview failed:', err);
+        }
+      }, 280);
+    }
     syncPresetHighlight();
     dp();
 
@@ -940,30 +951,53 @@ ${catHtml}
     });
 
     // ── Delete page ───────────────────────────────────────────────────────────
-    .addEventListener('click', async () => {
-      const title = .value.trim() || 'this page';
-      const slug  = getSlug();
-      if (!slug) { .className='pub-status err'; .textContent='No page to delete.'; return; }
-      if (!confirm()) return;
+    $('btn-del').addEventListener('click', async () => {
+      const title  = $('f-title').value.trim() || 'this page';
+      const slug   = getSlug();
+      const status = $('pub-status');
+      if (!slug) { status.className='pub-status err'; status.textContent='No page to delete.'; return; }
+      if (!confirm(`Permanently delete "${title}"?\n\nThe page files will be removed. This cannot be undone.`)) return;
 
-      const btn    = ;
-      const status = ;
-      btn.disabled = true; .disabled = true;
+      const btn = $('btn-del');
+      btn.disabled = true;
+      $('btn-pub').disabled = true;
       status.className = 'pub-status';
       status.textContent = 'Deleting…';
+
       try {
         const fp = getFullPath();
         await Promise.all([
-          WIKI.ghDelete(,       ),
-          WIKI.ghDelete(, ),
+          WIKI.ghDelete(fp + '/index.html',        `docs: delete "${title}"`),
+          WIKI.ghDelete(fp + '/editor-state.json', `docs: delete "${title}" state`),
         ]);
+
+        // Best-effort: remove this page from pages.json
+        try {
+          const pagesUrl  = `https://api.github.com/repos/${REPO}/contents/wikipedia/${wikiSlug}/pages.json`;
+          const pagesResp = await fetch(pagesUrl, { headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json'} });
+          if (pagesResp.ok) {
+            const pd      = await pagesResp.json();
+            const pages   = JSON.parse(atob(pd.content.replace(/\n/g,'')));
+            const relPath = fp.replace(`wikipedia/${wikiSlug}/`, '') + '/index.html';
+            const updated = pages
+              .map(g => ({ ...g, pages: g.pages.filter(p => p.file !== relPath) }))
+              .filter(g => g.pages.length > 0);
+            await fetch(pagesUrl, {
+              method: 'PUT',
+              headers: {'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
+              body: JSON.stringify({ message:`docs: remove "${title}" from index`, content: toB64(JSON.stringify(updated, null, 2)), sha: pd.sha, branch:'main' }),
+            });
+          }
+        } catch {}
+
         status.className = 'pub-status ok';
-        status.textContent = ;
+        status.textContent = `"${title}" deleted — redirecting…`;
         setTimeout(() => location.href = '/wikipedia/' + wikiSlug + '/', 2000);
       } catch(err) {
         status.className = 'pub-status err';
         status.textContent = 'Delete failed: ' + err.message;
-        btn.disabled = false; .disabled = false;
+        btn.disabled = false;
+        $('btn-pub').disabled = false;
       }
     });
 
