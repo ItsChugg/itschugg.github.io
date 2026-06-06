@@ -1,6 +1,6 @@
 /**
- * wiki-utils.js?v=12 — Shared utilities for wiki editing and rendering.
- * Requires site-config.js?v=12 to be loaded first (uses SITE.REPO, SITE.getSession).
+ * wiki-utils.js?v=13 — Shared utilities for wiki editing and rendering.
+ * Requires site-config.js?v=13 to be loaded first (uses SITE.REPO, SITE.getSession).
  *
  * Exposes: window.WIKI = { slugify, esc, toB64, ghPut, renderWikiGrid, genHubHTML }
  */
@@ -124,12 +124,13 @@
 
   /**
    * Generates a complete wiki hub index.html for the given state + wiki slug.
-   * Version strings (theme.css?v=12 inject-navbar.js?v=12 inject-sidebar.js?v=12
+   * Version strings (theme.css?v=13 inject-navbar.js?v=13 inject-sidebar.js?v=13
    * are updated automatically by `node build.js`.
    */
   function genHubHTML(state, slug) {
     const title    = esc(state.title || 'Untitled');
-    const leadHtml = leadToHtml(state.lead || '');
+    // Support both new rich-text leadHtml (v2 editor) and old plain-text lead (v1)
+    const leadHtml = state.leadHtml || leadToHtml(state.lead || '');
 
     // Normalise featured: support old single-object and new array format
     const featArr = Array.isArray(state.featured)
@@ -157,7 +158,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${title} — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=12" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=13" />
 </head>
 <body>
 
@@ -228,9 +229,9 @@
       .catch(function() {});
   <\/script>
 
-  <script src="/components/site-config.js?v=12"></script>
-  <script src="/components/navbar/inject-navbar.js?v=12" defer></script>
-  <script src="/components/sidebar/inject-sidebar.js?v=12" defer></script>
+  <script src="/components/site-config.js?v=13"></script>
+  <script src="/components/navbar/inject-navbar.js?v=13" defer></script>
+  <script src="/components/sidebar/inject-sidebar.js?v=13" defer></script>
 </body>
 </html>`;
   }

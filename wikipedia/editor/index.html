@@ -5,345 +5,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wiki Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=12" />
-  <style>
-    body { overflow: hidden; }
-
-    .editor-layout {
-      display: flex;
-      height: calc(100vh - 48px);
-    }
-
-    /* ── Left panel ── */
-    .editor-panel {
-      width: 390px;
-      flex-shrink: 0;
-      background: var(--bg-panel);
-      border-right: var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .editor-header {
-      padding: 13px 18px;
-      border-bottom: var(--border);
-      font-family: var(--font-head);
-      font-size: 0.78rem;
-      letter-spacing: 0.12em;
-      color: var(--amber);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-    }
-    .editor-header-slug {
-      font-size: 0.61rem;
-      letter-spacing: 0.03em;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 210px;
-    }
-    .editor-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 14px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    /* ── Fields ── */
-    .f-group { display: flex; flex-direction: column; gap: 5px; }
-    .f-label {
-      font-family: var(--font-head);
-      font-size: 0.62rem;
-      letter-spacing: 0.12em;
-      color: var(--text-muted);
-    }
-    .f-label small { font-family: var(--font-mono); font-size: 0.61rem; letter-spacing: 0; color: var(--text-faint); }
-    .f-input, .f-textarea, .f-select {
-      background: var(--bg);
-      border: var(--border);
-      color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      padding: 7px 10px;
-      width: 100%;
-      box-sizing: border-box;
-      resize: vertical;
-    }
-    .f-input:focus, .f-textarea:focus, .f-select:focus { outline: none; border-color: var(--amber-dim); }
-    .f-textarea { min-height: 72px; }
-    .f-select { appearance: none; cursor: pointer; }
-
-    /* ── Collapsible ── */
-    .collapsible-head {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      cursor: pointer;
-      user-select: none;
-    }
-    .collapsible-caret { font-size: 0.6rem; transition: transform 0.15s; display: inline-block; }
-    .collapsible-head.open .collapsible-caret { transform: rotate(90deg); }
-    .collapsible-body { display: none; flex-direction: column; gap: 7px; margin-top: 6px; }
-    .collapsible-body.open { display: flex; }
-
-    /* ── Section items ── */
-    .sec-item {
-      background: var(--bg);
-      border: var(--border);
-      padding: 9px;
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-    }
-    .sec-item-top { display: flex; align-items: center; gap: 7px; }
-    .sec-item-top input {
-      flex: 1;
-      background: none;
-      border: none;
-      border-bottom: 1px solid var(--amber-dim);
-      color: var(--amber);
-      font-family: var(--font-head);
-      font-size: 0.75rem;
-      padding: 3px 2px;
-    }
-    .sec-item-top input:focus { outline: none; }
-    .sec-item-top input::placeholder { color: var(--text-faint); }
-
-    /* ── Image rows ── */
-    .img-item {
-      background: rgba(0,0,0,0.18);
-      border: 1px solid rgba(255,176,0,0.10);
-      padding: 7px 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    .img-item-row { display: flex; gap: 5px; align-items: center; }
-    .img-item-row input {
-      flex: 1;
-      background: var(--bg);
-      border: var(--border);
-      color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 0.73rem;
-      padding: 4px 7px;
-      min-width: 0;
-    }
-    .img-item-row input:focus { outline: none; border-color: var(--amber-dim); }
-    .img-align-row { display: flex; gap: 5px; }
-    .align-btn {
-      flex: 1;
-      background: none;
-      border: var(--border);
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      padding: 4px 0;
-      cursor: pointer;
-      transition: all 0.12s;
-    }
-    .align-btn.on { color: var(--amber); border-color: var(--amber-dim); background: var(--amber-faint); }
-    .btn-upload {
-      background: none;
-      border: var(--border);
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      padding: 4px 8px;
-      cursor: pointer;
-      white-space: nowrap;
-      flex-shrink: 0;
-      transition: color 0.12s, border-color 0.12s;
-    }
-    .btn-upload:hover:not(:disabled) { color: var(--amber); border-color: var(--amber-dim); }
-    .btn-upload:disabled { opacity: 0.4; cursor: not-allowed; }
-    .img-status { font-size: 0.67rem; color: var(--text-muted); min-height: 14px; }
-    .img-status.ok  { color: var(--amber); }
-    .img-status.err { color: #ff5555; }
-
-    /* ── Infobox / see-also rows ── */
-    .kv-row, .sa-row { display: flex; gap: 6px; align-items: center; }
-    .kv-row input, .sa-row input {
-      flex: 1;
-      background: var(--bg);
-      border: var(--border);
-      color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      padding: 5px 8px;
-      min-width: 0;
-    }
-    .kv-row input:focus, .sa-row input:focus { outline: none; border-color: var(--amber-dim); }
-
-    /* ── Style toggles ── */
-    .style-btn-row { display: flex; gap: 5px; }
-    .style-btn {
-      flex: 1;
-      background: none;
-      border: var(--border);
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      padding: 5px 0;
-      cursor: pointer;
-      transition: all 0.12s;
-    }
-    .style-btn.on { color: var(--amber); border-color: var(--amber-dim); background: var(--amber-faint); }
-
-    /* ── Misc buttons ── */
-    .btn-remove {
-      background: none; border: none;
-      color: var(--text-muted); cursor: pointer;
-      font-size: 0.82rem; padding: 0 3px; line-height: 1;
-      transition: color 0.15s; flex-shrink: 0;
-    }
-    .btn-remove:hover { color: #ff5555; }
-    .btn-add {
-      align-self: flex-start;
-      background: none; border: var(--border);
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      padding: 4px 11px;
-      cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
-    }
-    .btn-add:hover { color: var(--amber); border-color: var(--amber-dim); }
-
-    /* ── Parent presets ── */
-    .parent-presets { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
-    .preset-btn {
-      background: none;
-      border: var(--border);
-      color: var(--text-faint);
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      padding: 3px 8px;
-      cursor: pointer;
-      transition: color 0.12s, border-color 0.12s;
-      white-space: nowrap;
-    }
-    .preset-btn:hover { color: var(--amber); border-color: var(--amber-dim); }
-    .preset-btn.on    { color: var(--amber); border-color: var(--amber-dim); background: var(--amber-faint); }
-
-    /* ── Categories ── */
-    .cat-grid { display: flex; flex-wrap: wrap; gap: 6px; }
-    .cat-btn {
-      background: none; border: var(--border);
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      padding: 4px 10px;
-      cursor: pointer;
-      transition: all 0.12s;
-    }
-    .cat-btn.on { color: var(--amber); border-color: var(--amber-dim); background: var(--amber-faint); }
-
-    /* ── Footer ── */
-    .editor-footer {
-      padding: 11px 18px;
-      border-top: var(--border);
-      display: flex; align-items: center; gap: 12px;
-      flex-shrink: 0;
-      background: var(--bg-panel);
-    }
-    .btn-publish {
-      background: none; border: var(--border);
-      color: var(--amber);
-      font-family: var(--font-head);
-      font-size: 0.78rem;
-      letter-spacing: 0.1em;
-      padding: 8px 20px;
-      cursor: pointer;
-      transition: box-shadow 0.15s, background 0.15s;
-    }
-    .btn-publish:hover:not(:disabled) { box-shadow: var(--glow-sm); background: var(--amber-faint); }
-    .btn-publish:disabled { opacity: 0.35; cursor: not-allowed; }
-    .pub-status { font-size: 0.72rem; color: var(--text-muted); flex: 1; }
-    .pub-status.ok  { color: var(--amber); }
-    .pub-status.err { color: #ff5555; }
-
-    /* ── Preview ── */
-    .preview-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .preview-header {
-      padding: 11px 18px; border-bottom: var(--border);
-      font-family: var(--font-head);
-      font-size: 0.65rem; letter-spacing: 0.12em;
-      color: var(--text-muted);
-      display: flex; align-items: center; justify-content: space-between;
-      flex-shrink: 0;
-    }
-    .preview-url { font-family: var(--font-mono); font-size: 0.61rem; color: var(--text-faint); }
-    .preview-frame { flex: 1; border: none; background: var(--bg); width: 100%; }
-  </style>
+  <link rel="stylesheet" href="/components/themes/theme.css?v=13" />
 </head>
 <body>
-  <script src="/components/site-config.js?v=12"></script>
-  <script src="/components/wiki-utils.js?v=12"></script>
-  <script src="/components/navbar/inject-navbar.js?v=12" defer></script>
+  <script src="/components/site-config.js?v=13"></script>
+  <script src="/components/wiki-utils.js?v=13"></script>
+  <script src="/components/navbar/inject-navbar.js?v=13" defer></script>
 
-  <div class="editor-layout">
+  <!-- Floating format toolbar -->
+  <div class="fmt-toolbar" id="fmt-toolbar">
+    <button data-cmd="bold"><strong>B</strong></button>
+    <button data-cmd="italic"><em>I</em></button>
+    <button data-cmd="underline"><u>U</u></button>
+    <div class="fmt-sep"></div>
+    <button data-cmd="link" id="fmt-link-btn">⛓</button>
+    <button data-cmd="unlink" title="Remove link">✕</button>
+    <div class="fmt-link-row" id="fmt-link-row">
+      <input type="url" id="fmt-link-input" placeholder="https://…" />
+      <button id="fmt-link-ok">↵</button>
+      <button id="fmt-link-cancel">✕</button>
+    </div>
+  </div>
 
-    <!-- ── Left: form ── -->
-    <div class="editor-panel">
-      <div class="editor-header">
-        <span id="hdr-title">WIKI EDITOR</span>
-        <span class="editor-header-slug" id="hdr-slug"></span>
+  <div class="editor-root">
+
+    <!-- ── Left: sidebar ── -->
+    <div class="editor-sidebar">
+      <div class="editor-sidebar-header">
+        <span id="hdr-title">EDITOR</span>
+        <span class="editor-sidebar-slug" id="hdr-slug"></span>
       </div>
-
-      <div class="editor-body">
+      <div class="editor-sidebar-body">
 
         <div class="f-group">
-          <div class="f-label">PARENT PATH <small>(repo-relative, no leading slash)</small></div>
-          <input class="f-input" id="f-parent" type="text" value="wikipedia" autocomplete="off" spellcheck="false" />
+          <div class="f-label">PARENT PATH <small style="font-family:var(--font-mono);font-size:0.60rem;letter-spacing:0;color:var(--text-faint);">(repo-relative)</small></div>
+          <input class="f-input" id="f-parent" type="text" autocomplete="off" spellcheck="false" />
           <div class="parent-presets" id="parent-presets"></div>
         </div>
 
         <div class="f-group">
-          <div class="f-label">TITLE</div>
-          <input class="f-input" id="f-title" type="text" placeholder="Article title…" autocomplete="off" />
-        </div>
-
-        <div class="f-group">
-          <div class="f-label">SLUG <small>(spaces become dashes automatically)</small></div>
-          <input class="f-input" id="f-slug" type="text" placeholder="article-slug" autocomplete="off" />
-        </div>
-
-        <div class="f-group">
-          <div class="f-label">LEAD PARAGRAPH</div>
-          <textarea class="f-textarea" id="f-lead" placeholder="Opening summary…" style="min-height:78px;"></textarea>
-        </div>
-
-        <div class="f-group">
-          <div class="f-label collapsible-head" id="ib-head">
-            <span class="collapsible-caret">▶</span> INFOBOX
-          </div>
-          <div class="collapsible-body" id="ib-body">
-            <div id="ib-rows"></div>
-            <button class="btn-add" id="ib-add">+ ADD ROW</button>
-          </div>
-        </div>
-
-        <div class="f-group">
-          <div class="f-label">SECTIONS</div>
-          <div id="sec-list" style="display:flex;flex-direction:column;gap:8px;"></div>
-          <button class="btn-add" id="sec-add">+ ADD SECTION</button>
-        </div>
-
-        <div class="f-group">
-          <div class="f-label collapsible-head" id="sa-head">
-            <span class="collapsible-caret">▶</span> SEE ALSO
-          </div>
-          <div class="collapsible-body" id="sa-body">
-            <div id="sa-rows"></div>
-            <button class="btn-add" id="sa-add">+ ADD LINK</button>
-          </div>
+          <div class="f-label">SLUG <small style="font-family:var(--font-mono);font-size:0.60rem;letter-spacing:0;color:var(--text-faint);">(auto from title)</small></div>
+          <input class="f-input" id="f-slug" type="text" placeholder="article-slug" autocomplete="off" spellcheck="false" />
         </div>
 
         <div class="f-group">
@@ -352,18 +54,44 @@
         </div>
 
         <div class="f-group">
-          <div class="f-label collapsible-head" id="ps-head">
-            <span class="collapsible-caret">▶</span> PAGE STYLE
+          <div class="f-label">SECTIONS</div>
+          <div id="sec-sidebar-list" style="display:flex;flex-direction:column;gap:5px;"></div>
+          <button class="btn-add" id="sec-add" style="margin-top:4px;">+ ADD SECTION</button>
+        </div>
+
+        <div class="f-group">
+          <div class="f-label collapsible-head" id="ib-head" style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
+            <span class="collapsible-caret" style="font-size:0.6rem;transition:transform 0.15s;display:inline-block;">▶</span> INFOBOX
           </div>
-          <div class="collapsible-body" id="ps-body">
+          <div class="collapsible-body" id="ib-body" style="display:none;flex-direction:column;gap:7px;margin-top:6px;">
+            <div id="ib-rows"></div>
+            <button class="btn-add" id="ib-add">+ ADD ROW</button>
+          </div>
+        </div>
+
+        <div class="f-group">
+          <div class="f-label collapsible-head" id="sa-head" style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
+            <span class="collapsible-caret" style="font-size:0.6rem;transition:transform 0.15s;display:inline-block;">▶</span> SEE ALSO
+          </div>
+          <div class="collapsible-body" id="sa-body" style="display:none;flex-direction:column;gap:7px;margin-top:6px;">
+            <div id="sa-rows"></div>
+            <button class="btn-add" id="sa-add">+ ADD LINK</button>
+          </div>
+        </div>
+
+        <div class="f-group">
+          <div class="f-label collapsible-head" id="ps-head" style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
+            <span class="collapsible-caret" style="font-size:0.6rem;transition:transform 0.15s;display:inline-block;">▶</span> PAGE STYLE
+          </div>
+          <div class="collapsible-body" id="ps-body" style="display:none;flex-direction:column;gap:7px;margin-top:6px;">
             <div class="f-label">BODY TEXT SIZE</div>
-            <div class="style-btn-row">
+            <div class="style-btn-row" style="display:flex;gap:5px;">
               <button class="style-btn" id="bs-sm">SMALL</button>
               <button class="style-btn on" id="bs-md">MEDIUM</button>
               <button class="style-btn" id="bs-lg">LARGE</button>
             </div>
-            <div class="f-label" style="margin-top:6px;">HEADING SIZE</div>
-            <div class="style-btn-row">
+            <div class="f-label" style="margin-top:6px;">HEADING SCALE</div>
+            <div class="style-btn-row" style="display:flex;gap:5px;">
               <button class="style-btn" id="hs-sm">COMPACT</button>
               <button class="style-btn on" id="hs-md">NORMAL</button>
               <button class="style-btn" id="hs-lg">LARGE</button>
@@ -372,52 +100,101 @@
         </div>
 
       </div>
-
-      <div class="editor-footer">
+      <div class="editor-sidebar-footer">
         <button class="btn-publish" id="btn-pub">PUBLISH</button>
-        <button class="btn-danger" id="btn-del">DELETE PAGE</button>
+        <button class="btn-danger" id="btn-del">DELETE</button>
         <span class="pub-status" id="pub-status"></span>
       </div>
     </div>
 
-    <!-- ── Right: preview ── -->
-    <div class="preview-panel">
-      <div class="preview-header">
-        <span>LIVE PREVIEW</span>
-        <span class="preview-url" id="prev-url"></span>
+    <!-- ── Right: canvas ── -->
+    <div class="editor-canvas" id="editor-canvas">
+      <div class="wiki-article" id="article-canvas">
+        <div class="wiki-breadcrumb" id="bc-display"><a href="/">HOME</a></div>
+        <h1 id="ed-title" contenteditable="true" class="ed-field"
+            spellcheck="false" data-placeholder="Article title…"></h1>
+        <div id="ed-infobox-render"></div>
+        <div id="ed-toc-render"></div>
+        <div id="ed-lead" contenteditable="true" class="ed-field ed-body"
+             data-placeholder="Opening summary…"></div>
+        <div id="ed-sections"></div>
+        <div id="ed-seealso-render"></div>
+        <div id="ed-meta-render" class="wiki-meta" style="margin-top:28px;"></div>
       </div>
-      <iframe class="preview-frame" id="prev-frame" sandbox="allow-same-origin allow-scripts"></iframe>
     </div>
 
   </div>
 
   <script>
-    // ── Shared config (from site-config.js?v=12 + wiki-utils.js) ──────────────────
+    // ── Bootstrap ─────────────────────────────────────────────────────────────
     const REPO    = SITE.REPO;
     const session = SITE.getSession();
     if (!session) location.href = '/login/?returnTo=' + encodeURIComponent(location.pathname + location.search);
     const { slugify, esc, toB64 } = WIKI;
 
-    const CATS = ['Anomalies','Biology','Elements','Magic','Sapient','Species','Technology','Unique Characters','Unique Systems'];
-
-    // ── Wiki context from URL params ─────────────────────────────────────────
     const _params   = new URLSearchParams(location.search);
     const _editPath = _params.get('edit') || '';
     const wikiSlug  = _params.get('wiki') ||
                       (_editPath ? _editPath.split('/').filter(Boolean)[1] : 'evolutionary');
-    document.getElementById('hdr-title').textContent = `${wikiSlug.toUpperCase()} EDITOR`;
 
-    const $   = id => document.getElementById(id);
-    let uid   = 0;
+    document.getElementById('hdr-title').textContent = wikiSlug.toUpperCase() + ' EDITOR';
+
+    const $ = id => document.getElementById(id);
+    let uid = 0;
     const nid = () => ++uid;
 
-    let sections = [], ibRows = [], saRows = [], activeCats = new Set();
-    let bodySize = 'md', headScale = 'md', slugLocked = false;
+    const CATS = ['Anomalies','Biology','Elements','Magic','Sapient','Species',
+                  'Technology','Unique Characters','Unique Systems'];
 
-    // ── Parent presets (built from wiki's pages.json) ─────────────────────────
-    const wikiRoot = `wikipedia/${wikiSlug}`;
+    const bodySzMap  = { sm:'0.82rem', md:'0.88rem', lg:'0.96rem' };
+    const headSzMap  = { sm:'0.82',    md:'1',        lg:'1.18'   };
+
+    let ibRows = [], saRows = [], activeCats = new Set();
+    let bodySize = 'md', headScale = 'md';
+    let slugLocked = false;
+
+    const wikiRoot = 'wikipedia/' + wikiSlug;
     $('f-parent').value = wikiRoot;
 
+    // ── Utilities ─────────────────────────────────────────────────────────────
+    function getParent()   { return $('f-parent').value.trim().replace(/\/+$/, ''); }
+    function getSlug()     { return $('f-slug').value.trim() || slugify($('ed-title').textContent.trim()); }
+    function getFullPath() { const p = getParent(), s = getSlug(); return p && s ? p + '/' + s : ''; }
+
+    function textToHtml(text) {
+      if (!text) return '';
+      return text.split(/\n\n+/).filter(Boolean).map(p => '<p>' + p.trim() + '</p>').join('\n');
+    }
+
+    function cleanForSave(html) {
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      div.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+      div.querySelectorAll('.ed-caption').forEach(el => el.classList.remove('ed-caption'));
+      return div.innerHTML;
+    }
+
+    // ── Slug / breadcrumb sync ─────────────────────────────────────────────────
+    function syncSlugDisplay() {
+      const fp = getFullPath();
+      $('hdr-slug').textContent = fp ? '/' + fp + '/' : '';
+      syncBreadcrumb();
+    }
+
+    function syncBreadcrumb() {
+      const title = $('ed-title').textContent.trim() || 'Untitled';
+      const parts = getParent().split('/').filter(Boolean);
+      let html = '<a href="/">HOME</a>';
+      let path = '';
+      parts.forEach(p => {
+        path += '/' + p;
+        html += ' <span class="sep">//</span> <a href="' + path + '/">' + p.toUpperCase() + '</a>';
+      });
+      html += ' <span class="sep">//</span> ' + esc(title).toUpperCase();
+      $('bc-display').innerHTML = html;
+    }
+
+    // ── Parent presets ─────────────────────────────────────────────────────────
     function syncPresetHighlight() {
       const val = $('f-parent').value.trim();
       document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('on', b.dataset.path === val));
@@ -432,295 +209,532 @@
       b.title        = path;
       b.addEventListener('click', () => {
         $('f-parent').value = path;
-        syncPresetHighlight(); syncSlugDisplay(); dp();
+        syncPresetHighlight();
+        syncSlugDisplay();
       });
       $('parent-presets').appendChild(b);
     }
 
-    buildPresetBtn(wikiRoot); // root preset always shown
-    // Fetch wiki's pages.json to build category presets
-    fetch(`/wikipedia/${wikiSlug}/pages.json`)
+    buildPresetBtn(wikiRoot);
+    fetch('/wikipedia/' + wikiSlug + '/pages.json')
       .then(r => r.json())
       .then(data => {
-        // Derive unique directory names from page file paths
         const dirs = [...new Set(data.flatMap(g => g.pages.map(p => p.file.split('/')[0])))];
-        dirs.forEach(d => buildPresetBtn(`${wikiRoot}/${d}`));
+        dirs.forEach(d => buildPresetBtn(wikiRoot + '/' + d));
         syncPresetHighlight();
       })
-      .catch(() => {}); // silently skip if no pages.json yet
+      .catch(() => {});
 
-    // ── Parent / title / slug ─────────────────────────────────────────────────
+    // ── Sidebar field listeners ────────────────────────────────────────────────
     $('f-parent').addEventListener('input', () => {
-      // Strip leading slash as the user types
       const v = $('f-parent').value;
       if (v.startsWith('/')) $('f-parent').value = v.replace(/^\/+/, '');
-      syncPresetHighlight(); syncSlugDisplay(); dp();
+      syncPresetHighlight();
+      syncSlugDisplay();
     });
-    $('f-title').addEventListener('input', () => {
-      if (!slugLocked) $('f-slug').value = slugify($('f-title').value);
-      syncSlugDisplay(); dp();
-    });
+
     $('f-slug').addEventListener('input', () => {
-      const raw = $('f-slug').value, clean = raw.replace(/ /g,'-');
+      const raw   = $('f-slug').value;
+      const clean = raw.replace(/ /g, '-');
       if (clean !== raw) $('f-slug').value = clean;
       slugLocked = !!$('f-slug').value;
-      syncSlugDisplay(); dp();
+      syncSlugDisplay();
     });
-    $('f-lead').addEventListener('input', dp);
 
-    function getParent()   { return $('f-parent').value.trim().replace(/\/+$/, ''); }
-    function getSlug()     { return $('f-slug').value || slugify($('f-title').value); }
-    function getFullPath() { return getParent() + '/' + getSlug(); }
-
-    function syncSlugDisplay() {
-      const fp = getFullPath();
-      $('hdr-slug').textContent = fp ? '/'+fp+'/' : '';
-      $('prev-url').textContent = fp ? 'itschu.gg/'+fp+'/' : '';
-    }
-
-    function buildBreadcrumb(title) {
-      const parts = getParent().split('/').filter(Boolean);
-      let html = '<a href="/">HOME</a>';
-      let path = '';
-      parts.forEach(p => {
-        path += '/'+p;
-        html += `\n          <span class="sep">//</span>\n          <a href="${path}/">${p.toUpperCase()}</a>`;
-      });
-      html += `\n          <span class="sep">//</span>\n          ${esc(title).toUpperCase()}`;
-      return html;
-    }
-
-    // ── Categories ───────────────────────────────────────────────────────────
+    // ── Categories ─────────────────────────────────────────────────────────────
     CATS.forEach(c => {
       const b = document.createElement('button');
-      b.className = 'cat-btn'; b.textContent = c;
+      b.className   = 'cat-btn';
+      b.textContent = c;
       b.addEventListener('click', () => {
         activeCats.has(c) ? (activeCats.delete(c), b.classList.remove('on'))
                           : (activeCats.add(c),    b.classList.add('on'));
-        dp();
+        renderCatsPreview();
       });
       $('cat-grid').appendChild(b);
     });
 
-    // ── Collapsibles ─────────────────────────────────────────────────────────
+    // ── Collapsibles ───────────────────────────────────────────────────────────
     ['ib','sa','ps'].forEach(id => {
-      $(id+'-head').addEventListener('click', () => {
-        $(id+'-head').classList.toggle('open');
-        $(id+'-body').classList.toggle('open');
+      const head = $(id + '-head');
+      const body = $(id + '-body');
+      const caret = head.querySelector('.collapsible-caret');
+      let open = false;
+      head.addEventListener('click', () => {
+        open = !open;
+        body.style.display = open ? 'flex' : 'none';
+        if (caret) caret.style.transform = open ? 'rotate(90deg)' : '';
       });
     });
 
-    // ── Page style ────────────────────────────────────────────────────────────
+    // ── Page style ─────────────────────────────────────────────────────────────
     ['sm','md','lg'].forEach(v => {
-      $('bs-'+v).addEventListener('click', () => {
+      $('bs-' + v).addEventListener('click', () => {
         bodySize = v;
-        ['sm','md','lg'].forEach(x => $('bs-'+x).classList.toggle('on', x===v));
-        dp();
+        ['sm','md','lg'].forEach(x => $('bs-' + x).classList.toggle('on', x === v));
       });
-      $('hs-'+v).addEventListener('click', () => {
+      $('hs-' + v).addEventListener('click', () => {
         headScale = v;
-        ['sm','md','lg'].forEach(x => $('hs-'+x).classList.toggle('on', x===v));
-        dp();
+        ['sm','md','lg'].forEach(x => $('hs-' + x).classList.toggle('on', x === v));
       });
     });
 
-    // ── Infobox ──────────────────────────────────────────────────────────────
-    $('ib-add').addEventListener('click', () => { ibRows.push({id:nid(),k:'',v:''}); renderIB(); dp(); });
+    // ── Infobox sidebar ────────────────────────────────────────────────────────
+    $('ib-add').addEventListener('click', () => { ibRows.push({id:nid(),k:'',v:''}); renderIB(); });
+
     function renderIB() {
       const el = $('ib-rows'); el.innerHTML = '';
       ibRows.forEach(r => {
-        const d = document.createElement('div'); d.className = 'kv-row';
-        d.innerHTML = `<input placeholder="Property" value="${esc(r.k)}" data-id="${r.id}" data-f="k"/>
-                       <input placeholder="Value"    value="${esc(r.v)}" data-id="${r.id}" data-f="v"/>
-                       <button class="btn-remove" data-id="${r.id}">✕</button>`;
+        const d = document.createElement('div');
+        d.className = 'kv-row';
+        d.style.cssText = 'display:flex;gap:6px;align-items:center;';
+        d.innerHTML = `
+          <input placeholder="Property" value="${esc(r.k)}" data-id="${r.id}" data-f="k"
+                 style="flex:1;background:var(--bg);border:var(--border);color:var(--text);
+                        font-family:var(--font-mono);font-size:0.75rem;padding:5px 8px;min-width:0;" />
+          <input placeholder="Value" value="${esc(r.v)}" data-id="${r.id}" data-f="v"
+                 style="flex:1;background:var(--bg);border:var(--border);color:var(--text);
+                        font-family:var(--font-mono);font-size:0.75rem;padding:5px 8px;min-width:0;" />
+          <button class="btn-remove" data-id="${r.id}"
+                  style="background:none;border:none;color:var(--text-muted);cursor:pointer;
+                         font-size:0.82rem;padding:0 3px;flex-shrink:0;">✕</button>`;
         el.appendChild(d);
         d.querySelectorAll('input').forEach(i => i.addEventListener('input', e => {
-          const row = ibRows.find(x => x.id===+e.target.dataset.id);
-          if (row) row[e.target.dataset.f] = e.target.value; dp();
+          const row = ibRows.find(x => x.id === +e.target.dataset.id);
+          if (row) row[e.target.dataset.f] = e.target.value;
+          renderInfoboxPreview();
         }));
         d.querySelector('.btn-remove').addEventListener('click', e => {
-          ibRows = ibRows.filter(x => x.id!==+e.target.dataset.id); renderIB(); dp();
+          ibRows = ibRows.filter(x => x.id !== +e.target.dataset.id);
+          renderIB(); renderInfoboxPreview();
         });
       });
+      renderInfoboxPreview();
     }
 
-    // ── Sections ─────────────────────────────────────────────────────────────
+    // ── See Also sidebar ───────────────────────────────────────────────────────
+    $('sa-add').addEventListener('click', () => { saRows.push({id:nid(),url:'',label:'',desc:''}); renderSA(); });
+
+    function renderSA() {
+      const el = $('sa-rows'); el.innerHTML = '';
+      saRows.forEach(r => {
+        const d = document.createElement('div');
+        d.style.cssText = 'display:flex;gap:5px;align-items:center;flex-wrap:wrap;';
+        const inp = (ph, val, f, w) =>
+          `<input placeholder="${ph}" value="${esc(val)}" data-id="${r.id}" data-f="${f}"
+                  style="flex:${w};min-width:0;background:var(--bg);border:var(--border);
+                         color:var(--text);font-family:var(--font-mono);font-size:0.73rem;padding:4px 7px;" />`;
+        d.innerHTML = inp('/url/', r.url, 'url', '0 0 80px') +
+                      inp('Label', r.label, 'label', '1') +
+                      inp('Description', r.desc, 'desc', '2') +
+                      `<button class="btn-remove" data-id="${r.id}"
+                               style="background:none;border:none;color:var(--text-muted);cursor:pointer;
+                                      font-size:0.82rem;padding:0 3px;flex-shrink:0;">✕</button>`;
+        el.appendChild(d);
+        d.querySelectorAll('input').forEach(i => i.addEventListener('input', e => {
+          const row = saRows.find(x => x.id === +e.target.dataset.id);
+          if (row) row[e.target.dataset.f] = e.target.value;
+          renderSeeAlsoPreview();
+        }));
+        d.querySelector('.btn-remove').addEventListener('click', e => {
+          saRows = saRows.filter(x => x.id !== +e.target.dataset.id);
+          renderSA(); renderSeeAlsoPreview();
+        });
+      });
+      renderSeeAlsoPreview();
+    }
+
+    // ── Section management ─────────────────────────────────────────────────────
     $('sec-add').addEventListener('click', () => {
-      sections.push({id:nid(),h:'',c:'',imgs:[]}); renderSec(); dp();
+      const sec = addSection('', '<p></p>');
+      sec.querySelector('h2').focus();
     });
 
-    function renderSec() {
-      const el = $('sec-list'); el.innerHTML = '';
-      sections.forEach(s => {
-        const d = document.createElement('div'); d.className = 'sec-item';
-        d.innerHTML = `
-          <div class="sec-item-top">
-            <input type="text" placeholder="Section heading…" value="${esc(s.h)}" data-id="${s.id}" data-f="h"/>
-            <button class="btn-remove" data-id="${s.id}" data-t="sec">✕</button>
-          </div>
-          <textarea class="f-textarea" placeholder="Body text. Blank line = new paragraph." data-id="${s.id}" data-f="c" style="min-height:62px;">${esc(s.c)}</textarea>
-          <div id="simgs-${s.id}" style="display:flex;flex-direction:column;gap:5px;"></div>
-          <button class="btn-add" data-sid="${s.id}" data-t="addimg">+ ADD IMAGE</button>`;
-        el.appendChild(d);
+    function addSection(heading, html) {
+      const sectionsEl = $('ed-sections');
+      const div = document.createElement('div');
+      div.className = 'ed-section';
+      div.innerHTML =
+        '<hr class="wiki-rule">' +
+        '<section>' +
+          '<h2 class="ed-field ed-heading" contenteditable="true" spellcheck="false">' +
+            (heading || '') +
+          '</h2>' +
+          '<div class="ed-field ed-body" contenteditable="true" data-placeholder="Section body…">' +
+            (html || '<p></p>') +
+          '</div>' +
+        '</section>';
 
-        d.querySelectorAll('[data-f]').forEach(i => i.addEventListener('input', e => {
-          const sec = sections.find(x => x.id===+e.target.dataset.id);
-          if (sec) sec[e.target.dataset.f] = e.target.value; dp();
-        }));
-        d.querySelector('[data-t="sec"]').addEventListener('click', e => {
-          sections = sections.filter(x => x.id!==+e.target.dataset.id); renderSec(); dp();
+      const h2   = div.querySelector('h2');
+      const body = div.querySelector('.ed-body');
+
+      // Heading: update sidebar list + TOC on every keystroke
+      h2.addEventListener('input', () => { renderSectionList(); renderTocPreview(); });
+      // Heading: Enter jumps to body
+      h2.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          body.focus();
+          placeCaretAt(body, true);
+        }
+      });
+      h2.addEventListener('paste', onPastePlainText);
+
+      body.addEventListener('paste', onPasteSanitized);
+      wireDropTarget(body);
+
+      // Wire any figures that were injected via HTML (backward compat / load)
+      body.querySelectorAll('figure').forEach(fig => {
+        fig.contentEditable = 'false';
+        wireFigureClick(fig);
+      });
+
+      sectionsEl.appendChild(div);
+      renderSectionList();
+      renderTocPreview();
+      return div;
+    }
+
+    function renderSectionList() {
+      const listEl = $('sec-sidebar-list');
+      listEl.innerHTML = '';
+      const secs = [...document.querySelectorAll('.ed-section')];
+      secs.forEach((sec, i) => {
+        const heading = sec.querySelector('h2')?.textContent.trim() || '(untitled)';
+        const item = document.createElement('div');
+        item.className = 'sec-list-item';
+        item.innerHTML =
+          '<span class="sec-list-name" title="' + esc(heading) + '">' + esc(heading) + '</span>' +
+          '<button class="sec-list-btn" data-a="up" title="Move up">↑</button>' +
+          '<button class="sec-list-btn" data-a="dn" title="Move down">↓</button>' +
+          '<button class="sec-list-btn del" data-a="rm" title="Remove">✕</button>';
+
+        item.querySelector('[data-a="up"]').addEventListener('click', () => {
+          if (sec.previousElementSibling) { sec.parentNode.insertBefore(sec, sec.previousElementSibling); renderSectionList(); renderTocPreview(); }
         });
-        d.querySelector('[data-t="addimg"]').addEventListener('click', e => {
-          const sec = sections.find(x => x.id===+e.target.dataset.sid);
-          if (sec) { sec.imgs.push({id:nid(),src:'',alt:'',align:'right',previewSrc:''}); renderSec(); dp(); }
+        item.querySelector('[data-a="dn"]').addEventListener('click', () => {
+          if (sec.nextElementSibling) { sec.parentNode.insertBefore(sec.nextElementSibling, sec); renderSectionList(); renderTocPreview(); }
         });
-        renderSecImgs(s);
+        item.querySelector('[data-a="rm"]').addEventListener('click', () => {
+          if (!confirm('Remove section "' + heading + '"?')) return;
+          sec.remove(); renderSectionList(); renderTocPreview();
+        });
+        item.querySelector('.sec-list-name').addEventListener('click', () => {
+          sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+        listEl.appendChild(item);
       });
     }
 
-    function renderSecImgs(s) {
-      const container = $('simgs-'+s.id);
-      if (!container) return;
-      container.innerHTML = '';
-      s.imgs.forEach(img => {
-        const d = document.createElement('div'); d.className = 'img-item';
-        d.innerHTML = `
-          <div class="img-item-row">
-            <input placeholder="URL or /assets/wiki/filename.png" value="${esc(img.src)}" data-imgid="${img.id}" data-f="src"/>
-            <button class="btn-upload" data-imgid="${img.id}" data-sid="${s.id}">↑ UPLOAD</button>
-            <input type="file" accept="image/*" style="display:none;" class="file-inp" data-imgid="${img.id}" data-sid="${s.id}"/>
-            <button class="btn-remove" data-imgid="${img.id}" data-sid="${s.id}" data-t="rmimg">✕</button>
-          </div>
-          <div class="img-item-row">
-            <input placeholder="Caption / alt text" value="${esc(img.alt)}" data-imgid="${img.id}" data-f="alt"/>
-          </div>
-          <div class="img-align-row">
-            <button class="align-btn ${img.align==='left'?'on':''}" data-imgid="${img.id}" data-a="left">◄ LEFT</button>
-            <button class="align-btn ${img.align==='right'?'on':''}" data-imgid="${img.id}" data-a="right">RIGHT ►</button>
-          </div>
-          <div class="img-status" id="imgst-${img.id}"></div>`;
-        container.appendChild(d);
+    // ── Canvas: read-only preview renders ──────────────────────────────────────
+    function renderInfoboxPreview() {
+      const el = $('ed-infobox-render');
+      const valid = ibRows.filter(r => r.k);
+      if (!valid.length) { el.innerHTML = ''; return; }
+      const title = $('ed-title').textContent.trim() || 'Infobox';
+      el.innerHTML =
+        '<div class="infobox">' +
+          '<div class="infobox-title">' + esc(title) + '</div>' +
+          '<table>' +
+            valid.map(r => '<tr><td>' + esc(r.k) + '</td><td>' + esc(r.v) + '</td></tr>').join('') +
+          '</table>' +
+        '</div>';
+    }
 
-        d.querySelectorAll('input[data-f]').forEach(i => i.addEventListener('input', e => {
-          const row = s.imgs.find(x => x.id===+e.target.dataset.imgid);
-          if (row) row[e.target.dataset.f] = e.target.value; dp();
-        }));
-        d.querySelectorAll('.align-btn').forEach(b => b.addEventListener('click', e => {
-          const row = s.imgs.find(x => x.id===+e.target.dataset.imgid);
-          if (row) { row.align = e.target.dataset.a; renderSecImgs(s); dp(); }
-        }));
-        d.querySelector('[data-t="rmimg"]').addEventListener('click', e => {
-          const sec = sections.find(x => x.id===+e.target.dataset.sid);
-          if (sec) { sec.imgs = sec.imgs.filter(x => x.id!==+e.target.dataset.imgid); renderSecImgs(sec); dp(); }
-        });
+    function renderTocPreview() {
+      const el = $('ed-toc-render');
+      const hs = [...document.querySelectorAll('.ed-section h2')]
+                   .map(h => h.textContent.trim()).filter(Boolean);
+      if (hs.length <= 1) { el.innerHTML = ''; return; }
+      el.innerHTML =
+        '<div class="wiki-toc">' +
+          '<div class="wiki-toc-title">Contents</div>' +
+          '<ol>' + hs.map(h => '<li><a href="#' + slugify(h) + '">' + esc(h) + '</a></li>').join('') + '</ol>' +
+        '</div>';
+    }
 
-        // Upload flow
-        const uploadBtn = d.querySelector('.btn-upload');
-        const fileInp   = d.querySelector('.file-inp');
-        uploadBtn.addEventListener('click', () => fileInp.click());
-        fileInp.addEventListener('change', async () => {
-          const file = fileInp.files[0];
-          if (!file) return;
-          const imgId    = +fileInp.dataset.imgid;
-          const statusEl = $('imgst-'+imgId);
-          const row      = s.imgs.find(x => x.id===imgId);
+    function renderSeeAlsoPreview() {
+      const el = $('ed-seealso-render');
+      const valid = saRows.filter(r => r.label);
+      if (!valid.length) { el.innerHTML = ''; return; }
+      el.innerHTML =
+        '<div class="wiki-seealso">' +
+          '<div class="wiki-seealso-title">See Also</div>' +
+          '<ul>' +
+            valid.map(r => '<li><a href="' + esc(r.url || '#') + '">' + esc(r.label) + '</a>' +
+              (r.desc ? ' — ' + esc(r.desc) : '') + '</li>').join('') +
+          '</ul>' +
+        '</div>';
+    }
 
-          // Show image in preview immediately via object URL
-          if (row) {
-            if (row.previewSrc) URL.revokeObjectURL(row.previewSrc);
-            row.previewSrc = URL.createObjectURL(file);
-            dp();
-          }
+    function renderCatsPreview() {
+      const el = $('ed-meta-render');
+      const cats = [...activeCats];
+      el.innerHTML = cats.length
+        ? '<div class="wiki-meta-categories"><span class="wiki-meta-label">Categories</span>' +
+            cats.map(c => '<a class="wiki-cat-tag" href="#">' + c + '</a>').join('') +
+          '</div>'
+        : '';
+    }
 
-          uploadBtn.disabled = true;
-          statusEl.className = 'img-status';
-          statusEl.textContent = 'Uploading…';
-          try {
-            const url = await uploadImage(file);
-            if (row) {
-              // Keep previewSrc (blob URL) alive so the preview stays visible
-              // while the real GitHub URL is still deploying (~60s).
-              // row.previewSrc intentionally NOT revoked here.
-              row.src = url;
-              renderSecImgs(s);
-              dp();
-            }
-            const st = $('imgst-'+imgId);
-            if (st) { st.className='img-status ok'; st.textContent='Uploaded → '+url+' (live in ~60s)'; }
-          } catch(err) {
-            statusEl.className = 'img-status err';
-            statusEl.textContent = 'Upload failed: '+err.message;
-            uploadBtn.disabled = false;
-          }
-          fileInp.value = '';
-        });
+    // ── Title events ───────────────────────────────────────────────────────────
+    $('ed-title').addEventListener('input', () => {
+      if (!slugLocked) $('f-slug').value = slugify($('ed-title').textContent.trim());
+      syncSlugDisplay();
+      renderInfoboxPreview(); // infobox title mirrors article title
+    });
+    $('ed-title').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        $('ed-lead').focus();
+        placeCaretAt($('ed-lead'), true);
+      }
+    });
+    $('ed-title').addEventListener('paste', onPastePlainText);
+    $('ed-lead').addEventListener('paste', onPasteSanitized);
+    wireDropTarget($('ed-lead'));
+
+    // ── Floating toolbar ───────────────────────────────────────────────────────
+    const fmtBar = $('fmt-toolbar');
+    let savedLinkRange = null;
+    let linkModeActive = false;
+
+    // Prevent toolbar clicks from stealing focus (except the link input)
+    fmtBar.addEventListener('mousedown', e => {
+      if (e.target.tagName !== 'INPUT') e.preventDefault();
+    });
+
+    document.addEventListener('selectionchange', () => {
+      if (linkModeActive) return;
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed || !sel.toString().trim()) {
+        fmtBar.style.display = 'none';
+        return;
+      }
+      const range = sel.getRangeAt(0);
+      const node  = range.commonAncestorContainer;
+      const el    = node.nodeType === 3 ? node.parentElement : node;
+      if (!el || !el.closest('.ed-field')) { fmtBar.style.display = 'none'; return; }
+      positionToolbar(range);
+      fmtBar.style.display = 'flex';
+      updateToolbarState();
+    });
+
+    // Hide toolbar on canvas scroll
+    $('editor-canvas').addEventListener('scroll', () => {
+      if (!linkModeActive) fmtBar.style.display = 'none';
+    });
+
+    function positionToolbar(range) {
+      const rect = range.getBoundingClientRect();
+      const tbW  = fmtBar.offsetWidth  || 230;
+      const tbH  = fmtBar.offsetHeight || 34;
+      let left   = rect.left + rect.width / 2 - tbW / 2;
+      left = Math.max(8, Math.min(left, window.innerWidth - tbW - 8));
+      let top    = rect.top - tbH - 8;
+      if (top < 60) top = rect.bottom + 8; // flip below navbar if too close to top
+      fmtBar.style.left = left + 'px';
+      fmtBar.style.top  = top  + 'px';
+    }
+
+    function updateToolbarState() {
+      ['bold','italic','underline'].forEach(cmd => {
+        const btn = fmtBar.querySelector('[data-cmd="' + cmd + '"]');
+        if (btn) btn.classList.toggle('active', !!document.queryCommandState(cmd));
       });
     }
 
-    // ── Image upload via GitHub API ───────────────────────────────────────────
+    fmtBar.querySelectorAll('[data-cmd]').forEach(btn => {
+      btn.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const cmd = btn.dataset.cmd;
+        if (cmd === 'link') {
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount) savedLinkRange = sel.getRangeAt(0).cloneRange();
+          linkModeActive = true;
+          $('fmt-link-row').classList.add('open');
+          // Pre-fill with existing href if cursor is inside a link
+          const anchor = sel?.getRangeAt(0)?.commonAncestorContainer;
+          const a = anchor?.nodeType === 3
+            ? anchor.parentElement.closest('a')
+            : anchor?.closest?.('a');
+          $('fmt-link-input').value = a ? a.href : '';
+          setTimeout(() => $('fmt-link-input').focus(), 0);
+        } else if (cmd === 'unlink') {
+          document.execCommand('unlink', false, null);
+          fmtBar.style.display = 'none';
+        } else {
+          document.execCommand(cmd, false, null);
+          updateToolbarState();
+        }
+      });
+    });
+
+    $('fmt-link-ok').addEventListener('click', applyLink);
+    $('fmt-link-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') applyLink();
+      if (e.key === 'Escape') closeLinkMode();
+    });
+    $('fmt-link-cancel').addEventListener('click', closeLinkMode);
+
+    function applyLink() {
+      const url = $('fmt-link-input').value.trim();
+      if (url && savedLinkRange) {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedLinkRange);
+        document.execCommand('createLink', false, url);
+      }
+      closeLinkMode();
+    }
+
+    function closeLinkMode() {
+      linkModeActive = false;
+      $('fmt-link-row').classList.remove('open');
+      $('fmt-link-input').value = '';
+      savedLinkRange = null;
+      fmtBar.style.display = 'none';
+    }
+
+    // ── Paste handlers ─────────────────────────────────────────────────────────
+    function onPastePlainText(e) {
+      e.preventDefault();
+      document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
+    }
+
+    function onPasteSanitized(e) {
+      e.preventDefault();
+      const text = e.clipboardData.getData('text/plain');
+      const paras = text.split(/\n\n+/);
+      if (paras.length > 1) {
+        document.execCommand('insertHTML', false,
+          paras.map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join(''));
+      } else {
+        document.execCommand('insertText', false, text);
+      }
+    }
+
+    // ── Image drag-and-drop ────────────────────────────────────────────────────
+    function wireDropTarget(bodyEl) {
+      bodyEl.addEventListener('dragover', e => {
+        if ([...e.dataTransfer.types].includes('Files')) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'copy';
+          bodyEl.classList.add('drag-over');
+        }
+      });
+      bodyEl.addEventListener('dragleave', e => {
+        if (!bodyEl.contains(e.relatedTarget)) bodyEl.classList.remove('drag-over');
+      });
+      bodyEl.addEventListener('drop', async e => {
+        const file = [...e.dataTransfer.files].find(f => f.type.startsWith('image/'));
+        if (!file) return;
+        e.preventDefault();
+        bodyEl.classList.remove('drag-over');
+
+        const blobUrl = URL.createObjectURL(file);
+        const fig = document.createElement('figure');
+        fig.className      = 'wiki-figure wiki-figure-right';
+        fig.contentEditable = 'false';
+        fig.innerHTML      =
+          '<img src="' + blobUrl + '" alt="" style="max-width:260px;" />' +
+          '<figcaption class="ed-caption" contenteditable="true"></figcaption>';
+        wireFigureClick(fig);
+
+        // Insert at drop point or append
+        let inserted = false;
+        const rng = document.caretRangeFromPoint
+          ? document.caretRangeFromPoint(e.clientX, e.clientY)
+          : null;
+        if (rng && bodyEl.contains(rng.commonAncestorContainer)) {
+          rng.insertNode(fig); inserted = true;
+        }
+        if (!inserted) bodyEl.appendChild(fig);
+
+        // Upload status
+        const status = document.createElement('div');
+        status.style.cssText = 'font-size:0.7rem;color:var(--text-muted);margin:3px 0;clear:both;';
+        status.textContent = 'Uploading…';
+        fig.after(status);
+
+        try {
+          const realUrl = await uploadImage(file);
+          fig.querySelector('img').src = realUrl;
+          URL.revokeObjectURL(blobUrl);
+          status.style.color = 'var(--amber)';
+          status.textContent = 'Uploaded — live in ~60s';
+          setTimeout(() => status.remove(), 4000);
+        } catch(err) {
+          status.style.color = '#ff5555';
+          status.textContent = 'Upload failed: ' + err.message;
+        }
+      });
+    }
+
+    function wireFigureClick(fig) {
+      fig.addEventListener('click', e => {
+        if (e.target.classList.contains('ed-caption')) return;
+        e.stopPropagation();
+        const toRight = fig.classList.contains('wiki-figure-left');
+        fig.classList.toggle('wiki-figure-right', toRight);
+        fig.classList.toggle('wiki-figure-left',  !toRight);
+      });
+    }
+
+    // ── Caret helper ──────────────────────────────────────────────────────────
+    function placeCaretAt(el, atStart) {
+      const range = document.createRange();
+      const sel   = window.getSelection();
+      const node  = el.firstChild || el;
+      atStart ? range.setStart(node, 0) : range.selectNodeContents(el);
+      if (!atStart) range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    // ── Image upload ───────────────────────────────────────────────────────────
     async function uploadImage(file) {
-      const safe   = file.name.replace(/[^a-zA-Z0-9._-]/g,'-').replace(/-+/g,'-').toLowerCase();
+      const safe   = file.name.replace(/[^a-zA-Z0-9._-]/g, '-').replace(/-+/g, '-').toLowerCase();
       const path   = 'assets/wiki/' + safe;
-      const apiUrl = `https://api.github.com/repos/${REPO}/contents/${path}`;
-
-      const b64 = await new Promise((res, rej) => {
+      const apiUrl = 'https://api.github.com/repos/' + REPO + '/contents/' + path;
+      const b64    = await new Promise((res, rej) => {
         const r = new FileReader();
         r.onload  = e => res(e.target.result.split(',')[1]);
         r.onerror = rej;
         r.readAsDataURL(file);
       });
-
       let sha = null;
       try {
-        const chk = await fetch(apiUrl, { headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json'} });
+        const chk = await fetch(apiUrl, { headers: authHdrs() });
         if (chk.ok) sha = (await chk.json()).sha;
       } catch {}
-
-      const body = { message:`assets: upload ${safe}`, content:b64, branch:'main' };
+      const body = { message: 'assets: upload ' + safe, content: b64, branch: 'main' };
       if (sha) body.sha = sha;
-
       const resp = await fetch(apiUrl, {
-        method:'PUT',
-        headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
+        method: 'PUT',
+        headers: { ...authHdrs(), 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      if (!resp.ok) throw new Error((await resp.json().catch(()=>({}))).message || resp.status);
-      return '/'+path;
+      if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).message || resp.status);
+      return '/' + path;
     }
 
-    // ── See Also ─────────────────────────────────────────────────────────────
-    $('sa-add').addEventListener('click', () => { saRows.push({id:nid(),url:'',label:'',desc:''}); renderSA(); dp(); });
-    function renderSA() {
-      const el = $('sa-rows'); el.innerHTML = '';
-      saRows.forEach(r => {
-        const d = document.createElement('div'); d.className = 'sa-row';
-        d.innerHTML = `
-          <input placeholder="/url/" value="${esc(r.url)}" data-id="${r.id}" data-f="url" style="max-width:90px;"/>
-          <input placeholder="Label" value="${esc(r.label)}" data-id="${r.id}" data-f="label"/>
-          <input placeholder="Description" value="${esc(r.desc)}" data-id="${r.id}" data-f="desc"/>
-          <button class="btn-remove" data-id="${r.id}">✕</button>`;
-        el.appendChild(d);
-        d.querySelectorAll('input').forEach(i => i.addEventListener('input', e => {
-          const row = saRows.find(x => x.id===+e.target.dataset.id);
-          if (row) row[e.target.dataset.f] = e.target.value; dp();
-        }));
-        d.querySelector('.btn-remove').addEventListener('click', e => {
-          saRows = saRows.filter(x => x.id!==+e.target.dataset.id); renderSA(); dp();
-        });
-      });
+    function authHdrs() {
+      return { 'Authorization': 'Bearer ' + session.token, 'Accept': 'application/vnd.github+json' };
     }
 
-    // ── Editor state serialisation ────────────────────────────────────────────
+    // ── State ──────────────────────────────────────────────────────────────────
     function buildState() {
       return {
-        v: 1,
+        v:         2,
         parent:    getParent(),
-        title:     $('f-title').value.trim(),
+        title:     $('ed-title').textContent.trim(),
         slug:      getSlug(),
-        lead:      $('f-lead').value.trim(),
-        sections:  sections.map(s => ({
-          h: s.h, c: s.c,
-          imgs: s.imgs.map(i => ({ src: i.src, alt: i.alt, align: i.align }))
+        leadHtml:  cleanForSave($('ed-lead').innerHTML),
+        sections:  [...document.querySelectorAll('.ed-section')].map(sec => ({
+          h:    sec.querySelector('h2').textContent.trim(),
+          html: cleanForSave(sec.querySelector('.ed-body').innerHTML),
         })),
         ibRows:    ibRows.map(r => ({ k: r.k, v: r.v })),
         saRows:    saRows.map(r => ({ url: r.url, label: r.label, desc: r.desc })),
@@ -731,114 +745,126 @@
     }
 
     function loadState(state) {
-      $('f-parent').value = state.parent || wikiRoot;
-      $('f-title').value  = state.title  || '';
-      $('f-slug').value   = state.slug   || '';
+      // Title
+      $('ed-title').textContent = state.title || '';
+      if (!slugLocked) $('f-slug').value = state.slug || '';
       slugLocked = !!state.slug;
-      $('f-lead').value   = state.lead   || '';
+      $('f-parent').value = state.parent || wikiRoot;
 
+      // Lead
+      const leadEl = $('ed-lead');
+      if (state.leadHtml) {
+        leadEl.innerHTML = state.leadHtml;
+      } else if (state.lead) {
+        leadEl.innerHTML = textToHtml(state.lead);
+      } else {
+        leadEl.innerHTML = '';
+      }
+      wireDropTarget(leadEl);
+      leadEl.querySelectorAll('figure').forEach(fig => {
+        fig.contentEditable = 'false';
+        wireFigureClick(fig);
+      });
+
+      // Sections
+      $('ed-sections').innerHTML = '';
+      (state.sections || []).forEach(s => {
+        let html;
+        if (s.html) {
+          html = s.html;
+        } else {
+          // Old format: plain text c + imgs array
+          html = textToHtml(s.c || '');
+          if (s.imgs && s.imgs.length) {
+            html = s.imgs.filter(i => i.src).map(i =>
+              '<figure class="wiki-figure wiki-figure-' + (i.align || 'right') + '" contenteditable="false">' +
+              '<img src="' + esc(i.src) + '" alt="' + esc(i.alt || '') + '" style="max-width:260px;" />' +
+              '<figcaption class="ed-caption" contenteditable="true">' + esc(i.alt || '') + '</figcaption>' +
+              '</figure>').join('') + html;
+          }
+        }
+        addSection(s.h || '', html);
+      });
+
+      // Sidebar state
       bodySize  = state.bodySize  || 'md';
       headScale = state.headScale || 'md';
       ['sm','md','lg'].forEach(v => {
-        $('bs-'+v).classList.toggle('on', v === bodySize);
-        $('hs-'+v).classList.toggle('on', v === headScale);
+        $('bs-' + v)?.classList.toggle('on', v === bodySize);
+        $('hs-' + v)?.classList.toggle('on', v === headScale);
       });
-
-      ibRows = (state.ibRows || []).map(r => ({ id: nid(), k: r.k||'', v: r.v||'' }));
-      saRows = (state.saRows || []).map(r => ({ id: nid(), url: r.url||'', label: r.label||'', desc: r.desc||'' }));
-      sections = (state.sections || []).map(s => ({
-        id: nid(), h: s.h||'', c: s.c||'',
-        imgs: (s.imgs||[]).map(i => ({ id: nid(), src: i.src||'', alt: i.alt||'', align: i.align||'right', previewSrc: '' }))
-      }));
-
+      ibRows = (state.ibRows || []).map(r => ({ id: nid(), k: r.k || '', v: r.v || '' }));
+      saRows = (state.saRows || []).map(r => ({ id: nid(), url: r.url || '', label: r.label || '', desc: r.desc || '' }));
       activeCats = new Set(state.activeCats || []);
       document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('on', activeCats.has(b.textContent)));
 
-      renderIB(); renderSec(); renderSA();
+      renderIB();
+      renderSA();
+      renderInfoboxPreview();
+      renderSeeAlsoPreview();
+      renderCatsPreview();
+      renderTocPreview();
       syncPresetHighlight();
       syncSlugDisplay();
-      dp();
     }
 
-    // ── HTML generation ───────────────────────────────────────────────────────
-    const bodySzMap = { sm:'0.82rem', md:'0.88rem', lg:'0.96rem' };
-    const headSzMap = { sm:'0.82',   md:'1',        lg:'1.18'    };
+    // ── HTML generation ────────────────────────────────────────────────────────
+    function genHTML() {
+      const state   = buildState();
+      const title   = state.title || 'Untitled';
+      const ibValid = state.ibRows.filter(r => r.k);
 
-    function genHTML(forPreview = false) {
-      const title = $('f-title').value.trim() || 'Untitled';
-      const lead  = $('f-lead').value.trim();
-      const cats  = [...activeCats];
-
-      const styleBlock = (bodySize!=='md'||headScale!=='md') ? `
+      const styleBlock = (bodySize !== 'md' || headScale !== 'md') ? `
   <style>
     .wiki-article p, .wiki-article li { font-size: ${bodySzMap[bodySize]}; }
     .wiki-article h1 { font-size: calc(${headSzMap[headScale]} * 1.4rem); }
     .wiki-article h2 { font-size: calc(${headSzMap[headScale]} * 0.95rem); }
   </style>` : '';
 
-      const ibValid = ibRows.filter(r=>r.k);
-      const infoboxHtml = ibValid.length ? `
-        <div class="infobox">
-          <div class="infobox-title">${esc(title)}</div>
-          <table>
-            ${ibValid.map(r=>`<tr><td>${esc(r.k)}</td><td>${esc(r.v)}</td></tr>`).join('\n            ')}
-          </table>
-        </div>` : '';
+      const infoboxHtml = ibValid.length
+        ? '\n        <div class="infobox"><div class="infobox-title">' + esc(title) + '</div><table>' +
+            ibValid.map(r => '<tr><td>' + esc(r.k) + '</td><td>' + esc(r.v) + '</td></tr>').join('') +
+          '</table></div>' : '';
 
-      const validSecs = sections.filter(s=>s.h||s.c);
-      const tocHtml = validSecs.length > 1 ? `
-        <div class="wiki-toc">
-          <div class="wiki-toc-title">Contents</div>
-          <ol>
-            ${validSecs.map(s=>`<li><a href="#${slugify(s.h||'section')}">${esc(s.h)}</a></li>`).join('\n            ')}
-          </ol>
-        </div>` : '';
+      const validSecs = state.sections.filter(s => s.h || s.html);
+      const tocHtml = validSecs.length > 1
+        ? '\n        <div class="wiki-toc"><div class="wiki-toc-title">Contents</div><ol>' +
+            validSecs.map(s => '<li><a href="#' + slugify(s.h || 'section') + '">' + esc(s.h) + '</a></li>').join('') +
+          '</ol></div>' : '';
 
       const secHtml = validSecs.map(s => {
-        const id = slugify(s.h||'section');
-        const imgHtml = s.imgs.filter(i=>i.src||i.previewSrc).map(i => {
-          const dispSrc = forPreview ? (i.previewSrc || i.src) : i.src;
-          return `          <figure class="wiki-figure wiki-figure-${i.align}">
-            <img src="${esc(dispSrc)}" alt="${esc(i.alt)}" />
-            ${i.alt?`<figcaption>${esc(i.alt)}</figcaption>`:''}`+`
-          </figure>`;
-        }).join('\n');
-        const paras = (s.c||'').split(/\n\n+/).filter(Boolean)
-          .map(p=>`          <p>${esc(p.trim())}</p>`).join('\n');
-        return `
-        <hr class="wiki-rule">
-
-        <section>
-          <h2 id="${id}">${esc(s.h)} <a class="wiki-anchor" href="#${id}">§</a></h2>
-${imgHtml}
-${paras}
-          <div style="clear:both;"></div>
-        </section>`;
+        const id = slugify(s.h || 'section');
+        return '\n    <hr class="wiki-rule">\n    <section><h2 id="' + id + '">' +
+          esc(s.h) + ' <a class="wiki-anchor" href="#' + id + '">§</a></h2>\n' +
+          s.html + '\n    <div style="clear:both;"></div></section>';
       }).join('\n');
 
-      const saValid = saRows.filter(r=>r.label);
-      const saHtml = saValid.length ? `
-        <div class="wiki-seealso">
-          <div class="wiki-seealso-title">See Also</div>
-          <ul>
-            ${saValid.map(r=>`<li><a href="${esc(r.url||'#')}">${esc(r.label)}</a>${r.desc?' — '+esc(r.desc):''}</li>`).join('\n            ')}
-          </ul>
-        </div>` : '';
+      const saValid = state.saRows.filter(r => r.label);
+      const saHtml = saValid.length
+        ? '\n        <div class="wiki-seealso"><div class="wiki-seealso-title">See Also</div><ul>' +
+            saValid.map(r => '<li><a href="' + esc(r.url || '#') + '">' + esc(r.label) + '</a>' +
+              (r.desc ? ' — ' + esc(r.desc) : '') + '</li>').join('') +
+          '</ul></div>' : '';
 
-      const catHtml = cats.length ? `
-          <div class="wiki-meta-categories">
-            <span class="wiki-meta-label">Categories</span>
-            ${cats.map(c=>`<a class="wiki-cat-tag" href="#">${c}</a>`).join('\n            ')}
-          </div>` : '';
+      const catHtml = state.activeCats.length
+        ? '\n          <div class="wiki-meta-categories"><span class="wiki-meta-label">Categories</span>' +
+            state.activeCats.map(c => '<a class="wiki-cat-tag" href="#">' + c + '</a>').join('') +
+          '</div>' : '';
+
+      const parts = state.parent.split('/').filter(Boolean);
+      let bc = '<a href="/">HOME</a>';
+      let path = '';
+      parts.forEach(p => { path += '/' + p; bc += ' <span class="sep">//</span> <a href="' + path + '/">' + p.toUpperCase() + '</a>'; });
+      bc += ' <span class="sep">//</span> ' + esc(title).toUpperCase();
 
       return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${esc(title)} — EVOLUTIONARY</title>
+  <title>${esc(title)} — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=12" />${styleBlock}
+  <link rel="stylesheet" href="/components/themes/theme.css?v=13" />${styleBlock}
 </head>
 <body>
 
@@ -849,13 +875,11 @@ ${paras}
 
       <main class="wiki-article">
 
-        <div class="wiki-breadcrumb">
-          ${buildBreadcrumb(title)}
-        </div>
+        <div class="wiki-breadcrumb">${bc}</div>
 
         <h1>${esc(title)}</h1>
 ${infoboxHtml}${tocHtml}
-        <p>${esc(lead)}</p>
+        ${state.leadHtml}
 ${secHtml}
 ${saHtml}
         <div class="wiki-meta">
@@ -866,82 +890,59 @@ ${catHtml}
     </div>
   </div>
 
-  <script src="/components/site-config.js?v=12"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=12" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=12" defer><\/script>
+  <script src="/components/site-config.js?v=13"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=13" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=13" defer><\/script>
 </body>
 </html>`;
     }
 
-    // ── Live preview ──────────────────────────────────────────────────────────
-    let pt = null;
-    function dp() {
-      clearTimeout(pt);
-      pt = setTimeout(() => {
-        try {
-          const base = `<base href="${window.location.origin}/" />`;
-          const html = genHTML(true).replace('<head>', '<head>\n  ' + base);
-          $('prev-frame').srcdoc = html;
-        } catch(err) {
-          console.error('Article preview failed:', err);
-        }
-      }, 280);
-    }
-    syncPresetHighlight();
-    dp();
-
-    // ── Publish ───────────────────────────────────────────────────────────────
+    // ── Publish ────────────────────────────────────────────────────────────────
     $('btn-pub').addEventListener('click', async () => {
       const btn    = $('btn-pub');
       const status = $('pub-status');
-      const title  = $('f-title').value.trim();
+      const title  = $('ed-title').textContent.trim();
       const slug   = getSlug();
 
-      if (!title) { status.className='pub-status err'; status.textContent='Title is required.'; return; }
-      if (!slug)  { status.className='pub-status err'; status.textContent='Slug is required.';  return; }
+      if (!title) { status.className = 'pub-status err'; status.textContent = 'Title is required.'; return; }
+      if (!slug)  { status.className = 'pub-status err'; status.textContent = 'Slug is required.';  return; }
 
       btn.disabled = true;
       status.className = 'pub-status';
       status.textContent = 'Publishing…';
 
-      const fullPath   = getFullPath();
-      const htmlPath   = fullPath + '/index.html';
-      const statePath  = fullPath + '/editor-state.json';
-      const htmlApiUrl = `https://api.github.com/repos/${REPO}/contents/${htmlPath}`;
-      const stateApiUrl= `https://api.github.com/repos/${REPO}/contents/${statePath}`;
-      const html       = genHTML();
-      const stateJson  = JSON.stringify(buildState(), null, 2);
-      const isUpdate   = sha => sha ? `docs: update "${title}"` : `docs: add wiki page "${title}"`;
+      const fp        = getFullPath();
+      const htmlPath  = fp + '/index.html';
+      const statePath = fp + '/editor-state.json';
+      const htmlApi   = 'https://api.github.com/repos/' + REPO + '/contents/' + htmlPath;
+      const stateApi  = 'https://api.github.com/repos/' + REPO + '/contents/' + statePath;
+      const html      = genHTML();
+      const stateJson = JSON.stringify(buildState(), null, 2);
 
-      // Fetch existing SHAs in parallel
       let htmlSha = null, stateSha = null;
       try {
-        const [hChk, sChk] = await Promise.all([
-          fetch(htmlApiUrl,  { headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json'} }),
-          fetch(stateApiUrl, { headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json'} }),
-        ]);
-        if (hChk.ok) htmlSha  = (await hChk.json()).sha;
-        if (sChk.ok) stateSha = (await sChk.json()).sha;
+        const [hc, sc] = await Promise.all([fetch(htmlApi, {headers:authHdrs()}), fetch(stateApi, {headers:authHdrs()})]);
+        if (hc.ok) htmlSha  = (await hc.json()).sha;
+        if (sc.ok) stateSha = (await sc.json()).sha;
       } catch {}
 
-      const htmlBody  = { message: isUpdate(htmlSha),  content: toB64(html),      branch:'main' };
-      const stateBody = { message: isUpdate(stateSha), content: toB64(stateJson), branch:'main' };
-      if (htmlSha)  htmlBody.sha  = htmlSha;
-      if (stateSha) stateBody.sha = stateSha;
+      const hBody = { message: (htmlSha ? 'docs: update' : 'docs: add') + ' "' + title + '"', content: toB64(html),      branch: 'main' };
+      const sBody = { message: 'docs: save state for "' + slug + '"',                           content: toB64(stateJson), branch: 'main' };
+      if (htmlSha)  hBody.sha  = htmlSha;
+      if (stateSha) sBody.sha  = stateSha;
 
       try {
-        // Write both files; state first so the edit button can always find it
-        const [stResp, htmlResp] = await Promise.all([
-          fetch(stateApiUrl, { method:'PUT', headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json','Content-Type':'application/json'}, body: JSON.stringify(stateBody) }),
-          fetch(htmlApiUrl,  { method:'PUT', headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json','Content-Type':'application/json'}, body: JSON.stringify(htmlBody)  }),
+        const [hr, sr] = await Promise.all([
+          fetch(htmlApi,  { method: 'PUT', headers: { ...authHdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify(hBody) }),
+          fetch(stateApi, { method: 'PUT', headers: { ...authHdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify(sBody) }),
         ]);
-        if (htmlResp.ok && stResp.ok) {
+        if (hr.ok && sr.ok) {
           status.className = 'pub-status ok';
-          status.textContent = (htmlSha?'Updated':'Published')+` — live in ~60s at itschu.gg/${fullPath}/`;
+          status.textContent = (htmlSha ? 'Updated' : 'Published') + ' — live in ~60s at itschu.gg/' + fp + '/';
         } else {
-          const errBody = await (htmlResp.ok ? stResp : htmlResp).json().catch(()=>({}));
+          const err = await (hr.ok ? sr : hr).json().catch(() => ({}));
           status.className = 'pub-status err';
-          status.textContent = 'GitHub error: '+(errBody.message||'unknown');
+          status.textContent = 'GitHub error: ' + (err.message || 'unknown');
         }
       } catch {
         status.className = 'pub-status err';
@@ -950,79 +951,74 @@ ${catHtml}
       btn.disabled = false;
     });
 
-    // ── Delete page ───────────────────────────────────────────────────────────
+    // ── Delete page ────────────────────────────────────────────────────────────
     $('btn-del').addEventListener('click', async () => {
-      const title  = $('f-title').value.trim() || 'this page';
+      const title  = $('ed-title').textContent.trim() || 'this page';
       const slug   = getSlug();
       const status = $('pub-status');
-      if (!slug) { status.className='pub-status err'; status.textContent='No page to delete.'; return; }
-      if (!confirm(`Permanently delete "${title}"?\n\nThe page files will be removed. This cannot be undone.`)) return;
+      if (!slug) { status.className = 'pub-status err'; status.textContent = 'No page to delete.'; return; }
+      if (!confirm('Permanently delete "' + title + '"?\n\nThis removes the page files. Cannot be undone.')) return;
 
       const btn = $('btn-del');
-      btn.disabled = true;
-      $('btn-pub').disabled = true;
-      status.className = 'pub-status';
-      status.textContent = 'Deleting…';
+      btn.disabled = true; $('btn-pub').disabled = true;
+      status.className = 'pub-status'; status.textContent = 'Deleting…';
 
       try {
         const fp = getFullPath();
         await Promise.all([
-          WIKI.ghDelete(fp + '/index.html',        `docs: delete "${title}"`),
-          WIKI.ghDelete(fp + '/editor-state.json', `docs: delete "${title}" state`),
+          WIKI.ghDelete(fp + '/index.html',        'docs: delete "' + title + '"'),
+          WIKI.ghDelete(fp + '/editor-state.json', 'docs: delete "' + title + '" state'),
         ]);
 
-        // Best-effort: remove this page from pages.json
+        // Best-effort: remove from pages.json
         try {
-          const pagesUrl  = `https://api.github.com/repos/${REPO}/contents/wikipedia/${wikiSlug}/pages.json`;
-          const pagesResp = await fetch(pagesUrl, { headers:{'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json'} });
+          const pagesUrl  = 'https://api.github.com/repos/' + REPO + '/contents/wikipedia/' + wikiSlug + '/pages.json';
+          const pagesResp = await fetch(pagesUrl, { headers: authHdrs() });
           if (pagesResp.ok) {
             const pd      = await pagesResp.json();
-            const pages   = JSON.parse(atob(pd.content.replace(/\n/g,'')));
-            const relPath = fp.replace(`wikipedia/${wikiSlug}/`, '') + '/index.html';
+            const pages   = JSON.parse(atob(pd.content.replace(/\n/g, '')));
+            const relPath = fp.replace('wikipedia/' + wikiSlug + '/', '') + '/index.html';
             const updated = pages
               .map(g => ({ ...g, pages: g.pages.filter(p => p.file !== relPath) }))
               .filter(g => g.pages.length > 0);
             await fetch(pagesUrl, {
               method: 'PUT',
-              headers: {'Authorization':`Bearer ${session.token}`,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
-              body: JSON.stringify({ message:`docs: remove "${title}" from index`, content: toB64(JSON.stringify(updated, null, 2)), sha: pd.sha, branch:'main' }),
+              headers: { ...authHdrs(), 'Content-Type': 'application/json' },
+              body: JSON.stringify({ message: 'docs: remove "' + title + '" from index', content: toB64(JSON.stringify(updated, null, 2)), sha: pd.sha, branch: 'main' }),
             });
           }
         } catch {}
 
         status.className = 'pub-status ok';
-        status.textContent = `"${title}" deleted — redirecting…`;
+        status.textContent = '"' + title + '" deleted — redirecting…';
         setTimeout(() => location.href = '/wikipedia/' + wikiSlug + '/', 2000);
       } catch(err) {
         status.className = 'pub-status err';
         status.textContent = 'Delete failed: ' + err.message;
-        btn.disabled = false;
-        $('btn-pub').disabled = false;
+        btn.disabled = false; $('btn-pub').disabled = false;
       }
     });
 
-    // ── Load existing page via ?edit=/path/ ───────────────────────────────────
+    // ── Load on ?edit= ─────────────────────────────────────────────────────────
     (async () => {
-      const editPath = _editPath;
-      if (!editPath || !session) return;
+      if (!_editPath || !session) { syncSlugDisplay(); return; }
       const status = $('pub-status');
-      status.className = 'pub-status';
-      status.textContent = 'Loading page…';
+      status.className = 'pub-status'; status.textContent = 'Loading…';
       try {
-        const clean  = editPath.replace(/^\/|\/$/g, '');
-        const apiUrl = `https://api.github.com/repos/${REPO}/contents/${clean}/editor-state.json`;
-        const resp   = await fetch(apiUrl, {
-          headers: { 'Authorization': `Bearer ${session.token}`, 'Accept': 'application/vnd.github+json' }
-        });
+        const clean  = _editPath.replace(/^\/|\/$/g, '');
+        const apiUrl = 'https://api.github.com/repos/' + REPO + '/contents/' + clean + '/editor-state.json';
+        const resp   = await fetch(apiUrl, { headers: authHdrs() });
         if (!resp.ok) throw new Error('No editor state found — page may have been created outside the editor.');
         const data  = await resp.json();
         const state = JSON.parse(atob(data.content.replace(/\n/g, '')));
         loadState(state);
+        slugLocked = true;
         status.className = 'pub-status ok';
-        status.textContent = 'Page loaded — make your changes and republish.';
+        status.textContent = 'Loaded — make changes and republish.';
       } catch(err) {
         status.className = 'pub-status err';
         status.textContent = 'Load failed: ' + err.message;
+        syncSlugDisplay();
       }
     })();
   </script>
