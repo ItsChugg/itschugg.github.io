@@ -1470,6 +1470,13 @@ hr.wiki-rule {
   text-overflow: ellipsis;
   white-space: nowrap;
   flex-shrink: 1;
+  text-decoration: none;
+}
+
+a.editor-sidebar-slug:hover {
+  color: var(--amber);
+  text-decoration: underline;
+  text-shadow: none;
 }
 
 .editor-sidebar-body {

@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wiki Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=18" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=19" />
 </head>
 <body>
-  <script src="/components/site-config.js?v=18"></script>
-  <script src="/components/wiki-utils.js?v=18"></script>
-  <script src="/components/navbar/inject-navbar.js?v=18" defer></script>
+  <script src="/components/site-config.js?v=19"></script>
+  <script src="/components/wiki-utils.js?v=19"></script>
+  <script src="/components/navbar/inject-navbar.js?v=19" defer></script>
 
   <!-- Floating format toolbar -->
   <div class="fmt-toolbar" id="fmt-toolbar">
@@ -33,7 +33,7 @@
     <div class="editor-sidebar">
       <div class="editor-sidebar-header">
         <span id="hdr-title">EDITOR</span>
-        <span class="editor-sidebar-slug" id="hdr-slug"></span>
+        <a class="editor-sidebar-slug" id="hdr-slug" href="#" target="_blank" title="View live page"></a>
       </div>
       <div class="editor-sidebar-body">
 
@@ -184,8 +184,12 @@
 
     // ── Slug / breadcrumb sync ─────────────────────────────────────────────────
     function syncSlugDisplay() {
-      const fp = getFullPath();
-      $('hdr-slug').textContent = fp ? '/' + fp + '/' : '';
+      const fp   = getFullPath();
+      const link = $('hdr-slug');
+      // Prefer the article's own URL; fall back to wiki hub if slug not set yet
+      const url  = fp ? '/' + fp + '/' : '/wikipedia/' + wikiSlug + '/';
+      link.textContent = fp ? '/' + fp + '/' : '/wikipedia/' + wikiSlug + '/';
+      link.href        = url;
       syncBreadcrumb();
     }
 
@@ -903,7 +907,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${esc(title)} — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=18" />${styleBlock}
+  <link rel="stylesheet" href="/components/themes/theme.css?v=19" />${styleBlock}
 </head>
 <body>
 
@@ -929,9 +933,9 @@ ${catHtml}
     </div>
   </div>
 
-  <script src="/components/site-config.js?v=18"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=18" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=18" defer><\/script>
+  <script src="/components/site-config.js?v=19"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=19" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=19" defer><\/script>
 </body>
 </html>`;
     }

@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hub Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=18" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=19" />
 </head>
 <body>
-  <script src="/components/site-config.js?v=18"></script>
-  <script src="/components/wiki-utils.js?v=18"></script>
-  <script src="/components/navbar/inject-navbar.js?v=18" defer></script>
+  <script src="/components/site-config.js?v=19"></script>
+  <script src="/components/wiki-utils.js?v=19"></script>
+  <script src="/components/navbar/inject-navbar.js?v=19" defer></script>
 
   <!-- Floating format toolbar -->
   <div class="fmt-toolbar" id="fmt-toolbar">
@@ -33,7 +33,7 @@
     <div class="editor-sidebar">
       <div class="editor-sidebar-header">
         <span>HUB EDITOR</span>
-        <span class="editor-sidebar-slug" id="hdr-slug"></span>
+        <a class="editor-sidebar-slug" id="hdr-slug" href="#" target="_blank" title="View live wiki hub"></a>
       </div>
       <div class="editor-sidebar-body">
 
@@ -129,8 +129,10 @@
     // ── Slug display sync ──────────────────────────────────────────────────────
     function syncSlugDisplay() {
       const slug = $('f-wiki').value.trim();
-      $('hdr-slug').textContent     = slug ? '/wikipedia/' + slug + '/' : '';
-      $('bc-wiki-name').textContent  = slug ? slug.toUpperCase() : 'WIKI';
+      const link = $('hdr-slug');
+      link.textContent = slug ? '/wikipedia/' + slug + '/' : '';
+      link.href        = slug ? '/wikipedia/' + slug + '/' : '#';
+      $('bc-wiki-name').textContent = slug ? slug.toUpperCase() : 'WIKI';
     }
 
     $('f-wiki').addEventListener('input', syncSlugDisplay);
