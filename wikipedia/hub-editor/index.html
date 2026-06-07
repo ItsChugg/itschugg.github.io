@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hub Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=19" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=20" />
 </head>
 <body>
-  <script src="/components/site-config.js?v=19"></script>
-  <script src="/components/wiki-utils.js?v=19"></script>
-  <script src="/components/navbar/inject-navbar.js?v=19" defer></script>
+  <script src="/components/site-config.js?v=20"></script>
+  <script src="/components/wiki-utils.js?v=20"></script>
+  <script src="/components/navbar/inject-navbar.js?v=20" defer></script>
 
   <!-- Floating format toolbar -->
   <div class="fmt-toolbar" id="fmt-toolbar">
@@ -62,6 +62,7 @@
 
       </div>
       <div class="editor-sidebar-footer">
+        <a class="btn-back" id="btn-back" href="/wikipedia/">← BACK</a>
         <button class="btn-publish" id="btn-pub">PUBLISH</button>
         <button class="btn-danger"  id="btn-del-wiki">DELETE WIKI</button>
         <span class="pub-status" id="pub-status"></span>
@@ -130,8 +131,10 @@
     function syncSlugDisplay() {
       const slug = $('f-wiki').value.trim();
       const link = $('hdr-slug');
-      link.textContent = slug ? '/wikipedia/' + slug + '/' : '';
-      link.href        = slug ? '/wikipedia/' + slug + '/' : '#';
+      const url  = slug ? '/wikipedia/' + slug + '/' : '/wikipedia/';
+      link.textContent              = slug ? '/wikipedia/' + slug + '/' : '';
+      link.href                     = url;
+      $('btn-back').href            = url;
       $('bc-wiki-name').textContent = slug ? slug.toUpperCase() : 'WIKI';
     }
 

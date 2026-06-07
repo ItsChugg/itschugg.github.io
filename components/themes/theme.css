@@ -1769,6 +1769,27 @@ a.editor-sidebar-slug:hover {
 
 .btn-add:hover { color: var(--amber); border-color: var(--amber-dim); }
 
+/* Back button */
+.btn-back {
+  background: none;
+  border: var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-head);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  padding: 8px 14px;
+  text-decoration: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.btn-back:hover {
+  color: var(--amber);
+  border-color: var(--amber-dim);
+  text-shadow: none;
+}
+
 /* Publish button */
 .btn-publish {
   background: none;
