@@ -1,29 +1,13 @@
 {
   "v": 1,
-  "title": "test",
-  "lead": "test",
-  "stats": [
+  "title": "Waow",
+  "leadHtml": "<p>look at me go I'm a live editor!!!!</p>",
+  "featured": [
     {
-      "num": "0",
-      "label": "Articles"
-    },
-    {
-      "num": "0",
-      "label": "Categories"
-    },
-    {
-      "num": "0",
-      "label": "Species"
-    },
-    {
-      "num": "∞",
-      "label": "In Development"
+      "title": "",
+      "link": "",
+      "excerpt": ""
     }
   ],
-  "featured": {
-    "title": "",
-    "link": "",
-    "excerpt": ""
-  },
-  "footerNote": "test wiki — under active development."
+  "footerNote": "peepeepoopoo"
 }
