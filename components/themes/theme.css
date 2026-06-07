@@ -1649,3 +1649,187 @@ hr.wiki-rule {
 
 .sec-list-btn:hover     { color: var(--amber); }
 .sec-list-btn.del:hover { color: #ff5555; }
+
+/* ── Editor sidebar shared form elements ────────────────────────────────── */
+
+.f-group { display: flex; flex-direction: column; gap: 5px; }
+
+.f-label {
+  font-family: var(--font-head);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.f-label small {
+  font-family: var(--font-mono);
+  font-size: 0.61rem;
+  letter-spacing: 0;
+  color: var(--text-faint);
+}
+
+.f-input, .f-textarea, .f-select {
+  background: var(--bg);
+  border: var(--border);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 7px 10px;
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.f-input:focus, .f-textarea:focus, .f-select:focus {
+  outline: none;
+  border-color: var(--amber-dim);
+}
+
+.f-textarea { min-height: 72px; }
+.f-select   { appearance: none; cursor: pointer; }
+
+/* Collapsibles */
+.collapsible-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.collapsible-caret {
+  font-size: 0.6rem;
+  transition: transform 0.15s;
+  display: inline-block;
+}
+
+.collapsible-head.open .collapsible-caret { transform: rotate(90deg); }
+.collapsible-body { display: none; flex-direction: column; gap: 7px; margin-top: 6px; }
+.collapsible-body.open { display: flex; }
+
+/* Utility buttons (editor) */
+.btn-remove {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.82rem;
+  padding: 0 3px;
+  line-height: 1;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+
+.btn-remove:hover { color: #ff5555; }
+
+.btn-add {
+  align-self: flex-start;
+  background: none;
+  border: var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 4px 11px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.btn-add:hover { color: var(--amber); border-color: var(--amber-dim); }
+
+/* Publish button */
+.btn-publish {
+  background: none;
+  border: var(--border);
+  color: var(--amber);
+  font-family: var(--font-head);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  padding: 8px 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: box-shadow 0.15s, background 0.15s;
+}
+
+.btn-publish:hover:not(:disabled) { box-shadow: var(--glow-sm); background: var(--amber-faint); }
+.btn-publish:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* Publish status */
+.pub-status {
+  font-size: 0.70rem;
+  color: var(--text-muted);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pub-status.ok  { color: var(--amber); }
+.pub-status.err { color: #ff5555; }
+
+/* Parent path presets */
+.parent-presets { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+
+.preset-btn {
+  background: none;
+  border: var(--border);
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+
+.preset-btn:hover { color: var(--amber); border-color: var(--amber-dim); }
+.preset-btn.on    { color: var(--amber); border-color: var(--amber-dim); background: var(--amber-faint); }
+
+/* Category grid */
+.cat-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.cat-btn {
+  background: none;
+  border: var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.cat-btn.on { color: var(--amber); border-color: var(--amber-dim); background: var(--amber-faint); }
+
+/* Page style toggles */
+.style-btn-row { display: flex; gap: 5px; }
+
+.style-btn {
+  flex: 1;
+  background: none;
+  border: var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 5px 0;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.style-btn.on { color: var(--amber); border-color: var(--amber-dim); background: var(--amber-faint); }
+
+/* Infobox / See Also rows (sidebar) */
+.kv-row, .sa-row { display: flex; gap: 6px; align-items: center; }
+
+.kv-row input, .sa-row input {
+  flex: 1;
+  background: var(--bg);
+  border: var(--border);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 5px 8px;
+  min-width: 0;
+}
+
+.kv-row input:focus, .sa-row input:focus { outline: none; border-color: var(--amber-dim); }
