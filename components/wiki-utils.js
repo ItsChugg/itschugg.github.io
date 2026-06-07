@@ -1,6 +1,6 @@
 /**
- * wiki-utils.js?v=23 — Shared utilities for wiki editing and rendering.
- * Requires site-config.js?v=23 to be loaded first (uses SITE.REPO, SITE.getSession).
+ * wiki-utils.js?v=24 — Shared utilities for wiki editing and rendering.
+ * Requires site-config.js?v=24 to be loaded first (uses SITE.REPO, SITE.getSession).
  *
  * Exposes: window.WIKI = { slugify, esc, toB64, ghPut, renderWikiGrid, genHubHTML }
  */
@@ -119,6 +119,82 @@
       });
   }
 
+  // ── Category page shell generator ──────────────────────────────────────────
+
+  /**
+   * Returns a generic category-hub shell HTML.
+   * The page derives the wiki + category from its own URL at runtime, so the
+   * same HTML can be placed at any wikipedia/{wiki}/{cat-slug}/index.html path.
+   */
+  function genCategoryHTML() {
+    const v = liveVer();
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loading… — ITSCHU.GG</title>
+  <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=24" />
+  <script src="/components/site-config.js?v=24"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=24" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=24" defer><\/script>
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="wiki-layout">
+      <aside id="sidebar-container" class="subpage-bar"></aside>
+      <main class="wiki-article">
+        <div class="wiki-breadcrumb" id="cat-bc"><a href="/">HOME</a></div>
+        <h1 id="cat-title"></h1>
+        <div id="cat-lead"></div>
+        <hr class="wiki-rule" style="margin-top:18px;">
+        <div id="cat-articles" style="margin-top:16px;"></div>
+        <div class="wiki-meta" style="margin-top:28px;">
+          <div class="wiki-meta-edited" id="cat-footer"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script>
+    (function(){
+      var sl=function(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');};
+      var pts=location.pathname.replace(/\\/+$/,'').split('/').filter(Boolean);
+      var wiki=pts[1], cat=pts[2];
+      fetch('/wikipedia/'+wiki+'/pages.json')
+        .then(function(r){return r.json();})
+        .then(function(data){
+          var g=data.find(function(c){return (c.slug||sl(c.category))===cat;});
+          if(!g){document.getElementById('cat-title').textContent='Category not found';return;}
+          document.title=g.category+' — ITSCHU.GG';
+          document.getElementById('cat-title').textContent=g.category;
+          document.getElementById('cat-bc').innerHTML=
+            '<a href="/">HOME</a><span class="sep"> // </span>'+
+            '<a href="/wikipedia/">WIKIPEDIA</a><span class="sep"> // </span>'+
+            '<a href="/wikipedia/'+wiki+'/">'+wiki.toUpperCase()+'</a><span class="sep"> // </span>'+
+            g.category.toUpperCase();
+          if(g.lead)document.getElementById('cat-lead').innerHTML=g.lead;
+          var box=document.getElementById('cat-articles');
+          if(!g.pages||!g.pages.length){
+            box.innerHTML='<p style="color:var(--text-muted);font-size:0.85rem;">No articles in this category yet.</p>';
+            return;
+          }
+          g.pages.forEach(function(p){
+            var href='/wikipedia/'+wiki+'/'+p.file.replace(/index\\.html$/,'').replace(/\\.html$/,'/');
+            var a=document.createElement('a');
+            a.className='wiki-cat-article';
+            a.href=href;
+            a.textContent=p.title;
+            box.appendChild(a);
+          });
+        })
+        .catch(function(){document.getElementById('cat-title').textContent='Error loading category';});
+    })();
+  <\/script>
+</body>
+</html>`;
+  }
+
   // ── Hub HTML generator ──────────────────────────────────────────────────────
 
   /** Converts plain text with blank-line paragraphs + **bold** / *italic* to HTML. */
@@ -133,7 +209,7 @@
 
   /**
    * Generates a complete wiki hub index.html for the given state + wiki slug.
-   * Version strings (theme.css?v=23 inject-navbar.js?v=23 inject-sidebar.js?v=23
+   * Version strings (theme.css?v=24 inject-navbar.js?v=24 inject-sidebar.js?v=24
    * are updated automatically by `node build.js`.
    */
   function genHubHTML(state, slug) {
@@ -168,10 +244,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${title} — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=23" />
-  <script src="/components/site-config.js?v=23"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=23" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=23" defer><\/script>
+  <link rel="stylesheet" href="/components/themes/theme.css?v=24" />
+  <script src="/components/site-config.js?v=24"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=24" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=24" defer><\/script>
 </head>
 <body>
 
@@ -231,9 +307,10 @@
         if (sc) sc.textContent = data.length;
         var cats = document.getElementById('hub-categories');
         if (cats) data.forEach(function(g) {
+          var catSlug = g.slug || g.category.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
           var a = document.createElement('a');
           a.className = 'wiki-category-card';
-          a.href = '#';
+          a.href = '/wikipedia/${slug}/' + catSlug + '/';
           a.innerHTML = '<div class="cat-name">' + g.category + '</div><div class="cat-count">' +
             g.pages.length + ' article' + (g.pages.length === 1 ? '' : 's') + '</div>';
           cats.appendChild(a);
@@ -247,6 +324,6 @@
   }
 
   // ── Export ──────────────────────────────────────────────────────────────────
-  window.WIKI = { slugify, esc, toB64, ghPut, ghDelete, renderWikiGrid, genHubHTML, leadToHtml };
+  window.WIKI = { slugify, esc, toB64, ghPut, ghDelete, renderWikiGrid, genHubHTML, genCategoryHTML, leadToHtml };
 
 }());

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wiki Link Audit — ITSCHU.GG</title>
+  <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=23" />
+  <script src="/components/site-config.js?v=23"></script>
+  <script src="/components/navbar/inject-navbar.js?v=23" defer></script>
+  <style>
+    .audit-wrap   { max-width: 900px; margin: 0 auto; padding: 36px 24px; }
+    .audit-header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 24px; }
+    .audit-select { background: var(--bg); border: var(--border); color: var(--text);
+                    font-family: var(--font-mono); font-size: 0.8rem; padding: 7px 12px;
+                    cursor: pointer; appearance: none; min-width: 180px; }
+    .audit-select:focus { outline: none; border-color: var(--amber-dim); }
+    .audit-run    { background: none; border: var(--border); color: var(--amber);
+                    font-family: var(--font-head); font-size: 0.72rem; letter-spacing: 0.1em;
+                    padding: 8px 20px; cursor: pointer; transition: box-shadow 0.15s, background 0.15s; }
+    .audit-run:hover:not(:disabled) { box-shadow: var(--glow-sm); background: var(--amber-faint); }
+    .audit-run:disabled  { opacity: 0.35; cursor: not-allowed; }
+    .audit-progress { margin: 16px 0; font-size: 0.78rem; color: var(--text-muted); }
+    .audit-bar-outer { background: var(--bg); border: var(--border); height: 4px; margin-top: 8px; }
+    .audit-bar-inner { height: 100%; background: var(--amber); transition: width 0.2s; width: 0; }
+
+    .audit-section       { margin-top: 28px; }
+    .audit-section-title {
+      font-family: var(--font-head); font-size: 0.65rem; letter-spacing: 0.14em;
+      color: var(--text-faint); border-bottom: var(--border);
+      padding-bottom: 8px; margin-bottom: 12px; text-transform: uppercase;
+    }
+    .audit-section-title .count {
+      font-family: var(--font-mono); letter-spacing: 0;
+      color: var(--amber); margin-left: 8px;
+    }
+    .audit-empty { font-size: 0.80rem; color: var(--text-muted); padding: 8px 0; }
+    .audit-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    .audit-table th {
+      text-align: left; font-family: var(--font-head); font-size: 0.58rem;
+      letter-spacing: 0.12em; color: var(--text-faint); padding: 6px 10px 8px;
+      border-bottom: var(--border);
+    }
+    .audit-table td { padding: 7px 10px; border-bottom: 1px solid var(--amber-faint); vertical-align: top; }
+    .audit-table tr:last-child td { border-bottom: none; }
+    .audit-table td:first-child  { color: var(--text-muted); font-size: 0.72rem; max-width: 220px; overflow-wrap: break-word; }
+    .audit-table td:nth-child(2) { color: #ff5555; font-size: 0.72rem; overflow-wrap: break-word; }
+    .audit-table td a            { color: #3366cc; font-size: 0.72rem; word-break: break-all; }
+    .audit-tag { display: inline-block; font-family: var(--font-head); font-size: 0.55rem;
+                 letter-spacing: 0.1em; padding: 2px 7px; margin-right: 4px;
+                 border: 1px solid; vertical-align: middle; }
+    .audit-tag.broken   { color: #ff5555; border-color: rgba(255,85,85,0.4); }
+    .audit-tag.orphan   { color: #ffaa00; border-color: rgba(255,170,0,0.4); }
+    .audit-tag.redirect { color: #aaaaff; border-color: rgba(170,170,255,0.4); }
+    .audit-tag.external { color: var(--text-faint); border-color: var(--amber-faint); }
+  </style>
+</head>
+<body>
+  <div class="audit-wrap">
+    <div class="panel">
+      <div class="panel-label">WIKI LINK AUDIT</div>
+
+      <div class="audit-header">
+        <select class="audit-select" id="wiki-select">
+          <option value="__all__">All Wikis</option>
+        </select>
+        <button class="audit-run" id="btn-run">RUN AUDIT</button>
+        <span id="audit-note" style="font-size:0.72rem;color:var(--text-muted);"></span>
+      </div>
+
+      <div class="audit-progress" id="audit-progress" style="display:none;">
+        <span id="audit-status">Starting…</span>
+        <div class="audit-bar-outer"><div class="audit-bar-inner" id="audit-bar"></div></div>
+      </div>
+
+      <div id="audit-results"></div>
+    </div>
+  </div>
+
+  <script>
+    const session = SITE.getSession();
+    if (!session || !SITE.ALLOWED.includes(session.username)) {
+      location.href = '/login/?returnTo=' + encodeURIComponent(location.pathname);
+    }
+
+    const REPO   = SITE.REPO;
+    const $ = id => document.getElementById(id);
+    const authH  = () => ({ 'Authorization': 'Bearer ' + session.token, 'Accept': 'application/vnd.github+json' });
+    const slugify = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+    // ── Load wiki list ──────────────────────────────────────────────────────────
+    fetch('/wikipedia/wikis.json').then(r => r.json()).then(wikis => {
+      wikis.forEach(w => {
+        const opt = document.createElement('option');
+        opt.value       = w.slug;
+        opt.textContent = w.name;
+        $('wiki-select').appendChild(opt);
+      });
+    }).catch(() => {});
+
+    // ── Helpers ─────────────────────────────────────────────────────────────────
+    async function fetchPageJson(wikiSlug) {
+      const r = await fetch('/wikipedia/' + wikiSlug + '/pages.json');
+      if (!r.ok) return [];
+      return r.json();
+    }
+
+    async function fetchArticleHTML(wikiSlug, filePath) {
+      // filePath relative to wiki root e.g. elements/prion/index.html
+      const apiPath = 'wikipedia/' + wikiSlug + '/' + filePath;
+      const url     = 'https://api.github.com/repos/' + REPO + '/contents/' + apiPath;
+      const r       = await fetch(url, { headers: authH() });
+      if (!r.ok) return null;
+      const data = await r.json();
+      return atob(data.content.replace(/\n/g, ''));
+    }
+
+    function extractLinks(html) {
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      return [...div.querySelectorAll('a[href]')]
+        .map(a => a.getAttribute('href'))
+        .filter(h => h && !h.startsWith('#') && !h.startsWith('mailto:'));
+    }
+
+    function isInternal(href) {
+      return href.startsWith('/') || href.startsWith('./') || href.startsWith('../');
+    }
+
+    function normalise(href) {
+      // Ensure trailing slash, strip index.html
+      return href.replace(/\/index\.html$/, '/').replace(/([^/])$/, '$1/');
+    }
+
+    // ── Audit runner ─────────────────────────────────────────────────────────────
+    $('btn-run').addEventListener('click', async () => {
+      const selected = $('wiki-select').value;
+      const btn      = $('btn-run');
+      btn.disabled   = true;
+      $('audit-note').textContent = '';
+      $('audit-results').innerHTML = '';
+      $('audit-progress').style.display = 'block';
+
+      try {
+        // 1. Build complete valid-path set across ALL wikis (for cross-wiki checks)
+        setStatus('Loading wiki index…', 0);
+        const wikisResp = await fetch('/wikipedia/wikis.json');
+        const allWikis  = wikisResp.ok ? await wikisResp.json() : [];
+
+        const validPaths = new Set(); // normalised paths like /wikipedia/evolutionary/elements/prion/
+        const allArticles = []; // {wikiSlug, title, file, path}
+
+        for (const w of allWikis) {
+          const pages = await fetchPageJson(w.slug);
+          pages.forEach(group => {
+            (group.pages || []).forEach(p => {
+              const path = normalise('/wikipedia/' + w.slug + '/' + p.file);
+              validPaths.add(path);
+              allArticles.push({ wikiSlug: w.slug, title: p.title, file: p.file, path });
+            });
+            // Category pages are also valid
+            const catSlug = group.slug || slugify(group.category);
+            validPaths.add('/wikipedia/' + w.slug + '/' + catSlug + '/');
+          });
+          // Wiki hubs are valid
+          validPaths.add('/wikipedia/' + w.slug + '/');
+        }
+        validPaths.add('/');
+        validPaths.add('/wikipedia/');
+
+        // 2. Filter to wikis being audited
+        const targets = selected === '__all__'
+          ? allWikis.map(w => w.slug)
+          : [selected];
+
+        const brokenLinks  = []; // {article, href, from}
+        const orphanPages  = []; // {wikiSlug, title, path}
+        const externalLinks = new Map(); // href → Set of article titles
+        const referencedPaths = new Set();
+
+        const targetArticles = allArticles.filter(a => targets.includes(a.wikiSlug));
+        let done = 0;
+
+        setStatus('Scanning ' + targetArticles.length + ' articles…', 5);
+
+        for (const art of targetArticles) {
+          const pct = 5 + Math.round((done / targetArticles.length) * 90);
+          setStatus('Checking: ' + art.title + ' (' + (done + 1) + '/' + targetArticles.length + ')', pct);
+
+          const html = await fetchArticleHTML(art.wikiSlug, art.file);
+          if (!html) {
+            // File missing = broken page in pages.json
+            brokenLinks.push({ from: art.title, href: art.path, note: 'File not found on GitHub' });
+            done++; continue;
+          }
+
+          const links = extractLinks(html);
+          links.forEach(href => {
+            if (isInternal(href)) {
+              const norm = normalise(href);
+              referencedPaths.add(norm);
+              if (!validPaths.has(norm)) {
+                brokenLinks.push({ from: art.title, href: norm, note: 'No matching page in any wiki' });
+              }
+            } else if (href.startsWith('http')) {
+              if (!externalLinks.has(href)) externalLinks.set(href, new Set());
+              externalLinks.get(href).add(art.title);
+            }
+          });
+          done++;
+        }
+
+        // 3. Detect orphans (in pages.json but never linked from any scanned article)
+        targetArticles.forEach(art => {
+          if (!referencedPaths.has(art.path)) {
+            orphanPages.push(art);
+          }
+        });
+
+        // 4. Check /pages/ directory for legacy redirects
+        setStatus('Checking for legacy redirect pages…', 97);
+        const legacyRedirects = [];
+        try {
+          const pDir = await fetch(
+            'https://api.github.com/repos/' + REPO + '/contents/pages',
+            { headers: authH() }
+          );
+          if (pDir.ok) {
+            const items = await pDir.json();
+            items.forEach(item => legacyRedirects.push('/pages/' + item.name + '/'));
+          }
+        } catch {}
+
+        setStatus('Done.', 100);
+        renderResults(brokenLinks, orphanPages, externalLinks, legacyRedirects);
+
+      } catch(err) {
+        $('audit-status').textContent = 'Error: ' + err.message;
+        $('audit-status').style.color = '#ff5555';
+      }
+      btn.disabled = false;
+    });
+
+    function setStatus(msg, pct) {
+      $('audit-status').textContent = msg;
+      $('audit-bar').style.width    = pct + '%';
+    }
+
+    function renderResults(broken, orphans, external, redirects) {
+      const out = document.createElement('div');
+
+      // ── Broken links ────────────────────────────────────────────────────────
+      const brokenSection = section(
+        'BROKEN INTERNAL LINKS', broken.length,
+        broken.length ? 'audit-tag broken' : null
+      );
+      if (!broken.length) {
+        brokenSection.appendChild(empty('No broken internal links found.'));
+      } else {
+        const t = table(['FROM ARTICLE', 'BROKEN LINK', 'NOTE']);
+        broken.forEach(b => {
+          const tr = document.createElement('tr');
+          tr.innerHTML =
+            '<td>' + esc(b.from) + '</td>' +
+            '<td>' + esc(b.href) + '</td>' +
+            '<td>' + esc(b.note) + '</td>';
+          t.querySelector('tbody').appendChild(tr);
+        });
+        brokenSection.appendChild(t);
+      }
+      out.appendChild(brokenSection);
+
+      // ── Orphaned pages ───────────────────────────────────────────────────────
+      const orphanSection = section('ORPHANED PAGES', orphans.length, orphans.length ? 'audit-tag orphan' : null);
+      if (!orphans.length) {
+        orphanSection.appendChild(empty('No orphaned pages found.'));
+      } else {
+        const t = table(['WIKI', 'ARTICLE', 'PATH']);
+        orphans.forEach(o => {
+          const tr = document.createElement('tr');
+          tr.innerHTML =
+            '<td>' + esc(o.wikiSlug) + '</td>' +
+            '<td>' + esc(o.title) + '</td>' +
+            '<td><a href="' + o.path + '">' + esc(o.path) + '</a></td>';
+          t.querySelector('tbody').appendChild(tr);
+        });
+        orphanSection.appendChild(t);
+      }
+      out.appendChild(orphanSection);
+
+      // ── Legacy redirects ─────────────────────────────────────────────────────
+      const redirSection = section('LEGACY REDIRECT PAGES', redirects.length, redirects.length ? 'audit-tag redirect' : null);
+      if (!redirects.length) {
+        redirSection.appendChild(empty('No legacy redirect pages found.'));
+      } else {
+        const t = table(['PATH']);
+        redirects.forEach(r => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td><a href="' + r + '">' + esc(r) + '</a></td>';
+          t.querySelector('tbody').appendChild(tr);
+        });
+        redirSection.appendChild(t);
+      }
+      out.appendChild(redirSection);
+
+      // ── External links ───────────────────────────────────────────────────────
+      const extSection = section('EXTERNAL LINKS', external.size, null);
+      if (!external.size) {
+        extSection.appendChild(empty('No external links found.'));
+      } else {
+        const t = table(['URL', 'REFERENCED FROM']);
+        external.forEach((articles, href) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML =
+            '<td><a href="' + href + '" target="_blank" rel="noopener">' + esc(href) + '</a></td>' +
+            '<td style="color:var(--text-muted);font-size:0.72rem;">' + esc([...articles].join(', ')) + '</td>';
+          t.querySelector('tbody').appendChild(tr);
+        });
+        extSection.appendChild(t);
+      }
+      out.appendChild(extSection);
+
+      $('audit-results').appendChild(out);
+    }
+
+    function section(title, count, tagClass) {
+      const div  = document.createElement('div');
+      div.className = 'audit-section';
+      const h = document.createElement('div');
+      h.className = 'audit-section-title';
+      h.innerHTML = title + '<span class="count">' + count + '</span>';
+      if (tagClass && count > 0) {
+        const tag = document.createElement('span');
+        tag.className = tagClass;
+        tag.textContent = count > 0 ? 'ISSUES' : 'OK';
+        h.appendChild(tag);
+      }
+      div.appendChild(h);
+      return div;
+    }
+
+    function empty(msg) {
+      const p = document.createElement('p');
+      p.className = 'audit-empty';
+      p.textContent = '✓ ' + msg;
+      return p;
+    }
+
+    function table(cols) {
+      const tbl = document.createElement('table');
+      tbl.className = 'audit-table';
+      const thead = document.createElement('thead');
+      const tr = document.createElement('tr');
+      cols.forEach(c => { const th = document.createElement('th'); th.textContent = c; tr.appendChild(th); });
+      thead.appendChild(tr);
+      tbl.appendChild(thead);
+      tbl.appendChild(document.createElement('tbody'));
+      return tbl;
+    }
+
+    function esc(s) {
+      return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+  </script>
+</body>
+</html>

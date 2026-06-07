@@ -613,6 +613,7 @@ hr {
   margin-bottom: 6px;
 }
 
+/* Legacy toggle button (kept for any pages still using it) */
 .dropdown-toggle {
   display: flex;
   align-items: center;
@@ -633,14 +634,48 @@ hr {
 }
 
 .dropdown-toggle:hover  { color: var(--amber); background: var(--bg-hover); }
+.dropdown-toggle .arrow { font-size: 0.5rem; transition: transform 0.2s; color: var(--text-faint); }
+.dropdown-toggle.open .arrow { transform: rotate(90deg); }
 
-.dropdown-toggle .arrow {
-  font-size: 0.5rem;
-  transition: transform 0.2s;
-  color: var(--text-faint);
+/* New split header: link (left) + arrow button (right) */
+.dropdown-header {
+  display: flex;
+  align-items: center;
+  border-bottom: none;
 }
 
-.dropdown-toggle.open .arrow { transform: rotate(90deg); }
+.dropdown-cat-link {
+  flex: 1;
+  display: block;
+  padding: 7px 14px;
+  font-family: var(--font-head);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s, background 0.15s;
+}
+
+.dropdown-cat-link:hover,
+.dropdown-cat-link.active { color: var(--amber); background: var(--bg-hover); text-shadow: none; }
+
+.dropdown-arrow {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  padding: 7px 12px;
+  cursor: pointer;
+  font-size: 0.5rem;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.dropdown-arrow:hover      { color: var(--amber); background: var(--bg-hover); }
+.dropdown-arrow .arrow     { transition: transform 0.2s; display: inline-block; }
+.dropdown-arrow.open .arrow { transform: rotate(90deg); }
 
 .dropdown {
   display: none;
@@ -1125,6 +1160,26 @@ hr.wiki-rule {
 .wiki-cat-tag:hover {
   color: var(--amber);
   border-color: var(--amber-dim);
+}
+
+/* ── Category page: article list ─────────────────────────────────────────── */
+
+.wiki-cat-article {
+  display: block;
+  padding: 10px 14px;
+  background: var(--bg-panel);
+  border: var(--border);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.wiki-cat-article:hover {
+  border-color: var(--amber-dim);
+  background: var(--bg-hover);
+  color: var(--amber);
+  text-shadow: none;
 }
 
 .wiki-meta-edited { font-size: 0.72rem; }
