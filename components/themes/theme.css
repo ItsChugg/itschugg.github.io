@@ -1461,6 +1461,7 @@ hr.wiki-rule {
   border-top: var(--border);
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   flex-shrink: 0;
   background: var(--bg-panel);
@@ -1753,17 +1754,17 @@ hr.wiki-rule {
 .btn-publish:hover:not(:disabled) { box-shadow: var(--glow-sm); background: var(--amber-faint); }
 .btn-publish:disabled { opacity: 0.35; cursor: not-allowed; }
 
-/* Publish status */
+/* Publish status — sits on its own row below the buttons */
 .pub-status {
   font-size: 0.70rem;
   color: var(--text-muted);
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  width: 100%;
+  line-height: 1.5;
+  word-break: break-word;
+  min-height: 0;
 }
 
+.pub-status:empty { display: none; }
 .pub-status.ok  { color: var(--amber); }
 .pub-status.err { color: #ff5555; }
 

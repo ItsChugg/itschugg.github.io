@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hub Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=16" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=17" />
 </head>
 <body>
-  <script src="/components/site-config.js?v=16"></script>
-  <script src="/components/wiki-utils.js?v=16"></script>
-  <script src="/components/navbar/inject-navbar.js?v=16" defer></script>
+  <script src="/components/site-config.js?v=17"></script>
+  <script src="/components/wiki-utils.js?v=17"></script>
+  <script src="/components/navbar/inject-navbar.js?v=17" defer></script>
 
   <!-- Floating format toolbar -->
   <div class="fmt-toolbar" id="fmt-toolbar">
@@ -446,21 +446,16 @@
       if (stateSha) sBody.sha  = stateSha;
 
       try {
-        const [hr, sr] = await Promise.all([
-          fetch(htmlApi,  { method: 'PUT', headers: { ...authHdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify(hBody) }),
-          fetch(stateApi, { method: 'PUT', headers: { ...authHdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify(sBody) }),
-        ]);
-        if (hr.ok && sr.ok) {
-          status.className = 'pub-status ok';
-          status.textContent = 'Published — live in ~60s at itschu.gg/wikipedia/' + slug + '/';
-        } else {
-          const err = await (hr.ok ? sr : hr).json().catch(() => ({}));
-          status.className = 'pub-status err';
-          status.textContent = 'GitHub error: ' + (err.message || 'unknown');
-        }
-      } catch {
+        // Write sequentially to avoid branch-level race conditions.
+        const sr = await fetch(stateApi, { method: 'PUT', headers: { ...authHdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify(sBody) });
+        if (!sr.ok) { const e = await sr.json().catch(()=>({})); throw new Error(e.message || 'state write failed: ' + sr.status); }
+        const hr = await fetch(htmlApi,  { method: 'PUT', headers: { ...authHdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify(hBody) });
+        if (!hr.ok) { const e = await hr.json().catch(()=>({})); throw new Error(e.message || 'html write failed: ' + hr.status); }
+        status.className = 'pub-status ok';
+        status.textContent = 'Published — live in ~60s at itschu.gg/wikipedia/' + slug + '/';
+      } catch(err) {
         status.className = 'pub-status err';
-        status.textContent = 'Network error — try again.';
+        status.textContent = 'Error: ' + err.message;
       }
       btn.disabled = false;
     });
