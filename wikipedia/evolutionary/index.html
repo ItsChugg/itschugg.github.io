@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Evolutionary — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=14" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=17" />
 </head>
 <body>
 
@@ -25,22 +25,32 @@
         </div>
 
         <h1>Evolutionary</h1>
-
-        <p><strong>Evolutionary</strong> is a fictional universe developed by Russell G. Rinaldo and associates, centered on the intersecting themes of science fiction, arcane biology, and the relentless mechanics of natural selection. It draws heavily from games and works such as <em>Stellaris</em>, <em>Spore</em>, and <em>Dune</em>, blending hard sci-fi cosmology with organic magic systems. The universe is under active development and subject to change.</p>
-        <p>Civilizations rise and fall across a vast cosmos shaped by the peculiar properties of <a href="/wikipedia/evolutionary/prion/">Prion</a>, the forces of elemental magic, and the pressures of evolutionary biology. No two star systems are alike; the local Prion field determines what forms of magic -- if any -- are accessible to the species that live there.</p>
+        <p><b>Evolutionary</b> is a fictional universe centered around biology and <i>mostly</i> hard science-fiction. It draws heavily from a multitude of games and stories for inspiration. A recurring theme is that while life is fairly common throughout the universe, it is so vast and diverse that it is largely incompatible with most other forms, breathing life into the technological and societal elements needed to become space-faring. <a href="https://en.wikipedia.org/wiki/Mirror-image_life">Mirror Life</a>, and&nbsp;<a href="https://en.wikipedia.org/wiki/Hypothetical_types_of_biochemistry#Silicon_biochemistry">Silicon Chemistry</a>&nbsp;are but two examples of the difficulties that could await,&nbsp;</p>
 
         <hr class="wiki-rule">
 
         <div class="wiki-stats wiki-stats-sm">
-          <div class="wiki-stat"><span class="wiki-stat-num" id="stat-pages">--</span><span class="wiki-stat-label">Pages</span></div>
-          <div class="wiki-stat"><span class="wiki-stat-num" id="stat-cats">--</span><span class="wiki-stat-label">Categories</span></div>
+          <div class="wiki-stat">
+            <span class="wiki-stat-num" id="stat-pages">—</span>
+            <span class="wiki-stat-label">Pages</span>
+          </div>
+          <div class="wiki-stat">
+            <span class="wiki-stat-num" id="stat-cats">—</span>
+            <span class="wiki-stat-label">Categories</span>
+          </div>
         </div>
 
-        <div class="wiki-hub-box">
-          <div class="wiki-hub-box-title">Featured -- Prion</div>
-          <p style="font-size:0.83rem;line-height:1.75;"><strong><a href="/wikipedia/evolutionary/prion/">Prion</a></strong> is a protein-like substance discovered across the known universe, serving as the energetic and metaphysical fuel for what is commonly recognized as magic. Its biochemical structure varies by region, but its core property -- an innate connection to arcane phenomena -- remains consistent. Only biologically organic beings can harness Prion to its full extent, placing Prion-utilizing species at the forefront of magical evolution.</p>
-          <p style="font-size:0.78rem;margin-top:8px;"><a href="/wikipedia/evolutionary/prion/">Read full article</a></p>
-        </div>
+        
+          <div class="wiki-hub-box">
+            <div class="wiki-hub-box-title">Featured — Prion</div>
+            <p style="font-size:0.83rem;line-height:1.75;">
+              <strong><a href="/wikipedia/evolutionary/prion/">Prion</a></strong>
+              Prion is a protein-like substance discovered across the known universe, serving as the energetic and metaphysical fuel for what is commonly recognized as &quot;magic.&quot; Its biochemical structure varies by region, but its core property â an innate connection to arcane phenomena â remains consistent. Only biologically organic beings can harness Prion to its full extent, placing Prion-utilizing species at the forefront of magical evolution.
+            </p>
+            <p style="font-size:0.78rem;margin-top:8px;">
+              <a href="/wikipedia/evolutionary/prion/">Read full article &rarr;</a>
+            </p>
+          </div>
 
         <section>
           <h2>Browse by Category</h2>
@@ -57,24 +67,27 @@
 
   <script>
     fetch('/wikipedia/evolutionary/pages.json')
-      .then(function(r){ return r.json(); })
-      .then(function(data){
+      .then(r => r.json())
+      .then(data => {
         var sp = document.getElementById('stat-pages');
         var sc = document.getElementById('stat-cats');
-        if(sp) sp.textContent = data.reduce(function(n,g){ return n+g.pages.length; },0);
-        if(sc) sc.textContent = data.length;
+        if (sp) sp.textContent = data.reduce(function(n, g) { return n + g.pages.length; }, 0);
+        if (sc) sc.textContent = data.length;
         var cats = document.getElementById('hub-categories');
-        if(cats) data.forEach(function(g){
+        if (cats) data.forEach(function(g) {
           var a = document.createElement('a');
-          a.className='wiki-category-card'; a.href='#';
-          a.innerHTML='<div class="cat-name">'+g.category+'</div><div class="cat-count">'+g.pages.length+' article'+(g.pages.length===1?'':'s')+'</div>';
+          a.className = 'wiki-category-card';
+          a.href = '#';
+          a.innerHTML = '<div class="cat-name">' + g.category + '</div><div class="cat-count">' +
+            g.pages.length + ' article' + (g.pages.length === 1 ? '' : 's') + '</div>';
           cats.appendChild(a);
         });
-      }).catch(function(){});
+      })
+      .catch(function() {});
   </script>
 
-  <script src="/components/site-config.js?v=14"></script>
-  <script src="/components/navbar/inject-navbar.js?v=14" defer></script>
-  <script src="/components/sidebar/inject-sidebar.js?v=14" defer></script>
+  <script src="/components/site-config.js?v=17"></script>
+  <script src="/components/navbar/inject-navbar.js?v=17" defer></script>
+  <script src="/components/sidebar/inject-sidebar.js?v=17" defer></script>
 </body>
 </html>
