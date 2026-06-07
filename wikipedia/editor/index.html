@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wiki Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=25" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=26" />
 </head>
 <body>
-  <script src="/components/site-config.js?v=25"></script>
-  <script src="/components/wiki-utils.js?v=25"></script>
-  <script src="/components/navbar/inject-navbar.js?v=25" defer></script>
+  <script src="/components/site-config.js?v=26"></script>
+  <script src="/components/wiki-utils.js?v=26"></script>
+  <script src="/components/navbar/inject-navbar.js?v=26" defer></script>
 
   <!-- Floating format toolbar -->
   <div class="fmt-toolbar" id="fmt-toolbar">
@@ -37,65 +37,48 @@
       </div>
       <div class="editor-sidebar-body">
 
+        <!-- CATEGORY — determines parent path automatically -->
         <div class="f-group">
-          <div class="f-label">PARENT PATH <small style="font-family:var(--font-mono);font-size:0.60rem;letter-spacing:0;color:var(--text-faint);">(repo-relative)</small></div>
-          <input class="f-input" id="f-parent" type="text" autocomplete="off" spellcheck="false" />
-          <div class="parent-presets" id="parent-presets"></div>
+          <div class="f-label">CATEGORY</div>
+          <select class="f-input f-select" id="f-category">
+            <option value="" disabled selected>Select category…</option>
+          </select>
+          <!-- Inline new-category form (hidden until + New category… is picked) -->
+          <div id="new-cat-form" style="display:none;flex-direction:column;gap:5px;margin-top:6px;
+               background:var(--bg);border:var(--border);padding:8px;">
+            <input class="f-input" id="new-cat-name" type="text" placeholder="Category name…"
+                   autocomplete="off" />
+            <div style="font-family:var(--font-mono);font-size:0.68rem;color:var(--text-faint);">
+              Slug: <span id="new-cat-slug-preview" style="color:var(--amber);">—</span>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn-add" id="new-cat-confirm">CREATE</button>
+              <button class="btn-add" id="new-cat-cancel"
+                      style="color:var(--text-faint);">CANCEL</button>
+            </div>
+            <span id="new-cat-status" style="font-size:0.68rem;color:var(--text-muted);"></span>
+          </div>
         </div>
 
-        <div class="f-group">
-          <div class="f-label">SLUG <small style="font-family:var(--font-mono);font-size:0.60rem;letter-spacing:0;color:var(--text-faint);">(auto from title)</small></div>
-          <input class="f-input" id="f-slug" type="text" placeholder="article-slug" autocomplete="off" spellcheck="false" />
-        </div>
-
-        <div class="f-group">
-          <div class="f-label">CATEGORIES</div>
-          <div class="cat-grid" id="cat-grid"></div>
-        </div>
-
+        <!-- SECTIONS -->
         <div class="f-group">
           <div class="f-label">SECTIONS</div>
           <div id="sec-sidebar-list" style="display:flex;flex-direction:column;gap:5px;"></div>
           <button class="btn-add" id="sec-add" style="margin-top:4px;">+ ADD SECTION</button>
         </div>
 
+        <!-- SEE ALSO (compact, collapsible) -->
         <div class="f-group">
-          <div class="f-label collapsible-head" id="ib-head" style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
-            <span class="collapsible-caret" style="font-size:0.6rem;transition:transform 0.15s;display:inline-block;">▶</span> INFOBOX
+          <div class="f-label collapsible-head" id="sa-head"
+               style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
+            <span class="collapsible-caret"
+                  style="font-size:0.6rem;transition:transform 0.15s;display:inline-block;">▶</span>
+            SEE ALSO
           </div>
-          <div class="collapsible-body" id="ib-body" style="display:none;flex-direction:column;gap:7px;margin-top:6px;">
-            <div id="ib-rows"></div>
-            <button class="btn-add" id="ib-add">+ ADD ROW</button>
-          </div>
-        </div>
-
-        <div class="f-group">
-          <div class="f-label collapsible-head" id="sa-head" style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
-            <span class="collapsible-caret" style="font-size:0.6rem;transition:transform 0.15s;display:inline-block;">▶</span> SEE ALSO
-          </div>
-          <div class="collapsible-body" id="sa-body" style="display:none;flex-direction:column;gap:7px;margin-top:6px;">
+          <div class="collapsible-body" id="sa-body"
+               style="display:none;flex-direction:column;gap:5px;margin-top:6px;">
             <div id="sa-rows"></div>
             <button class="btn-add" id="sa-add">+ ADD LINK</button>
-          </div>
-        </div>
-
-        <div class="f-group">
-          <div class="f-label collapsible-head" id="ps-head" style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
-            <span class="collapsible-caret" style="font-size:0.6rem;transition:transform 0.15s;display:inline-block;">▶</span> PAGE STYLE
-          </div>
-          <div class="collapsible-body" id="ps-body" style="display:none;flex-direction:column;gap:7px;margin-top:6px;">
-            <div class="f-label">BODY TEXT SIZE</div>
-            <div class="style-btn-row" style="display:flex;gap:5px;">
-              <button class="style-btn" id="bs-sm">SMALL</button>
-              <button class="style-btn on" id="bs-md">MEDIUM</button>
-              <button class="style-btn" id="bs-lg">LARGE</button>
-            </div>
-            <div class="f-label" style="margin-top:6px;">HEADING SCALE</div>
-            <div class="style-btn-row" style="display:flex;gap:5px;">
-              <button class="style-btn" id="hs-sm">COMPACT</button>
-              <button class="style-btn on" id="hs-md">NORMAL</button>
-              <button class="style-btn" id="hs-lg">LARGE</button>
-            </div>
           </div>
         </div>
 
@@ -114,7 +97,6 @@
         <div class="wiki-breadcrumb" id="bc-display"><a href="/">HOME</a></div>
         <h1 id="ed-title" contenteditable="true" class="ed-field"
             spellcheck="false" data-placeholder="Article title…"></h1>
-        <div id="ed-infobox-render"></div>
         <div id="ed-toc-render"></div>
         <div id="ed-lead" contenteditable="true" class="ed-field ed-body"
              data-placeholder="Opening summary…"></div>
@@ -144,30 +126,21 @@
     let uid = 0;
     const nid = () => ++uid;
 
-    const CATS = ['Anomalies','Biology','Elements','Magic','Sapient','Species',
-                  'Technology','Unique Characters','Unique Systems'];
-
-    const bodySzMap  = { sm:'0.82rem', md:'0.88rem', lg:'0.96rem' };
-    const headSzMap  = { sm:'0.82',    md:'1',        lg:'1.18'   };
-
-    // Read the current build version from this page's own CSS link so published
-    // articles always reference whichever version was live when they were saved.
     function liveVer() {
       const link = document.querySelector('link[href*="theme.css"]');
       const m = link && link.getAttribute('href').match(/\?v=(\d+)/);
       return m ? m[1] : '14';
     }
 
-    let ibRows = [], saRows = [], activeCats = new Set();
-    let bodySize = 'md', headScale = 'md';
-    let slugLocked = false;
+    let saRows = [];
+    let activeCategory   = ''; // selected category slug — determines parent path
+    let categoriesCache  = []; // [{slug, category}] from pages.json
 
     const wikiRoot = 'wikipedia/' + wikiSlug;
-    $('f-parent').value = wikiRoot;
 
     // ── Utilities ─────────────────────────────────────────────────────────────
-    function getParent()   { return $('f-parent').value.trim().replace(/\/+$/, ''); }
-    function getSlug()     { return $('f-slug').value.trim() || slugify($('ed-title').textContent.trim()); }
+    function getParent()   { return activeCategory ? wikiRoot + '/' + activeCategory : wikiRoot; }
+    function getSlug()     { return slugify($('ed-title').textContent.trim() || 'untitled'); }
     function getFullPath() { const p = getParent(), s = getSlug(); return p && s ? p + '/' + s : ''; }
 
     function textToHtml(text) {
@@ -207,70 +180,101 @@
       $('bc-display').innerHTML = html;
     }
 
-    // ── Parent presets ─────────────────────────────────────────────────────────
-    function syncPresetHighlight() {
-      const val = $('f-parent').value.trim();
-      document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('on', b.dataset.path === val));
-    }
-
-    function buildPresetBtn(path) {
-      const b = document.createElement('button');
-      b.className    = 'preset-btn';
-      b.dataset.path = path;
-      const parts    = path.split('/');
-      b.textContent  = parts.length <= 2 ? 'root' : parts[parts.length - 1];
-      b.title        = path;
-      b.addEventListener('click', () => {
-        $('f-parent').value = path;
-        syncPresetHighlight();
-        syncSlugDisplay();
+    // ── Category dropdown ──────────────────────────────────────────────────────
+    function buildCategoryDropdown(selected) {
+      const sel = $('f-category');
+      sel.innerHTML = '<option value="" disabled' + (selected ? '' : ' selected') + '>Select category…</option>';
+      categoriesCache.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.slug;
+        opt.textContent = cat.category;
+        if (cat.slug === selected) opt.selected = true;
+        sel.appendChild(opt);
       });
-      $('parent-presets').appendChild(b);
+      const div = document.createElement('option'); div.disabled = true; div.textContent = '──────────';
+      sel.appendChild(div);
+      const newOpt = document.createElement('option');
+      newOpt.value = '__new__'; newOpt.textContent = '+ New category…';
+      sel.appendChild(newOpt);
     }
 
-    buildPresetBtn(wikiRoot);
+    // Load categories from pages.json
     fetch('/wikipedia/' + wikiSlug + '/pages.json')
       .then(r => r.json())
       .then(data => {
-        const dirs = [...new Set(data.flatMap(g => g.pages.map(p => p.file.split('/')[0])))];
-        dirs.forEach(d => buildPresetBtn(wikiRoot + '/' + d));
-        syncPresetHighlight();
+        categoriesCache = data.map(g => ({ slug: g.slug || slugify(g.category), category: g.category }));
+        buildCategoryDropdown(activeCategory);
       })
-      .catch(() => {});
-
-    // ── Sidebar field listeners ────────────────────────────────────────────────
-    $('f-parent').addEventListener('input', () => {
-      const v = $('f-parent').value;
-      if (v.startsWith('/')) $('f-parent').value = v.replace(/^\/+/, '');
-      syncPresetHighlight();
-      syncSlugDisplay();
-    });
-
-    $('f-slug').addEventListener('input', () => {
-      const raw   = $('f-slug').value;
-      const clean = raw.replace(/ /g, '-');
-      if (clean !== raw) $('f-slug').value = clean;
-      slugLocked = !!$('f-slug').value;
-      syncSlugDisplay();
-    });
-
-    // ── Categories ─────────────────────────────────────────────────────────────
-    CATS.forEach(c => {
-      const b = document.createElement('button');
-      b.className   = 'cat-btn';
-      b.textContent = c;
-      b.addEventListener('click', () => {
-        activeCats.has(c) ? (activeCats.delete(c), b.classList.remove('on'))
-                          : (activeCats.add(c),    b.classList.add('on'));
-        renderCatsPreview();
+      .catch(() => {
+        // Fallback to common categories if pages.json not found
+        categoriesCache = ['Anomalies','Biology','Elements','Magic','Sapient','Species',
+                           'Technology','Unique Characters','Unique Systems']
+          .map(n => ({ slug: slugify(n), category: n }));
+        buildCategoryDropdown(activeCategory);
       });
-      $('cat-grid').appendChild(b);
+
+    $('f-category').addEventListener('change', () => {
+      const val = $('f-category').value;
+      if (val === '__new__') {
+        $('f-category').value = activeCategory || '';
+        $('new-cat-form').style.display = 'flex';
+        $('new-cat-name').focus();
+        return;
+      }
+      activeCategory = val;
+      syncSlugDisplay();
+      renderCatPreview();
     });
 
-    // ── Collapsibles ───────────────────────────────────────────────────────────
-    ['ib','sa','ps'].forEach(id => {
-      const head = $(id + '-head');
-      const body = $(id + '-body');
+    // ── New category form ──────────────────────────────────────────────────────
+    $('new-cat-name').addEventListener('input', () => {
+      $('new-cat-slug-preview').textContent = slugify($('new-cat-name').value.trim()) || '—';
+    });
+
+    $('new-cat-confirm').addEventListener('click', async () => {
+      const name = $('new-cat-name').value.trim();
+      const slug = slugify(name);
+      if (!name || !slug) return;
+      if (categoriesCache.find(c => c.slug === slug)) {
+        $('new-cat-status').style.color = '#ff5555';
+        $('new-cat-status').textContent = 'Category "' + slug + '" already exists.'; return;
+      }
+      $('new-cat-confirm').disabled = true;
+      $('new-cat-status').style.color = 'var(--text-muted)';
+      $('new-cat-status').textContent = 'Creating…';
+      try {
+        const pUrl   = 'https://api.github.com/repos/' + REPO + '/contents/wikipedia/' + wikiSlug + '/pages.json';
+        const pResp  = await fetch(pUrl, { headers: authHdrs() });
+        if (!pResp.ok) throw new Error('Could not read pages.json');
+        const pData  = await pResp.json();
+        const cur    = JSON.parse(atob(pData.content.replace(/\n/g, '')));
+        await WIKI.ghPut('wikipedia/' + wikiSlug + '/pages.json',
+          JSON.stringify([...cur, { slug, category: name, lead: '', pages: [] }], null, 2),
+          'wiki: add "' + name + '" category');
+        await WIKI.ghPut('wikipedia/' + wikiSlug + '/' + slug + '/index.html',
+          WIKI.genCategoryHTML(), 'wiki: create "' + name + '" category page');
+        categoriesCache.push({ slug, category: name });
+        buildCategoryDropdown(slug);
+        activeCategory = slug;
+        $('f-category').value = slug;
+        $('new-cat-name').value = ''; $('new-cat-slug-preview').textContent = '—';
+        $('new-cat-status').textContent = ''; $('new-cat-form').style.display = 'none';
+        syncSlugDisplay(); renderCatPreview();
+      } catch(err) {
+        $('new-cat-status').style.color = '#ff5555';
+        $('new-cat-status').textContent = 'Error: ' + err.message;
+      }
+      $('new-cat-confirm').disabled = false;
+    });
+
+    $('new-cat-cancel').addEventListener('click', () => {
+      $('new-cat-name').value = ''; $('new-cat-slug-preview').textContent = '—';
+      $('new-cat-status').textContent = ''; $('new-cat-form').style.display = 'none';
+    });
+
+    // ── See Also collapsible ───────────────────────────────────────────────────
+    {
+      const head = $('sa-head'), body = $('sa-body');
       const caret = head.querySelector('.collapsible-caret');
       let open = false;
       head.addEventListener('click', () => {
@@ -278,73 +282,29 @@
         body.style.display = open ? 'flex' : 'none';
         if (caret) caret.style.transform = open ? 'rotate(90deg)' : '';
       });
-    });
-
-    // ── Page style ─────────────────────────────────────────────────────────────
-    ['sm','md','lg'].forEach(v => {
-      $('bs-' + v).addEventListener('click', () => {
-        bodySize = v;
-        ['sm','md','lg'].forEach(x => $('bs-' + x).classList.toggle('on', x === v));
-      });
-      $('hs-' + v).addEventListener('click', () => {
-        headScale = v;
-        ['sm','md','lg'].forEach(x => $('hs-' + x).classList.toggle('on', x === v));
-      });
-    });
-
-    // ── Infobox sidebar ────────────────────────────────────────────────────────
-    $('ib-add').addEventListener('click', () => { ibRows.push({id:nid(),k:'',v:''}); renderIB(); });
-
-    function renderIB() {
-      const el = $('ib-rows'); el.innerHTML = '';
-      ibRows.forEach(r => {
-        const d = document.createElement('div');
-        d.className = 'kv-row';
-        d.style.cssText = 'display:flex;gap:6px;align-items:center;';
-        d.innerHTML = `
-          <input placeholder="Property" value="${esc(r.k)}" data-id="${r.id}" data-f="k"
-                 style="flex:1;background:var(--bg);border:var(--border);color:var(--text);
-                        font-family:var(--font-mono);font-size:0.75rem;padding:5px 8px;min-width:0;" />
-          <input placeholder="Value" value="${esc(r.v)}" data-id="${r.id}" data-f="v"
-                 style="flex:1;background:var(--bg);border:var(--border);color:var(--text);
-                        font-family:var(--font-mono);font-size:0.75rem;padding:5px 8px;min-width:0;" />
-          <button class="btn-remove" data-id="${r.id}"
-                  style="background:none;border:none;color:var(--text-muted);cursor:pointer;
-                         font-size:0.82rem;padding:0 3px;flex-shrink:0;">✕</button>`;
-        el.appendChild(d);
-        d.querySelectorAll('input').forEach(i => i.addEventListener('input', e => {
-          const row = ibRows.find(x => x.id === +e.target.dataset.id);
-          if (row) row[e.target.dataset.f] = e.target.value;
-          renderInfoboxPreview();
-        }));
-        d.querySelector('.btn-remove').addEventListener('click', e => {
-          ibRows = ibRows.filter(x => x.id !== +e.target.dataset.id);
-          renderIB(); renderInfoboxPreview();
-        });
-      });
-      renderInfoboxPreview();
     }
 
-    // ── See Also sidebar ───────────────────────────────────────────────────────
+    // ── See Also sidebar (compact) ─────────────────────────────────────────────
     $('sa-add').addEventListener('click', () => { saRows.push({id:nid(),url:'',label:'',desc:''}); renderSA(); });
 
     function renderSA() {
       const el = $('sa-rows'); el.innerHTML = '';
+      const s = 'background:none;border:none;border-bottom:1px solid var(--amber-faint);' +
+                'color:var(--text);font-family:var(--font-mono);font-size:0.72rem;padding:2px 4px;outline:none;';
       saRows.forEach(r => {
         const d = document.createElement('div');
-        d.style.cssText = 'display:flex;gap:5px;align-items:center;flex-wrap:wrap;';
-        const inp = (ph, val, f, w) =>
-          `<input placeholder="${ph}" value="${esc(val)}" data-id="${r.id}" data-f="${f}"
-                  style="flex:${w};min-width:0;background:var(--bg);border:var(--border);
-                         color:var(--text);font-family:var(--font-mono);font-size:0.73rem;padding:4px 7px;" />`;
-        d.innerHTML = inp('/url/', r.url, 'url', '0 0 80px') +
-                      inp('Label', r.label, 'label', '1') +
-                      inp('Description', r.desc, 'desc', '2') +
-                      `<button class="btn-remove" data-id="${r.id}"
-                               style="background:none;border:none;color:var(--text-muted);cursor:pointer;
-                                      font-size:0.82rem;padding:0 3px;flex-shrink:0;">✕</button>`;
+        d.style.cssText = 'background:var(--bg);border:var(--border);padding:6px;display:flex;flex-direction:column;gap:3px;';
+        d.innerHTML =
+          '<div style="display:flex;gap:4px;align-items:center;">' +
+            '<input placeholder="Label" value="' + esc(r.label) + '" data-id="' + r.id + '" data-f="label" style="flex:1;' + s + '" />' +
+            '<button class="btn-remove" data-id="' + r.id + '">✕</button>' +
+          '</div>' +
+          '<div style="display:flex;gap:4px;">' +
+            '<input placeholder="/url/" value="' + esc(r.url) + '" data-id="' + r.id + '" data-f="url" style="flex:0 0 90px;' + s + '" />' +
+            '<input placeholder="Description…" value="' + esc(r.desc) + '" data-id="' + r.id + '" data-f="desc" style="flex:1;' + s + '" />' +
+          '</div>';
         el.appendChild(d);
-        d.querySelectorAll('input').forEach(i => i.addEventListener('input', e => {
+        d.querySelectorAll('input[data-f]').forEach(i => i.addEventListener('input', e => {
           const row = saRows.find(x => x.id === +e.target.dataset.id);
           if (row) row[e.target.dataset.f] = e.target.value;
           renderSeeAlsoPreview();
@@ -441,20 +401,6 @@
     }
 
     // ── Canvas: read-only preview renders ──────────────────────────────────────
-    function renderInfoboxPreview() {
-      const el = $('ed-infobox-render');
-      const valid = ibRows.filter(r => r.k);
-      if (!valid.length) { el.innerHTML = ''; return; }
-      const title = $('ed-title').textContent.trim() || 'Infobox';
-      el.innerHTML =
-        '<div class="infobox">' +
-          '<div class="infobox-title">' + esc(title) + '</div>' +
-          '<table>' +
-            valid.map(r => '<tr><td>' + esc(r.k) + '</td><td>' + esc(r.v) + '</td></tr>').join('') +
-          '</table>' +
-        '</div>';
-    }
-
     function renderTocPreview() {
       const el = $('ed-toc-render');
       const hs = [...document.querySelectorAll('.ed-section h2')]
@@ -481,21 +427,21 @@
         '</div>';
     }
 
-    function renderCatsPreview() {
+    function renderCatPreview() {
       const el = $('ed-meta-render');
-      const cats = [...activeCats];
-      el.innerHTML = cats.length
-        ? '<div class="wiki-meta-categories"><span class="wiki-meta-label">Categories</span>' +
-            cats.map(c => '<a class="wiki-cat-tag" href="#">' + c + '</a>').join('') +
-          '</div>'
-        : '';
+      if (!activeCategory) { el.innerHTML = ''; return; }
+      const entry = categoriesCache.find(c => c.slug === activeCategory);
+      const name  = entry ? entry.category : activeCategory;
+      el.innerHTML =
+        '<div class="wiki-meta-categories"><span class="wiki-meta-label">Category</span>' +
+          '<a class="wiki-cat-tag" href="/wikipedia/' + wikiSlug + '/' + activeCategory + '/">' +
+            esc(name) + '</a>' +
+        '</div>';
     }
 
     // ── Title events ───────────────────────────────────────────────────────────
     $('ed-title').addEventListener('input', () => {
-      if (!slugLocked) $('f-slug').value = slugify($('ed-title').textContent.trim());
-      syncSlugDisplay();
-      renderInfoboxPreview(); // infobox title mirrors article title
+      syncSlugDisplay(); // slug is always auto-derived from title
     });
     $('ed-title').addEventListener('keydown', e => {
       if (e.key === 'Enter') {
@@ -770,104 +716,70 @@
     // ── State ──────────────────────────────────────────────────────────────────
     function buildState() {
       return {
-        v:         2,
-        parent:    getParent(),
-        title:     $('ed-title').textContent.trim(),
-        slug:      getSlug(),
-        leadHtml:  cleanForSave($('ed-lead').innerHTML),
-        sections:  [...document.querySelectorAll('.ed-section')].map(sec => ({
+        v:              2,
+        parent:         getParent(),
+        title:          $('ed-title').textContent.trim(),
+        slug:           getSlug(),
+        leadHtml:       cleanForSave($('ed-lead').innerHTML),
+        sections:       [...document.querySelectorAll('.ed-section')].map(sec => ({
           h:    sec.querySelector('h2').textContent.trim(),
           html: cleanForSave(sec.querySelector('.ed-body').innerHTML),
         })),
-        ibRows:    ibRows.map(r => ({ k: r.k, v: r.v })),
-        saRows:    saRows.map(r => ({ url: r.url, label: r.label, desc: r.desc })),
-        activeCats: [...activeCats],
-        bodySize,
-        headScale,
+        saRows:         saRows.map(r => ({ url: r.url, label: r.label, desc: r.desc })),
+        activeCategory,
       };
     }
 
     function loadState(state) {
-      // Title
       $('ed-title').textContent = state.title || '';
-      if (!slugLocked) $('f-slug').value = state.slug || '';
-      slugLocked = !!state.slug;
-      $('f-parent').value = state.parent || wikiRoot;
+
+      // Determine category slug from new or old state formats
+      let catSlug = state.activeCategory || '';
+      if (!catSlug && state.parent) {
+        const p = state.parent.split('/').filter(Boolean);
+        if (p.length >= 3) catSlug = p[2]; // wikipedia/{wiki}/{cat}
+      }
+      if (!catSlug && state.activeCats && state.activeCats.length) {
+        const found = categoriesCache.find(c => c.category === state.activeCats[0]);
+        catSlug = found ? found.slug : slugify(state.activeCats[0]);
+      }
+      activeCategory = catSlug;
+      // Apply to dropdown (may run before pages.json fetch completes — re-applied after load)
+      if ($('f-category').querySelector('option[value="' + activeCategory + '"]'))
+        $('f-category').value = activeCategory;
 
       // Lead
       const leadEl = $('ed-lead');
-      if (state.leadHtml) {
-        leadEl.innerHTML = state.leadHtml;
-      } else if (state.lead) {
-        leadEl.innerHTML = textToHtml(state.lead);
-      } else {
-        leadEl.innerHTML = '';
-      }
+      leadEl.innerHTML = state.leadHtml ? state.leadHtml : state.lead ? textToHtml(state.lead) : '';
       wireDropTarget(leadEl);
-      leadEl.querySelectorAll('figure').forEach(fig => {
-        fig.contentEditable = 'false';
-        wireFigureClick(fig);
-      });
+      leadEl.querySelectorAll('figure').forEach(fig => { fig.contentEditable = 'false'; wireFigureClick(fig); });
 
       // Sections
       $('ed-sections').innerHTML = '';
       (state.sections || []).forEach(s => {
-        let html;
-        if (s.html) {
-          html = s.html;
-        } else {
-          // Old format: plain text c + imgs array
-          html = textToHtml(s.c || '');
-          if (s.imgs && s.imgs.length) {
-            html = s.imgs.filter(i => i.src).map(i =>
-              '<figure class="wiki-figure wiki-figure-' + (i.align || 'right') + '" contenteditable="false">' +
-              '<img src="' + esc(i.src) + '" alt="' + esc(i.alt || '') + '" style="max-width:260px;" />' +
-              '<figcaption class="ed-caption" contenteditable="true">' + esc(i.alt || '') + '</figcaption>' +
-              '</figure>').join('') + html;
-          }
+        let html = s.html ? s.html : textToHtml(s.c || '');
+        if (!s.html && s.imgs && s.imgs.length) {
+          html = s.imgs.filter(i => i.src).map(i =>
+            '<figure class="wiki-figure wiki-figure-' + (i.align || 'right') + '" contenteditable="false">' +
+            '<img src="' + esc(i.src) + '" alt="' + esc(i.alt || '') + '" style="max-width:260px;" />' +
+            '<figcaption class="ed-caption" contenteditable="true">' + esc(i.alt || '') + '</figcaption>' +
+            '</figure>').join('') + html;
         }
         addSection(s.h || '', html);
       });
 
-      // Sidebar state
-      bodySize  = state.bodySize  || 'md';
-      headScale = state.headScale || 'md';
-      ['sm','md','lg'].forEach(v => {
-        $('bs-' + v)?.classList.toggle('on', v === bodySize);
-        $('hs-' + v)?.classList.toggle('on', v === headScale);
-      });
-      ibRows = (state.ibRows || []).map(r => ({ id: nid(), k: r.k || '', v: r.v || '' }));
       saRows = (state.saRows || []).map(r => ({ id: nid(), url: r.url || '', label: r.label || '', desc: r.desc || '' }));
-      activeCats = new Set(state.activeCats || []);
-      document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('on', activeCats.has(b.textContent)));
-
-      renderIB();
       renderSA();
-      renderInfoboxPreview();
       renderSeeAlsoPreview();
-      renderCatsPreview();
+      renderCatPreview();
       renderTocPreview();
-      syncPresetHighlight();
       syncSlugDisplay();
     }
 
     // ── HTML generation ────────────────────────────────────────────────────────
     function genHTML() {
-      const state   = buildState();
-      const title   = state.title || 'Untitled';
-      const ibValid = state.ibRows.filter(r => r.k);
-
-      const styleBlock = (bodySize !== 'md' || headScale !== 'md') ? `
-  <style>
-    .wiki-article p, .wiki-article li { font-size: ${bodySzMap[bodySize]}; }
-    .wiki-article h1 { font-size: calc(${headSzMap[headScale]} * 1.4rem); }
-    .wiki-article h2 { font-size: calc(${headSzMap[headScale]} * 0.95rem); }
-  </style>` : '';
-
-      const infoboxHtml = ibValid.length
-        ? '\n        <div class="infobox"><div class="infobox-title">' + esc(title) + '</div><table>' +
-            ibValid.map(r => '<tr><td>' + esc(r.k) + '</td><td>' + esc(r.v) + '</td></tr>').join('') +
-          '</table></div>' : '';
+      const state = buildState();
+      const title = state.title || 'Untitled';
 
       const validSecs = state.sections.filter(s => s.h || s.html);
       const tocHtml = validSecs.length > 1
@@ -889,9 +801,11 @@
               (r.desc ? ' — ' + esc(r.desc) : '') + '</li>').join('') +
           '</ul></div>' : '';
 
-      const catHtml = state.activeCats.length
-        ? '\n          <div class="wiki-meta-categories"><span class="wiki-meta-label">Categories</span>' +
-            state.activeCats.map(c => '<a class="wiki-cat-tag" href="#">' + c + '</a>').join('') +
+      const catEntry = categoriesCache.find(c => c.slug === activeCategory);
+      const catName  = catEntry ? catEntry.category : activeCategory;
+      const catHtml  = activeCategory
+        ? '\n          <div class="wiki-meta-categories"><span class="wiki-meta-label">Category</span>' +
+            '<a class="wiki-cat-tag" href="/wikipedia/' + wikiSlug + '/' + activeCategory + '/">' + esc(catName) + '</a>' +
           '</div>' : '';
 
       const parts = state.parent.split('/').filter(Boolean);
@@ -908,10 +822,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${esc(title)} — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=25" />${styleBlock}
-  <script src="/components/site-config.js?v=25"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=25" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=25" defer><\/script>
+  <link rel="stylesheet" href="/components/themes/theme.css?v=26" />
+  <script src="/components/site-config.js?v=26"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=26" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=26" defer><\/script>
 </head>
 <body>
 
@@ -925,7 +839,7 @@
         <div class="wiki-breadcrumb">${bc}</div>
 
         <h1>${esc(title)}</h1>
-${infoboxHtml}${tocHtml}
+${tocHtml}
         ${state.leadHtml}
 ${secHtml}
 ${saHtml}
@@ -1039,14 +953,16 @@ ${catHtml}
         const data  = await resp.json();
         const state = JSON.parse(atob(data.content.replace(/\n/g, '')));
         loadState(state);
-        slugLocked = true;
+        // Re-apply category selection after dropdown may have loaded
+        if (activeCategory && $('f-category').querySelector('option[value="' + activeCategory + '"]'))
+          $('f-category').value = activeCategory;
         status.className = 'pub-status ok';
         status.textContent = 'Loaded — make changes and republish.';
       } catch(err) {
         status.className = 'pub-status err';
         status.textContent = 'Load failed: ' + err.message;
-        syncSlugDisplay();
       }
+      syncSlugDisplay();
     })();
   </script>
 </body>
