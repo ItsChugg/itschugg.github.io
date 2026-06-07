@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hub Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=26" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=27" />
 </head>
 <body>
-  <script src="/components/site-config.js?v=26"></script>
-  <script src="/components/wiki-utils.js?v=26"></script>
-  <script src="/components/navbar/inject-navbar.js?v=26" defer></script>
+  <script src="/components/site-config.js?v=27"></script>
+  <script src="/components/wiki-utils.js?v=27"></script>
+  <script src="/components/navbar/inject-navbar.js?v=27" defer></script>
 
   <!-- Floating format toolbar -->
   <div class="fmt-toolbar" id="fmt-toolbar">
@@ -160,38 +160,62 @@
 
     // ── Featured articles sidebar ──────────────────────────────────────────────
     $('feat-add').addEventListener('click', () => {
-      featuredItems.push({ id: nid(), title: '', link: '', excerpt: '' });
+      featuredItems.push({ id: nid(), title: '', link: '', excerpt: '', file: '' });
       renderFeatured();
     });
 
+    function buildArticleOptions(selectedFile) {
+      // Build <optgroup> options from all articles in categoryData
+      if (!categoryData.length) return '<option value="" disabled selected>Load a wiki first…</option>';
+      let html = '<option value="" disabled' + (selectedFile ? '' : ' selected') + '>Select article…</option>';
+      categoryData.forEach(cat => {
+        if (!cat.pages || !cat.pages.length) return;
+        html += '<optgroup label="' + esc(cat.category) + '">';
+        cat.pages.forEach(p => {
+          const sel = (selectedFile && p.file === selectedFile) ? ' selected' : '';
+          html += '<option value="' + esc(p.file) + '"' + sel + '>' + esc(p.title) + '</option>';
+        });
+        html += '</optgroup>';
+      });
+      return html;
+    }
+
     function renderFeatured() {
       const el = $('feat-list'); el.innerHTML = '';
+      const wikiSlug = $('f-wiki').value.trim();
       featuredItems.forEach(item => {
         const d = document.createElement('div');
-        d.style.cssText = 'background:var(--bg);border:var(--border);padding:9px;display:flex;flex-direction:column;gap:6px;';
+        d.style.cssText = 'background:var(--bg);border:var(--border);padding:8px;display:flex;flex-direction:column;gap:6px;';
         d.innerHTML =
-          '<div style="display:flex;align-items:center;gap:7px;">' +
-            '<input type="text" placeholder="Article title…" value="' + esc(item.title) + '"' +
-              ' data-id="' + item.id + '" data-f="title"' +
-              ' style="flex:1;background:none;border:none;border-bottom:1px solid var(--amber-dim);' +
-                      'color:var(--amber);font-family:var(--font-head);font-size:0.75rem;padding:3px 2px;outline:none;" />' +
-            '<button style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.82rem;padding:0 3px;"' +
-              ' data-id="' + item.id + '" data-t="rm">✕</button>' +
+          '<div style="display:flex;align-items:center;gap:6px;">' +
+            '<select class="f-input f-select" data-id="' + item.id + '" data-t="page-sel" style="flex:1;">' +
+              buildArticleOptions(item.file) +
+            '</select>' +
+            '<button class="btn-remove" data-id="' + item.id + '" data-t="rm">✕</button>' +
           '</div>' +
-          '<input class="f-input" placeholder="/wikipedia/slug/article/" value="' + esc(item.link) + '"' +
-            ' data-id="' + item.id + '" data-f="link" style="margin-top:2px;" />' +
-          '<textarea class="f-textarea" placeholder="Short excerpt…"' +
+          '<textarea class="f-textarea" placeholder="Short excerpt (optional)…"' +
             ' data-id="' + item.id + '" data-f="excerpt"' +
-            ' style="min-height:50px;background:var(--bg);border:var(--border);color:var(--text);' +
-                    'font-family:var(--font-mono);font-size:0.78rem;padding:6px 9px;width:100%;box-sizing:border-box;resize:vertical;">' +
-            esc(item.excerpt) +
-          '</textarea>';
+            ' style="min-height:44px;font-size:0.76rem;">' + esc(item.excerpt || '') + '</textarea>';
         el.appendChild(d);
-        d.querySelectorAll('[data-f]').forEach(i => i.addEventListener('input', e => {
+
+        d.querySelector('[data-t="page-sel"]').addEventListener('change', e => {
           const row = featuredItems.find(x => x.id === +e.target.dataset.id);
-          if (row) row[e.target.dataset.f] = e.target.value;
+          if (!row) return;
+          const file = e.target.value;
+          const page = categoryData.flatMap(c => c.pages || []).find(p => p.file === file);
+          if (page) {
+            row.file  = file;
+            row.title = page.title;
+            row.link  = '/wikipedia/' + wikiSlug + '/' + file.replace(/index\.html$/, '').replace(/\.html$/, '/');
+          }
           renderFeaturedPreview();
-        }));
+        });
+
+        d.querySelector('[data-f="excerpt"]').addEventListener('input', e => {
+          const row = featuredItems.find(x => x.id === +e.target.dataset.id);
+          if (row) { row.excerpt = e.target.value; renderFeaturedPreview(); }
+        });
+
         d.querySelector('[data-t="rm"]').addEventListener('click', e => {
           featuredItems = featuredItems.filter(x => x.id !== +e.target.dataset.id);
           renderFeatured(); renderFeaturedPreview();
@@ -238,32 +262,57 @@
         return;
       }
       categoryData.forEach((cat, i) => {
-        const wrap = document.createElement('div');
-        wrap.style.cssText = 'background:var(--bg);border:var(--border);padding:8px;' +
-          (cat.isNew ? 'border-color:var(--amber-dim);' : '');
         const slug = cat.slug || slugify(cat.category);
-        wrap.innerHTML =
-          '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">' +
-            '<div style="flex:1;font-family:var(--font-head);font-size:0.65rem;letter-spacing:0.1em;color:var(--amber);">' +
-              esc(cat.category) +
-              ' <span style="color:var(--text-faint);font-family:var(--font-mono);font-size:0.58rem;">/' + slug + '/</span>' +
-              (cat.isNew ? ' <span style="font-family:var(--font-mono);font-size:0.55rem;color:#ffaa00;">[NEW]</span>' : '') +
-            '</div>' +
-            '<button class="btn-remove" data-ci="' + i + '" data-t="rm-cat" title="Remove category"' +
-              (cat.isNew ? '' : ' style="visibility:hidden;"') + '>✕</button>' +
+        const item = document.createElement('div');
+        item.style.cssText = 'display:flex;align-items:center;gap:6px;padding:6px 8px;' +
+          'background:var(--bg);border:var(--border);' + (cat.isNew ? 'border-color:var(--amber-dim);' : '');
+        item.innerHTML =
+          '<div style="flex:1;overflow:hidden;">' +
+            '<span style="font-family:var(--font-head);font-size:0.65rem;letter-spacing:0.1em;color:var(--amber);">' + esc(cat.category) + '</span>' +
+            ' <span style="font-family:var(--font-mono);font-size:0.58rem;color:var(--text-faint);">/' + slug + '/</span>' +
+            (cat.isNew ? ' <span style="font-family:var(--font-mono);font-size:0.55rem;color:#ffaa00;">[NEW]</span>' : '') +
           '</div>' +
-          '<textarea class="f-textarea" data-ci="' + i + '" placeholder="Category lead HTML (optional)…" ' +
-            'style="min-height:48px;font-size:0.75rem;">' + esc(cat.lead || '') + '</textarea>';
-        wrap.querySelector('textarea').addEventListener('input', e => {
-          categoryData[+e.target.dataset.ci].lead = e.target.value;
-        });
-        const rmBtn = wrap.querySelector('[data-t="rm-cat"]');
-        if (rmBtn) rmBtn.addEventListener('click', e => {
+          '<button class="btn-remove del" data-ci="' + i + '" data-t="rm-cat" title="Delete category">✕</button>';
+
+        item.querySelector('[data-t="rm-cat"]').addEventListener('click', async e => {
           const idx = +e.target.dataset.ci;
-          if (categoryData[idx].isNew) { categoryData.splice(idx, 1); renderCatsList(); }
+          const cd  = categoryData[idx];
+          const cs  = cd.slug || slugify(cd.category);
+          if (cd.isNew) { categoryData.splice(idx, 1); renderCatsList(); renderFeatured(); return; }
+          if (!confirm('Delete "' + cd.category + '"?\n\nThe category page will be removed and it will be removed from the page index. Articles inside remain on disk.')) return;
+          await deleteCategoryAsync(idx, cs, cd.category);
         });
-        el.appendChild(wrap);
+
+        el.appendChild(item);
       });
+    }
+
+    async function deleteCategoryAsync(idx, catSlug, catName) {
+      const wikiSlug = $('f-wiki').value.trim();
+      const status   = $('pub-status');
+      status.className = 'pub-status'; status.textContent = 'Deleting category…';
+      try {
+        await WIKI.ghDelete('wikipedia/' + wikiSlug + '/' + catSlug + '/index.html',
+          'wiki: delete "' + catName + '" category page');
+
+        const pUrl  = 'https://api.github.com/repos/' + REPO + '/contents/wikipedia/' + wikiSlug + '/pages.json';
+        const pResp = await fetch(pUrl, { headers: authHdrs() });
+        if (pResp.ok) {
+          const pd  = await pResp.json();
+          const cur = JSON.parse(atob(pd.content.replace(/\n/g, '')));
+          const upd = cur.filter(c => (c.slug || slugify(c.category)) !== catSlug);
+          await WIKI.ghPut('wikipedia/' + wikiSlug + '/pages.json', JSON.stringify(upd, null, 2),
+            'wiki: remove "' + catName + '" from index');
+        }
+
+        categoryData.splice(idx, 1);
+        renderCatsList();
+        renderFeatured();
+        loadStats(wikiSlug);
+        status.className = 'pub-status ok'; status.textContent = '"' + catName + '" deleted.';
+      } catch(err) {
+        status.className = 'pub-status err'; status.textContent = 'Delete failed: ' + err.message;
+      }
     }
 
     // ── Add category form wiring ───────────────────────────────────────────────
@@ -315,6 +364,7 @@
             pages:    g.pages || [],
           }));
           renderCatsList();
+          renderFeatured(); // rebuild article picker dropdowns now that categoryData is loaded
           // Category cards on canvas
           const cats = $('hub-categories');
           cats.innerHTML = '';
@@ -356,8 +406,13 @@
         ? state.featured
         : (state.featured?.title ? [state.featured] : []);
       featuredItems = arr.length
-        ? arr.map(f => ({ id: nid(), title: f.title || '', link: f.link || '', excerpt: f.excerpt || '' }))
-        : [{ id: nid(), title: '', link: '', excerpt: '' }];
+        ? arr.map(f => {
+            // Try to match a file path from categoryData so the dropdown can pre-select
+            const allPages = categoryData.flatMap(c => c.pages || []);
+            const match    = allPages.find(p => p.title === f.title);
+            return { id: nid(), title: f.title || '', link: f.link || '', excerpt: f.excerpt || '', file: match ? match.file : '' };
+          })
+        : [{ id: nid(), title: '', link: '', excerpt: '', file: '' }];
       renderFeatured();
 
       // Footer
@@ -576,44 +631,23 @@
           'wiki: update "' + state.title + '" hub'
         );
 
-        // Update pages.json with category leads, then generate category shells
-        if (categoryData.length) {
-          status.textContent = 'Updating category pages…';
-          // Fetch current pages.json to get the full data (pages list etc.)
+        // Add new categories to pages.json + generate their shells
+        const newCats = categoryData.filter(c => c.isNew);
+        if (newCats.length) {
+          status.textContent = 'Adding new categories…';
           const pUrl  = 'https://api.github.com/repos/' + REPO + '/contents/wikipedia/' + slug + '/pages.json';
           const pResp = await fetch(pUrl, { headers: authHdrs() });
           if (pResp.ok) {
-            const pData  = await pResp.json();
-            const current = JSON.parse(atob(pData.content.replace(/\n/g, '')));
-            // Merge edited leads back into the full pages.json
-            const updated = [
-              // Update existing categories (slug + lead)
-              ...current.map(g => {
-                const catSlug = g.slug || slugify(g.category);
-                const edited  = categoryData.find(c => c.slug === catSlug || c.category === g.category);
-                return edited ? { ...g, slug: catSlug, lead: edited.lead } : { ...g, slug: catSlug };
-              }),
-              // Append brand-new categories (marked isNew)
-              ...categoryData
-                .filter(c => c.isNew)
-                .map(c => ({ slug: c.slug, category: c.category, lead: c.lead || '', pages: [] })),
-            ];
-            // Clear isNew flags now that they're saved
+            const pd  = await pResp.json();
+            const cur = JSON.parse(atob(pd.content.replace(/\n/g, '')));
+            const upd = [...cur, ...newCats.map(c => ({ slug: c.slug, category: c.category, lead: c.lead || '', pages: [] }))];
             categoryData.forEach(c => { delete c.isNew; });
-            await WIKI.ghPut(
-              'wikipedia/' + slug + '/pages.json',
-              JSON.stringify(updated, null, 2),
-              'wiki: update category leads for "' + slug + '"'
-            );
-            // Generate / refresh category shell for each category
-            const catShell = WIKI.genCategoryHTML();
-            for (const cat of updated) {
-              const catSlug = cat.slug || slugify(cat.category);
-              await WIKI.ghPut(
-                'wikipedia/' + slug + '/' + catSlug + '/index.html',
-                catShell,
-                'wiki: update "' + cat.category + '" category page'
-              );
+            await WIKI.ghPut('wikipedia/' + slug + '/pages.json', JSON.stringify(upd, null, 2),
+              'wiki: add ' + newCats.length + ' categor' + (newCats.length === 1 ? 'y' : 'ies') + ' to "' + slug + '"');
+            const shell = WIKI.genCategoryHTML();
+            for (const cat of newCats) {
+              await WIKI.ghPut('wikipedia/' + slug + '/' + cat.slug + '/index.html', shell,
+                'wiki: create "' + cat.category + '" category page');
             }
           }
         }

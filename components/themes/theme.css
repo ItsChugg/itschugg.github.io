@@ -1588,6 +1588,13 @@ a.editor-sidebar-slug:hover {
   word-break: break-word;
 }
 
+.ed-heading:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-faint);
+  pointer-events: none;
+  font-weight: 700;
+}
+
 .ed-body p:last-child { margin-bottom: 0; }
 
 .ed-body:empty::before {

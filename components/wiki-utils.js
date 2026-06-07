@@ -1,6 +1,6 @@
 /**
- * wiki-utils.js?v=26 — Shared utilities for wiki editing and rendering.
- * Requires site-config.js?v=26 to be loaded first (uses SITE.REPO, SITE.getSession).
+ * wiki-utils.js?v=27 — Shared utilities for wiki editing and rendering.
+ * Requires site-config.js?v=27 to be loaded first (uses SITE.REPO, SITE.getSession).
  *
  * Exposes: window.WIKI = { slugify, esc, toB64, ghPut, renderWikiGrid, genHubHTML }
  */
@@ -135,10 +135,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Loading… — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=26" />
-  <script src="/components/site-config.js?v=26"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=26" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=26" defer><\/script>
+  <link rel="stylesheet" href="/components/themes/theme.css?v=27" />
+  <script src="/components/site-config.js?v=27"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=27" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=27" defer><\/script>
 </head>
 <body>
   <div class="page-wrapper">
@@ -209,7 +209,7 @@
 
   /**
    * Generates a complete wiki hub index.html for the given state + wiki slug.
-   * Version strings (theme.css?v=26 inject-navbar.js?v=26 inject-sidebar.js?v=26
+   * Version strings (theme.css?v=27 inject-navbar.js?v=27 inject-sidebar.js?v=27
    * are updated automatically by `node build.js`.
    */
   function genHubHTML(state, slug) {
@@ -244,10 +244,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${title} — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=26" />
-  <script src="/components/site-config.js?v=26"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=26" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=26" defer><\/script>
+  <link rel="stylesheet" href="/components/themes/theme.css?v=27" />
+  <script src="/components/site-config.js?v=27"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=27" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=27" defer><\/script>
 </head>
 <body>
 
