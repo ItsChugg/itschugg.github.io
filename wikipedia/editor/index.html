@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wiki Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=14" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=15" />
 </head>
 <body>
-  <script src="/components/site-config.js?v=14"></script>
-  <script src="/components/wiki-utils.js?v=14"></script>
-  <script src="/components/navbar/inject-navbar.js?v=14" defer></script>
+  <script src="/components/site-config.js?v=15"></script>
+  <script src="/components/wiki-utils.js?v=15"></script>
+  <script src="/components/navbar/inject-navbar.js?v=15" defer></script>
 
   <!-- Floating format toolbar -->
   <div class="fmt-toolbar" id="fmt-toolbar">
@@ -148,6 +148,14 @@
 
     const bodySzMap  = { sm:'0.82rem', md:'0.88rem', lg:'0.96rem' };
     const headSzMap  = { sm:'0.82',    md:'1',        lg:'1.18'   };
+
+    // Read the current build version from this page's own CSS link so published
+    // articles always reference whichever version was live when they were saved.
+    function liveVer() {
+      const link = document.querySelector('link[href*="theme.css"]');
+      const m = link && link.getAttribute('href').match(/\?v=(\d+)/);
+      return m ? m[1] : '14';
+    }
 
     let ibRows = [], saRows = [], activeCats = new Set();
     let bodySize = 'md', headScale = 'md';
@@ -857,6 +865,7 @@
       parts.forEach(p => { path += '/' + p; bc += ' <span class="sep">//</span> <a href="' + path + '/">' + p.toUpperCase() + '</a>'; });
       bc += ' <span class="sep">//</span> ' + esc(title).toUpperCase();
 
+      const v = liveVer();
       return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -864,7 +873,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${esc(title)} — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=14" />${styleBlock}
+  <link rel="stylesheet" href="/components/themes/theme.css?v=15" />${styleBlock}
 </head>
 <body>
 
@@ -890,9 +899,9 @@ ${catHtml}
     </div>
   </div>
 
-  <script src="/components/site-config.js?v=14"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=14" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=14" defer><\/script>
+  <script src="/components/site-config.js?v=15"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=15" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=15" defer><\/script>
 </body>
 </html>`;
     }

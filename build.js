@@ -38,12 +38,23 @@ const STAMPS = [
 // ── File walker ───────────────────────────────────────────────────────────────
 const SKIP_DIRS = new Set(['_backup', 'node_modules', '.git', 'assets']);
 
+// Wiki tool slugs under wikipedia/ that ARE part of the codebase (should be stamped).
+// Everything else under wikipedia/{slug}/ is published user content — skipping it
+// prevents SHA conflicts when the editor tries to publish articles.
+const WIKI_TOOLS = new Set(['editor', 'hub-editor', 'new']);
+
 function walk(dir) {
   const results = [];
   for (const f of fs.readdirSync(dir)) {
     if (SKIP_DIRS.has(f)) continue;
     const full = path.join(dir, f);
     if (fs.statSync(full).isDirectory()) {
+      // Skip published wiki content: wikipedia/{non-tool-slug}/
+      const rel   = path.relative('.', full).replace(/\\/g, '/');
+      const parts = rel.split('/');
+      if (parts[0] === 'wikipedia' && parts.length === 2 && !WIKI_TOOLS.has(parts[1])) {
+        continue; // e.g. wikipedia/evolutionary/, wikipedia/test/ — user content, leave alone
+      }
       results.push(...walk(full));
     } else if (f.endsWith('.html') || f.endsWith('.js')) {
       results.push(full);

@@ -1,5 +1,5 @@
 /**
- * inject-sidebar.js?v=14 — Builds a collapsible sidebar from the current wiki's
+ * inject-sidebar.js?v=15 — Builds a collapsible sidebar from the current wiki's
  * pages.json and injects it into #sidebar-container.
  *
  * Wiki slug is derived automatically from the URL:
