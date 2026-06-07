@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wiki Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=20" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=21" />
 </head>
 <body>
-  <script src="/components/site-config.js?v=20"></script>
-  <script src="/components/wiki-utils.js?v=20"></script>
-  <script src="/components/navbar/inject-navbar.js?v=20" defer></script>
+  <script src="/components/site-config.js?v=21"></script>
+  <script src="/components/wiki-utils.js?v=21"></script>
+  <script src="/components/navbar/inject-navbar.js?v=21" defer></script>
 
   <!-- Floating format toolbar -->
   <div class="fmt-toolbar" id="fmt-toolbar">
@@ -908,7 +908,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${esc(title)} — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=20" />${styleBlock}
+  <link rel="stylesheet" href="/components/themes/theme.css?v=21" />${styleBlock}
 </head>
 <body>
 
@@ -934,9 +934,9 @@ ${catHtml}
     </div>
   </div>
 
-  <script src="/components/site-config.js?v=20"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=20" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=20" defer><\/script>
+  <script src="/components/site-config.js?v=21"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=21" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=21" defer><\/script>
 </body>
 </html>`;
     }
@@ -955,41 +955,22 @@ ${catHtml}
       status.className = 'pub-status';
       status.textContent = 'Publishing…';
 
-      const fp        = getFullPath();
-      const htmlPath  = fp + '/index.html';
-      const statePath = fp + '/editor-state.json';
-      const htmlApi   = 'https://api.github.com/repos/' + REPO + '/contents/' + htmlPath;
-      const stateApi  = 'https://api.github.com/repos/' + REPO + '/contents/' + statePath;
-      const html      = genHTML();
-      const stateJson = JSON.stringify(buildState(), null, 2);
-
-      let htmlSha = null, stateSha = null;
+      // WIKI.ghPut fetches a fresh SHA immediately before each PUT,
+      // eliminating the stale-SHA window that caused "does not match" errors.
+      const fp = getFullPath();
       try {
-        const [hc, sc] = await Promise.all([fetch(htmlApi, {headers:authHdrs()}), fetch(stateApi, {headers:authHdrs()})]);
-        if (hc.ok) htmlSha  = (await hc.json()).sha;
-        if (sc.ok) stateSha = (await sc.json()).sha;
-      } catch {}
-
-      const hBody = { message: (htmlSha ? 'docs: update' : 'docs: add') + ' "' + title + '"', content: toB64(html),      branch: 'main' };
-      const sBody = { message: 'docs: save state for "' + slug + '"',                           content: toB64(stateJson), branch: 'main' };
-      if (htmlSha)  hBody.sha  = htmlSha;
-      if (stateSha) sBody.sha  = stateSha;
-
-      try {
-        // Write sequentially — parallel PUTs to the same branch can race.
-        // State first so the edit button can always find it; HTML second.
-        const sr = await fetch(stateApi, { method: 'PUT', headers: { ...authHdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify(sBody) });
-        if (!sr.ok) {
-          const err = await sr.json().catch(() => ({}));
-          throw new Error(err.message || ('state write failed: ' + sr.status));
-        }
-        const hr = await fetch(htmlApi,  { method: 'PUT', headers: { ...authHdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify(hBody) });
-        if (!hr.ok) {
-          const err = await hr.json().catch(() => ({}));
-          throw new Error(err.message || ('html write failed: ' + hr.status));
-        }
+        await WIKI.ghPut(
+          fp + '/editor-state.json',
+          JSON.stringify(buildState(), null, 2),
+          'docs: save state for "' + slug + '"'
+        );
+        await WIKI.ghPut(
+          fp + '/index.html',
+          genHTML(),
+          'docs: publish "' + title + '"'
+        );
         status.className = 'pub-status ok';
-        status.textContent = (htmlSha ? 'Updated' : 'Published') + ' — live in ~60s at itschu.gg/' + fp + '/';
+        status.textContent = 'Published — live in ~60s at itschu.gg/' + fp + '/';
       } catch(err) {
         status.className = 'pub-status err';
         status.textContent = 'Error: ' + err.message;

@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hub Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=20" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=21" />
 </head>
 <body>
-  <script src="/components/site-config.js?v=20"></script>
-  <script src="/components/wiki-utils.js?v=20"></script>
-  <script src="/components/navbar/inject-navbar.js?v=20" defer></script>
+  <script src="/components/site-config.js?v=21"></script>
+  <script src="/components/wiki-utils.js?v=21"></script>
+  <script src="/components/navbar/inject-navbar.js?v=21" defer></script>
 
   <!-- Floating format toolbar -->
   <div class="fmt-toolbar" id="fmt-toolbar">
@@ -459,31 +459,19 @@
       btn.disabled = true;
       status.className = 'pub-status'; status.textContent = 'Publishing…';
 
-      const htmlPath  = 'wikipedia/' + slug + '/index.html';
-      const statePath = 'wikipedia/' + slug + '/hub-state.json';
-      const htmlApi   = 'https://api.github.com/repos/' + REPO + '/contents/' + htmlPath;
-      const stateApi  = 'https://api.github.com/repos/' + REPO + '/contents/' + statePath;
-      const html      = WIKI.genHubHTML(state, slug);
-      const stateJson = JSON.stringify(state, null, 2);
-
-      let htmlSha = null, stateSha = null;
+      // WIKI.ghPut fetches a fresh SHA immediately before each PUT, so
+      // there is no stale-SHA window regardless of other concurrent writes.
       try {
-        const [hc, sc] = await Promise.all([fetch(htmlApi, {headers:authHdrs()}), fetch(stateApi, {headers:authHdrs()})]);
-        if (hc.ok) htmlSha  = (await hc.json()).sha;
-        if (sc.ok) stateSha = (await sc.json()).sha;
-      } catch {}
-
-      const hBody = { message: 'wiki: update "' + state.title + '" hub', content: toB64(html),      branch: 'main' };
-      const sBody = { message: 'wiki: save hub state for "'  + slug  + '"', content: toB64(stateJson), branch: 'main' };
-      if (htmlSha)  hBody.sha  = htmlSha;
-      if (stateSha) sBody.sha  = stateSha;
-
-      try {
-        // Write sequentially to avoid branch-level race conditions.
-        const sr = await fetch(stateApi, { method: 'PUT', headers: { ...authHdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify(sBody) });
-        if (!sr.ok) { const e = await sr.json().catch(()=>({})); throw new Error(e.message || 'state write failed: ' + sr.status); }
-        const hr = await fetch(htmlApi,  { method: 'PUT', headers: { ...authHdrs(), 'Content-Type': 'application/json' }, body: JSON.stringify(hBody) });
-        if (!hr.ok) { const e = await hr.json().catch(()=>({})); throw new Error(e.message || 'html write failed: ' + hr.status); }
+        await WIKI.ghPut(
+          'wikipedia/' + slug + '/hub-state.json',
+          JSON.stringify(state, null, 2),
+          'wiki: save hub state for "' + slug + '"'
+        );
+        await WIKI.ghPut(
+          'wikipedia/' + slug + '/index.html',
+          WIKI.genHubHTML(state, slug),
+          'wiki: update "' + state.title + '" hub'
+        );
         status.className = 'pub-status ok';
         status.textContent = 'Published — live in ~60s at itschu.gg/wikipedia/' + slug + '/';
       } catch(err) {
