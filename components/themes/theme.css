@@ -938,6 +938,31 @@ hr {
   .wiki-toc { float: none; max-width: 100%; margin: 0 0 20px 0; }
 }
 
+/* ── Wiki: body content hyperlinks — Wikipedia blue ─────────────────────── */
+/* Only targets paragraph/list/section body text, NOT breadcrumbs or UI nav */
+
+.wiki-article p a,
+.wiki-article li a,
+.wiki-article section a:not(.wiki-anchor),
+.wiki-seealso a,
+.infobox a,
+.ed-body a {
+  color: #3366cc;
+  text-shadow: none;
+  text-decoration: none;
+}
+
+.wiki-article p a:hover,
+.wiki-article li a:hover,
+.wiki-article section a:not(.wiki-anchor):hover,
+.wiki-seealso a:hover,
+.infobox a:hover,
+.ed-body a:hover {
+  color: #3366cc;
+  text-decoration: underline;
+  text-shadow: none;
+}
+
 /* ── Wiki: section anchor ────────────────────────────────────────────────── */
 
 .wiki-anchor {

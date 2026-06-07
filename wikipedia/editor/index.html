@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wiki Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=17" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=18" />
 </head>
 <body>
-  <script src="/components/site-config.js?v=17"></script>
-  <script src="/components/wiki-utils.js?v=17"></script>
-  <script src="/components/navbar/inject-navbar.js?v=17" defer></script>
+  <script src="/components/site-config.js?v=18"></script>
+  <script src="/components/wiki-utils.js?v=18"></script>
+  <script src="/components/navbar/inject-navbar.js?v=18" defer></script>
 
   <!-- Floating format toolbar -->
   <div class="fmt-toolbar" id="fmt-toolbar">
@@ -581,10 +581,40 @@
 
     $('fmt-link-ok').addEventListener('click', applyLink);
     $('fmt-link-input').addEventListener('keydown', e => {
-      if (e.key === 'Enter') applyLink();
-      if (e.key === 'Escape') closeLinkMode();
+      if (e.key === 'Enter')  { e.preventDefault(); applyLink();     }
+      if (e.key === 'Escape') { e.preventDefault(); closeLinkMode(); }
     });
     $('fmt-link-cancel').addEventListener('click', closeLinkMode);
+
+    // ── Keyboard shortcuts (Ctrl/⌘ + B / I / U / K) ──────────────────────────
+    document.addEventListener('keydown', e => {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+      const key = e.key.toLowerCase();
+      if (!['b','i','u','k'].includes(key)) return;
+
+      // Only fire when cursor is inside an editable region
+      const sel  = window.getSelection();
+      if (!sel || !sel.rangeCount) return;
+      const node = sel.getRangeAt(0).commonAncestorContainer;
+      const el   = node.nodeType === 3 ? node.parentElement : node;
+      if (!el || !el.closest('.ed-field')) return;
+
+      e.preventDefault();
+      if (key === 'b') { document.execCommand('bold',      false, null); updateToolbarState(); }
+      if (key === 'i') { document.execCommand('italic',    false, null); updateToolbarState(); }
+      if (key === 'u') { document.execCommand('underline', false, null); updateToolbarState(); }
+      if (key === 'k') {
+        // Ctrl+K — open link toolbar (only when text is selected)
+        if (!sel.isCollapsed && sel.toString().trim()) {
+          savedLinkRange = sel.getRangeAt(0).cloneRange();
+          linkModeActive = true;
+          $('fmt-link-row').classList.add('open');
+          positionToolbar(sel.getRangeAt(0));
+          fmtBar.style.display = 'flex';
+          setTimeout(() => $('fmt-link-input').focus(), 0);
+        }
+      }
+    });
 
     function applyLink() {
       const url = $('fmt-link-input').value.trim();
@@ -873,7 +903,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${esc(title)} — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=17" />${styleBlock}
+  <link rel="stylesheet" href="/components/themes/theme.css?v=18" />${styleBlock}
 </head>
 <body>
 
@@ -899,9 +929,9 @@ ${catHtml}
     </div>
   </div>
 
-  <script src="/components/site-config.js?v=17"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=17" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=17" defer><\/script>
+  <script src="/components/site-config.js?v=18"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=18" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=18" defer><\/script>
 </body>
 </html>`;
     }
