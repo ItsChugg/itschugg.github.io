@@ -1,27 +1,5 @@
 [
   {
-    "slug": "magic",
-    "category": "Magic",
-    "lead": "",
-    "pages": [
-      {
-        "title": "Ichor",
-        "file": "magic/ichor/index.html",
-        "icon": "/assets/icons/ichor.png"
-      },
-      {
-        "title": "Hyperlanes",
-        "file": "magic/hyperlanes/index.html",
-        "icon": "/assets/icons/hyperlanes.png"
-      },
-      {
-        "title": "Wormholes",
-        "file": "magic/wormholes/index.html",
-        "icon": "/assets/icons/wormholes.png"
-      }
-    ]
-  },
-  {
     "slug": "species",
     "category": "Species",
     "lead": "",
