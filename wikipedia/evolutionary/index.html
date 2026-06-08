@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Evolutionary — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=21" />
-  <script src="/components/site-config.js?v=21"></script>
-  <script src="/components/navbar/inject-navbar.js?v=21" defer></script>
-  <script src="/components/sidebar/inject-sidebar.js?v=21" defer></script>
+  <link rel="stylesheet" href="/components/themes/theme.css?v=28" />
+  <script src="/components/site-config.js?v=28"></script>
+  <script src="/components/navbar/inject-navbar.js?v=28" defer></script>
+  <script src="/components/sidebar/inject-sidebar.js?v=28" defer></script>
 </head>
 <body>
 
@@ -68,9 +68,10 @@
         if (sc) sc.textContent = data.length;
         var cats = document.getElementById('hub-categories');
         if (cats) data.forEach(function(g) {
+          var catSlug = g.slug || g.category.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
           var a = document.createElement('a');
           a.className = 'wiki-category-card';
-          a.href = '#';
+          a.href = '/wikipedia/evolutionary/' + catSlug + '/';
           a.innerHTML = '<div class="cat-name">' + g.category + '</div><div class="cat-count">' +
             g.pages.length + ' article' + (g.pages.length === 1 ? '' : 's') + '</div>';
           cats.appendChild(a);
@@ -78,7 +79,6 @@
       })
       .catch(function() {});
   </script>
-
 
 </body>
 </html>
