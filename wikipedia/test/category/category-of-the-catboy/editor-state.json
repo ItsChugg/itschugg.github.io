@@ -7,7 +7,7 @@
   "sections": [
     {
       "h": "Section of the Catboy",
-      "html": "Summary of the Catboy - Section<p></p>"
+      "html": "Summary of the Catboy - Section<figure class=\"wiki-figure wiki-figure-right\"><img src=\"/assets/wiki/catchugg.png\" alt=\"\" style=\"max-width:260px;\"><figcaption class=\"\"></figcaption></figure><div style=\"font-size: 0.7rem; color: var(--amber); margin: 3px 0px; clear: both;\">Uploaded — live in ~60s</div><p></p>"
     }
   ],
   "saRows": [],
