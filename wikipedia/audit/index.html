@@ -24,16 +24,18 @@
     .audit-bar-outer { background: var(--bg); border: var(--border); height: 4px; margin-top: 8px; }
     .audit-bar-inner { height: 100%; background: var(--amber); transition: width 0.2s; width: 0; }
 
-    .audit-section       { margin-top: 28px; }
+    .audit-section       { margin-top: 36px; }
     .audit-section-title {
       font-family: var(--font-head); font-size: 0.65rem; letter-spacing: 0.14em;
       color: var(--text-faint); border-bottom: var(--border);
-      padding-bottom: 8px; margin-bottom: 12px; text-transform: uppercase;
+      padding-bottom: 10px; margin-bottom: 14px; text-transform: uppercase;
+      display: flex; align-items: center; gap: 10px;
     }
     .audit-section-title .count {
-      font-family: var(--font-mono); letter-spacing: 0;
-      color: var(--amber); margin-left: 8px;
+      font-family: var(--font-mono); font-size: 0.80rem; letter-spacing: 0;
+      color: var(--amber);
     }
+    .audit-section-title .count.zero { color: var(--text-faint); }
     .audit-empty { font-size: 0.80rem; color: var(--text-muted); padding: 8px 0; }
     .audit-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
     .audit-table th {
@@ -287,10 +289,7 @@
       const out = document.createElement('div');
 
       // ── Broken links ────────────────────────────────────────────────────────
-      const brokenSection = section(
-        'BROKEN INTERNAL LINKS', broken.length,
-        broken.length ? 'audit-tag broken' : null
-      );
+      const brokenSection = section('BROKEN INTERNAL LINKS', broken.length);
       if (!broken.length) {
         brokenSection.appendChild(empty('No broken internal links found.'));
       } else {
@@ -308,7 +307,7 @@
       out.appendChild(brokenSection);
 
       // ── Orphaned pages ───────────────────────────────────────────────────────
-      const orphanSection = section('ORPHANED PAGES', orphans.length, orphans.length ? 'audit-tag orphan' : null);
+      const orphanSection = section('ORPHANED PAGES', orphans.length);
       if (!orphans.length) {
         orphanSection.appendChild(empty('No orphaned pages found.'));
       } else {
@@ -326,7 +325,7 @@
       out.appendChild(orphanSection);
 
       // ── Ghost files ──────────────────────────────────────────────────────────
-      const ghostSection = section('GHOST FILES', ghosts.length, ghosts.length ? 'audit-tag ghost' : null);
+      const ghostSection = section('GHOST FILES', ghosts.length);
       const ghostNote    = document.createElement('p');
       ghostNote.style.cssText = 'font-size:0.72rem;color:var(--text-faint);margin-bottom:10px;';
       ghostNote.textContent   = 'index.html files that exist on disk but are not referenced by any wiki, category, or page index. These are typically left over from deleted pages or restructuring.';
@@ -345,7 +344,7 @@
       out.appendChild(ghostSection);
 
       // ── Legacy redirects ─────────────────────────────────────────────────────
-      const redirSection = section('LEGACY REDIRECT PAGES', redirects.length, redirects.length ? 'audit-tag redirect' : null);
+      const redirSection = section('LEGACY REDIRECT PAGES', redirects.length);
       if (!redirects.length) {
         redirSection.appendChild(empty('No legacy redirect pages found.'));
       } else {
@@ -360,7 +359,7 @@
       out.appendChild(redirSection);
 
       // ── External links ───────────────────────────────────────────────────────
-      const extSection = section('EXTERNAL LINKS', external.size, null);
+      const extSection = section('EXTERNAL LINKS', external.size);
       if (!external.size) {
         extSection.appendChild(empty('No external links found.'));
       } else {
@@ -379,18 +378,16 @@
       $('audit-results').appendChild(out);
     }
 
-    function section(title, count, tagClass) {
-      const div  = document.createElement('div');
+    function section(title, count) {
+      const div = document.createElement('div');
       div.className = 'audit-section';
       const h = document.createElement('div');
       h.className = 'audit-section-title';
-      h.innerHTML = title + '<span class="count">' + count + '</span>';
-      if (tagClass && count > 0) {
-        const tag = document.createElement('span');
-        tag.className = tagClass;
-        tag.textContent = count > 0 ? 'ISSUES' : 'OK';
-        h.appendChild(tag);
-      }
+      h.textContent = title;
+      const countEl = document.createElement('span');
+      countEl.className = 'count' + (count === 0 ? ' zero' : '');
+      countEl.textContent = count;
+      h.appendChild(countEl);
       div.appendChild(h);
       return div;
     }
