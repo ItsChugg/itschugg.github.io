@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wiki Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=29" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=30" />
 </head>
 <body>
-  <script src="/components/site-config.js?v=29"></script>
-  <script src="/components/wiki-utils.js?v=29"></script>
-  <script src="/components/navbar/inject-navbar.js?v=29" defer></script>
+  <script src="/components/site-config.js?v=30"></script>
+  <script src="/components/wiki-utils.js?v=30"></script>
+  <script src="/components/navbar/inject-navbar.js?v=30" defer></script>
 
   <!-- Floating format toolbar -->
   <div class="fmt-toolbar" id="fmt-toolbar">
@@ -82,6 +82,24 @@
           </div>
         </div>
 
+        <!-- MEDIA (collapsible) -->
+        <div class="f-group">
+          <div class="f-label collapsible-head" id="media-head"
+               style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
+            <span class="collapsible-caret"
+                  style="font-size:0.6rem;transition:transform 0.15s;display:inline-block;">▶</span>
+            MEDIA
+          </div>
+          <div class="collapsible-body" id="media-body"
+               style="display:none;flex-direction:column;gap:6px;margin-top:6px;">
+            <div style="font-size:0.68rem;color:var(--text-muted);line-height:1.5;">
+              Inserts into the last active section. Images upload when you publish.
+            </div>
+            <input type="file" id="media-file-input" accept="image/*" multiple style="display:none;" />
+            <button class="btn-add" id="media-pick-btn">+ ADD IMAGE</button>
+          </div>
+        </div>
+
       </div>
       <div class="editor-sidebar-footer">
         <a class="btn-back" id="btn-back" href="#">← BACK</a>
@@ -135,6 +153,8 @@
     let saRows = [];
     let activeCategory   = ''; // selected category slug — determines parent path
     let categoriesCache  = []; // [{slug, category}] from pages.json
+    const pendingImages  = new Map(); // blobUrl → { file, figEl } — uploaded at publish time
+    let lastFocusedBody  = null;      // last focused ed-body — target for sidebar image inserts
 
     const wikiRoot = 'wikipedia/' + wikiSlug;
 
@@ -283,6 +303,30 @@
         if (caret) caret.style.transform = open ? 'rotate(90deg)' : '';
       });
     }
+
+    // ── Media sidebar ──────────────────────────────────────────────────────────
+    {
+      const head = $('media-head'), body = $('media-body');
+      const caret = head.querySelector('.collapsible-caret');
+      let open = false;
+      head.addEventListener('click', () => {
+        open = !open;
+        body.style.display = open ? 'flex' : 'none';
+        if (caret) caret.style.transform = open ? 'rotate(90deg)' : '';
+      });
+    }
+
+    $('media-pick-btn').addEventListener('click', () => $('media-file-input').click());
+
+    $('media-file-input').addEventListener('change', e => {
+      const files = [...e.target.files].filter(f => f.type.startsWith('image/'));
+      const target = lastFocusedBody || $('ed-lead');
+      files.forEach(file => {
+        const fig = createImageFigure(file);
+        target.appendChild(fig);
+      });
+      e.target.value = ''; // reset so same file can be re-picked
+    });
 
     // ── See Also sidebar (compact) ─────────────────────────────────────────────
     $('sa-add').addEventListener('click', () => { saRows.push({id:nid(),url:'',label:'',desc:''}); renderSA(); });
@@ -485,6 +529,11 @@
       if (!linkModeActive) fmtBar.style.display = 'none';
     });
 
+    // Track last focused body field for sidebar image insertion
+    $('editor-canvas').addEventListener('focusin', e => {
+      if (e.target.classList.contains('ed-body')) lastFocusedBody = e.target;
+    });
+
     function positionToolbar(range) {
       const rect = range.getBoundingClientRect();
       const tbW  = fmtBar.offsetWidth  || 230;
@@ -616,22 +665,13 @@
       bodyEl.addEventListener('dragleave', e => {
         if (!bodyEl.contains(e.relatedTarget)) bodyEl.classList.remove('drag-over');
       });
-      bodyEl.addEventListener('drop', async e => {
+      bodyEl.addEventListener('drop', e => {
         const file = [...e.dataTransfer.files].find(f => f.type.startsWith('image/'));
         if (!file) return;
         e.preventDefault();
         bodyEl.classList.remove('drag-over');
-
-        const blobUrl = URL.createObjectURL(file);
-        const fig = document.createElement('figure');
-        fig.className      = 'wiki-figure wiki-figure-right';
-        fig.contentEditable = 'false';
-        fig.innerHTML      =
-          '<img src="' + blobUrl + '" alt="" style="max-width:260px;" />' +
-          '<figcaption class="ed-caption" contenteditable="true"></figcaption>';
-        wireFigureClick(fig);
-
-        // Insert at drop point or append
+        lastFocusedBody = bodyEl;
+        const fig = createImageFigure(file);
         let inserted = false;
         const rng = document.caretRangeFromPoint
           ? document.caretRangeFromPoint(e.clientX, e.clientY)
@@ -640,24 +680,6 @@
           rng.insertNode(fig); inserted = true;
         }
         if (!inserted) bodyEl.appendChild(fig);
-
-        // Upload status
-        const status = document.createElement('div');
-        status.style.cssText = 'font-size:0.7rem;color:var(--text-muted);margin:3px 0;clear:both;';
-        status.textContent = 'Uploading…';
-        fig.after(status);
-
-        try {
-          const realUrl = await uploadImage(file);
-          fig.querySelector('img').src = realUrl;
-          URL.revokeObjectURL(blobUrl);
-          status.style.color = 'var(--amber)';
-          status.textContent = 'Uploaded — live in ~60s';
-          setTimeout(() => status.remove(), 4000);
-        } catch(err) {
-          status.style.color = '#ff5555';
-          status.textContent = 'Upload failed: ' + err.message;
-        }
       });
     }
 
@@ -669,6 +691,43 @@
         fig.classList.toggle('wiki-figure-right', toRight);
         fig.classList.toggle('wiki-figure-left',  !toRight);
       });
+    }
+
+    // Creates a figure from a File, registers it as pending (uploaded at publish time)
+    function createImageFigure(file) {
+      const blobUrl = URL.createObjectURL(file);
+      const fig = document.createElement('figure');
+      fig.className = 'wiki-figure wiki-figure-right';
+      fig.contentEditable = 'false';
+      fig.dataset.pending = 'true';
+      fig.innerHTML =
+        '<img src="' + blobUrl + '" alt="" style="max-width:260px;" />' +
+        '<figcaption class="ed-caption" contenteditable="true"></figcaption>';
+      wireFigureClick(fig);
+      pendingImages.set(blobUrl, { file, figEl: fig });
+      return fig;
+    }
+
+    // Revoke all blob URLs and clear the pending map (call before loadState)
+    function clearPendingImages() {
+      for (const [blobUrl] of pendingImages) URL.revokeObjectURL(blobUrl);
+      pendingImages.clear();
+    }
+
+    // Upload every pending image; swaps blob src → real URL in the DOM
+    async function uploadPendingImages(statusEl) {
+      const entries = [...pendingImages];
+      let i = 0;
+      for (const [blobUrl, { file, figEl }] of entries) {
+        i++;
+        if (statusEl) statusEl.textContent = 'Uploading image ' + i + ' of ' + entries.length + '…';
+        const realUrl = await uploadImage(file);
+        const img = figEl.querySelector('img');
+        if (img) img.src = realUrl;
+        delete figEl.dataset.pending;
+        URL.revokeObjectURL(blobUrl);
+        pendingImages.delete(blobUrl);
+      }
     }
 
     // ── Caret helper ──────────────────────────────────────────────────────────
@@ -731,6 +790,7 @@
     }
 
     function loadState(state) {
+      clearPendingImages();
       $('ed-title').textContent = state.title || '';
 
       // Determine category slug from new or old state formats
@@ -822,10 +882,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${esc(title)} — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=29" />
-  <script src="/components/site-config.js?v=29"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=29" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=29" defer><\/script>
+  <link rel="stylesheet" href="/components/themes/theme.css?v=30" />
+  <script src="/components/site-config.js?v=30"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=30" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=30" defer><\/script>
 </head>
 <body>
 
@@ -873,6 +933,11 @@ ${catHtml}
       // eliminating the stale-SHA window that caused "does not match" errors.
       const fp = getFullPath();
       try {
+        // Upload any locally-held images before freezing state/HTML
+        if (pendingImages.size > 0) {
+          await uploadPendingImages(status);
+          status.textContent = 'Publishing…';
+        }
         await WIKI.ghPut(
           fp + '/editor-state.json',
           JSON.stringify(buildState(), null, 2),

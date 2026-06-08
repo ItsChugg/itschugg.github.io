@@ -1044,6 +1044,15 @@ hr {
   border-top: none;
   line-height: 1.5;
 }
+.wiki-figure[data-pending] img {
+  outline: 2px dashed var(--amber-faint);
+  outline-offset: -2px;
+}
+.wiki-figure[data-pending] figcaption::before {
+  content: '⏳ pending upload · ';
+  color: var(--amber);
+  font-size: 0.68rem;
+}
 @media (max-width: 600px) {
   .wiki-figure,
   .wiki-figure.wiki-figure-left,
