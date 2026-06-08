@@ -4,5 +4,11 @@
     "category": "Catboy",
     "lead": "",
     "pages": []
+  },
+  {
+    "slug": "category",
+    "category": "Category",
+    "lead": "",
+    "pages": []
   }
 ]
