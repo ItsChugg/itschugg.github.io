@@ -53,6 +53,7 @@
     .audit-tag.orphan   { color: #ffaa00; border-color: rgba(255,170,0,0.4); }
     .audit-tag.redirect { color: #aaaaff; border-color: rgba(170,170,255,0.4); }
     .audit-tag.external { color: var(--text-faint); border-color: var(--amber-faint); }
+    .audit-tag.ghost    { color: #bb88ff; border-color: rgba(187,136,255,0.4); }
   </style>
 </head>
 <body>
@@ -217,8 +218,44 @@
           }
         });
 
-        // 4. Check /pages/ directory for legacy redirects
-        setStatus('Checking for legacy redirect pages…', 97);
+        // 4. Ghost files — index.html files on disk not referenced by any wiki index
+        setStatus('Scanning repo for ghost files…', 90);
+        const ghostFiles = [];
+        try {
+          // Use the Git Tree API (one request = full recursive file list)
+          const treeResp = await fetch(
+            'https://api.github.com/repos/' + REPO + '/git/trees/main?recursive=1',
+            { headers: authH() }
+          );
+          if (treeResp.ok) {
+            const treeData = await treeResp.json();
+
+            // Pages under wikipedia/ that we know are intentional tool/utility pages
+            const TOOL_PATHS = new Set([
+              '/wikipedia/', '/wikipedia/editor/', '/wikipedia/hub-editor/',
+              '/wikipedia/new/', '/wikipedia/audit/',
+            ]);
+
+            treeData.tree
+              .filter(item =>
+                item.type === 'blob' &&
+                item.path.startsWith('wikipedia/') &&
+                item.path.endsWith('/index.html')
+              )
+              .forEach(item => {
+                // Convert tree path → normalised URL path
+                // e.g. wikipedia/evolutionary/elements/prion/index.html
+                //   → /wikipedia/evolutionary/elements/prion/
+                const urlPath = '/' + item.path.replace(/\/index\.html$/, '/');
+                if (!validPaths.has(urlPath) && !TOOL_PATHS.has(urlPath)) {
+                  ghostFiles.push(urlPath);
+                }
+              });
+          }
+        } catch {}
+
+        // 5. Check /pages/ directory for legacy redirects
+        setStatus('Checking for legacy redirect pages…', 96);
         const legacyRedirects = [];
         try {
           const pDir = await fetch(
@@ -232,7 +269,7 @@
         } catch {}
 
         setStatus('Done.', 100);
-        renderResults(brokenLinks, orphanPages, externalLinks, legacyRedirects);
+        renderResults(brokenLinks, orphanPages, externalLinks, legacyRedirects, ghostFiles);
 
       } catch(err) {
         $('audit-status').textContent = 'Error: ' + err.message;
@@ -246,7 +283,7 @@
       $('audit-bar').style.width    = pct + '%';
     }
 
-    function renderResults(broken, orphans, external, redirects) {
+    function renderResults(broken, orphans, external, redirects, ghosts) {
       const out = document.createElement('div');
 
       // ── Broken links ────────────────────────────────────────────────────────
@@ -287,6 +324,25 @@
         orphanSection.appendChild(t);
       }
       out.appendChild(orphanSection);
+
+      // ── Ghost files ──────────────────────────────────────────────────────────
+      const ghostSection = section('GHOST FILES', ghosts.length, ghosts.length ? 'audit-tag ghost' : null);
+      const ghostNote    = document.createElement('p');
+      ghostNote.style.cssText = 'font-size:0.72rem;color:var(--text-faint);margin-bottom:10px;';
+      ghostNote.textContent   = 'index.html files that exist on disk but are not referenced by any wiki, category, or page index. These are typically left over from deleted pages or restructuring.';
+      ghostSection.appendChild(ghostNote);
+      if (!ghosts.length) {
+        ghostSection.appendChild(empty('No ghost files found.'));
+      } else {
+        const t = table(['PATH ON DISK']);
+        ghosts.forEach(g => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td><a href="' + g + '">' + esc(g) + '</a></td>';
+          t.querySelector('tbody').appendChild(tr);
+        });
+        ghostSection.appendChild(t);
+      }
+      out.appendChild(ghostSection);
 
       // ── Legacy redirects ─────────────────────────────────────────────────────
       const redirSection = section('LEGACY REDIRECT PAGES', redirects.length, redirects.length ? 'audit-tag redirect' : null);
