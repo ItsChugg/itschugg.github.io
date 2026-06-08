@@ -1,27 +1,5 @@
 [
   {
-    "slug": "elements",
-    "category": "Elements",
-    "lead": "",
-    "pages": [
-      {
-        "title": "Periodic Matter",
-        "file": "elements/periodic-matter/index.html",
-        "icon": "/assets/icons/element.png"
-      },
-      {
-        "title": "Dark Matter",
-        "file": "elements/dark-matter/index.html",
-        "icon": "/assets/icons/dark_matter.png"
-      },
-      {
-        "title": "Ambrosia",
-        "file": "elements/ambrosia/index.html",
-        "icon": "/assets/icons/ambrosia.png"
-      }
-    ]
-  },
-  {
     "slug": "magic",
     "category": "Magic",
     "lead": "",
