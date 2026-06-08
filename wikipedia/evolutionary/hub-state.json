@@ -2,6 +2,12 @@
   "v": 1,
   "title": "Evolutionary",
   "leadHtml": "<p><b>Evolutionary</b> is a fictional universe centered around biology and <i>mostly</i> hard science-fiction. It draws heavily from a multitude of games and stories for inspiration. A recurring theme is that while life is fairly common throughout the universe, it is so vast and diverse that it is largely incompatible with most other forms, breathing life into the technological and societal elements needed for a species to become space-faring.</p>",
-  "featured": [],
+  "featured": [
+    {
+      "title": "",
+      "link": "",
+      "excerpt": ""
+    }
+  ],
   "footerNote": "This wiki is under active development. Content may be incomplete or subject to change."
 }
