@@ -1,20 +1,24 @@
 [
   {
-    "slug": "anomalies",
-    "category": "Anomalies",
-    "lead": "",
-    "pages": [
-      {"title": "Diseased Space", "file": "anomalies/diseased-space/index.html", "icon": "/assets/icons/bacterium.png"}
-    ]
-  },
-  {
     "slug": "elements",
     "category": "Elements",
     "lead": "",
     "pages": [
-      {"title": "Periodic Matter", "file": "elements/periodic-matter/index.html", "icon": "/assets/icons/element.png"},
-      {"title": "Dark Matter",     "file": "elements/dark-matter/index.html",     "icon": "/assets/icons/dark_matter.png"},
-      {"title": "Ambrosia",        "file": "elements/ambrosia/index.html",        "icon": "/assets/icons/ambrosia.png"}
+      {
+        "title": "Periodic Matter",
+        "file": "elements/periodic-matter/index.html",
+        "icon": "/assets/icons/element.png"
+      },
+      {
+        "title": "Dark Matter",
+        "file": "elements/dark-matter/index.html",
+        "icon": "/assets/icons/dark_matter.png"
+      },
+      {
+        "title": "Ambrosia",
+        "file": "elements/ambrosia/index.html",
+        "icon": "/assets/icons/ambrosia.png"
+      }
     ]
   },
   {
@@ -22,9 +26,21 @@
     "category": "Magic",
     "lead": "",
     "pages": [
-      {"title": "Ichor",     "file": "magic/ichor/index.html",      "icon": "/assets/icons/ichor.png"},
-      {"title": "Hyperlanes","file": "magic/hyperlanes/index.html", "icon": "/assets/icons/hyperlanes.png"},
-      {"title": "Wormholes", "file": "magic/wormholes/index.html",  "icon": "/assets/icons/wormholes.png"}
+      {
+        "title": "Ichor",
+        "file": "magic/ichor/index.html",
+        "icon": "/assets/icons/ichor.png"
+      },
+      {
+        "title": "Hyperlanes",
+        "file": "magic/hyperlanes/index.html",
+        "icon": "/assets/icons/hyperlanes.png"
+      },
+      {
+        "title": "Wormholes",
+        "file": "magic/wormholes/index.html",
+        "icon": "/assets/icons/wormholes.png"
+      }
     ]
   },
   {
@@ -32,11 +48,26 @@
     "category": "Species",
     "lead": "",
     "pages": [
-      {"title": "Non-Sentient",  "file": "species/non-sentient/index.html"},
-      {"title": "Sentient",      "file": "species/sentient/index.html"},
-      {"title": "Pre-Sapient",   "file": "species/pre-sapient/index.html"},
-      {"title": "Sapient",       "file": "species/sapient/index.html"},
-      {"title": "Post-Sapient",  "file": "species/post-sapient/index.html"}
+      {
+        "title": "Non-Sentient",
+        "file": "species/non-sentient/index.html"
+      },
+      {
+        "title": "Sentient",
+        "file": "species/sentient/index.html"
+      },
+      {
+        "title": "Pre-Sapient",
+        "file": "species/pre-sapient/index.html"
+      },
+      {
+        "title": "Sapient",
+        "file": "species/sapient/index.html"
+      },
+      {
+        "title": "Post-Sapient",
+        "file": "species/post-sapient/index.html"
+      }
     ]
   },
   {
@@ -44,9 +75,18 @@
     "category": "Technology",
     "lead": "",
     "pages": [
-      {"title": "Ichor Drive",         "file": "technology/ichor-drive/index.html"},
-      {"title": "Tectonic Generator",  "file": "technology/tectonic-generator/index.html"},
-      {"title": "Glacier",             "file": "technology/glacier/index.html"}
+      {
+        "title": "Ichor Drive",
+        "file": "technology/ichor-drive/index.html"
+      },
+      {
+        "title": "Tectonic Generator",
+        "file": "technology/tectonic-generator/index.html"
+      },
+      {
+        "title": "Glacier",
+        "file": "technology/glacier/index.html"
+      }
     ]
   },
   {
@@ -54,9 +94,18 @@
     "category": "Unique Systems",
     "lead": "",
     "pages": [
-      {"title": "Lacus Magna",   "file": "unique-systems/lacus-magna/index.html"},
-      {"title": "Essentia",      "file": "unique-systems/essentia/index.html"},
-      {"title": "Voloid System", "file": "unique-systems/voloid-system/index.html"}
+      {
+        "title": "Lacus Magna",
+        "file": "unique-systems/lacus-magna/index.html"
+      },
+      {
+        "title": "Essentia",
+        "file": "unique-systems/essentia/index.html"
+      },
+      {
+        "title": "Voloid System",
+        "file": "unique-systems/voloid-system/index.html"
+      }
     ]
   },
   {
@@ -64,9 +113,18 @@
     "category": "Unique Characters",
     "lead": "",
     "pages": [
-      {"title": "Dr. Rin",       "file": "unique-characters/dr-rin/index.html"},
-      {"title": "Mizu Vermont",  "file": "unique-characters/mizu-vermont/index.html"},
-      {"title": "Rivers",        "file": "unique-characters/rivers/index.html"}
+      {
+        "title": "Dr. Rin",
+        "file": "unique-characters/dr-rin/index.html"
+      },
+      {
+        "title": "Mizu Vermont",
+        "file": "unique-characters/mizu-vermont/index.html"
+      },
+      {
+        "title": "Rivers",
+        "file": "unique-characters/rivers/index.html"
+      }
     ]
   }
 ]
