@@ -1,32 +1,5 @@
 [
   {
-    "slug": "species",
-    "category": "Species",
-    "lead": "",
-    "pages": [
-      {
-        "title": "Non-Sentient",
-        "file": "species/non-sentient/index.html"
-      },
-      {
-        "title": "Sentient",
-        "file": "species/sentient/index.html"
-      },
-      {
-        "title": "Pre-Sapient",
-        "file": "species/pre-sapient/index.html"
-      },
-      {
-        "title": "Sapient",
-        "file": "species/sapient/index.html"
-      },
-      {
-        "title": "Post-Sapient",
-        "file": "species/post-sapient/index.html"
-      }
-    ]
-  },
-  {
     "slug": "technology",
     "category": "Technology",
     "lead": "",
