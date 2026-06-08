@@ -1,0 +1,15 @@
+{
+  "v": 2,
+  "parent": "wikipedia/test/category",
+  "title": "Category of the Catboy",
+  "slug": "category-of-the-catboy",
+  "leadHtml": "Summary of the Catboy - Category",
+  "sections": [
+    {
+      "h": "Section of the Catboy",
+      "html": "Summary of the Catboy - Section<p></p>"
+    }
+  ],
+  "saRows": [],
+  "activeCategory": "category"
+}
