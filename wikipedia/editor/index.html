@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wiki Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=30" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=31" />
 </head>
 <body>
-  <script src="/components/site-config.js?v=30"></script>
-  <script src="/components/wiki-utils.js?v=30"></script>
-  <script src="/components/navbar/inject-navbar.js?v=30" defer></script>
+  <script src="/components/site-config.js?v=31"></script>
+  <script src="/components/wiki-utils.js?v=31"></script>
+  <script src="/components/navbar/inject-navbar.js?v=31" defer></script>
 
   <!-- Floating format toolbar -->
   <div class="fmt-toolbar" id="fmt-toolbar">
@@ -323,7 +323,7 @@
       const target = lastFocusedBody || $('ed-lead');
       files.forEach(file => {
         const fig = createImageFigure(file);
-        target.appendChild(fig);
+        insertFigureIntoBody(fig, Infinity, target); // Infinity → always appends to end
       });
       e.target.value = ''; // reset so same file can be re-picked
     });
@@ -672,14 +672,7 @@
         bodyEl.classList.remove('drag-over');
         lastFocusedBody = bodyEl;
         const fig = createImageFigure(file);
-        let inserted = false;
-        const rng = document.caretRangeFromPoint
-          ? document.caretRangeFromPoint(e.clientX, e.clientY)
-          : null;
-        if (rng && bodyEl.contains(rng.commonAncestorContainer)) {
-          rng.insertNode(fig); inserted = true;
-        }
-        if (!inserted) bodyEl.appendChild(fig);
+        insertFigureIntoBody(fig, e.clientY, bodyEl);
       });
     }
 
@@ -691,6 +684,35 @@
         fig.classList.toggle('wiki-figure-right', toRight);
         fig.classList.toggle('wiki-figure-left',  !toRight);
       });
+    }
+
+    // Insert a figure as a block-level sibling (never inside a <p>), near the drop Y position.
+    // Appending inside a <p> via caretRangeFromPoint produces invalid HTML that browsers
+    // shuffle around, causing the layout glitches we saw.
+    function insertFigureIntoBody(fig, clientY, bodyEl) {
+      // Walk direct children to find the first block whose bottom edge is below the drop point
+      const siblings = [...bodyEl.children];
+      let insertBefore = null;
+      for (const child of siblings) {
+        if (child === fig) continue;
+        if (clientY < child.getBoundingClientRect().bottom) {
+          insertBefore = child;
+          break;
+        }
+      }
+      if (insertBefore) {
+        bodyEl.insertBefore(fig, insertBefore);
+      } else {
+        bodyEl.appendChild(fig);
+      }
+      // Ensure there's always an empty paragraph after the figure so the
+      // cursor doesn't get trapped when the figure is the last child.
+      const next = fig.nextElementSibling;
+      if (!next || next.tagName === 'FIGURE') {
+        const p = document.createElement('p');
+        p.innerHTML = '<br>';
+        fig.after(p);
+      }
     }
 
     // Creates a figure from a File, registers it as pending (uploaded at publish time)
@@ -882,10 +904,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${esc(title)} — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=30" />
-  <script src="/components/site-config.js?v=30"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=30" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=30" defer><\/script>
+  <link rel="stylesheet" href="/components/themes/theme.css?v=31" />
+  <script src="/components/site-config.js?v=31"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=31" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=31" defer><\/script>
 </head>
 <body>
 
