@@ -1,24 +1,5 @@
 [
   {
-    "slug": "unique-systems",
-    "category": "Unique Systems",
-    "lead": "",
-    "pages": [
-      {
-        "title": "Lacus Magna",
-        "file": "unique-systems/lacus-magna/index.html"
-      },
-      {
-        "title": "Essentia",
-        "file": "unique-systems/essentia/index.html"
-      },
-      {
-        "title": "Voloid System",
-        "file": "unique-systems/voloid-system/index.html"
-      }
-    ]
-  },
-  {
     "slug": "unique-characters",
     "category": "Unique Characters",
     "lead": "",
