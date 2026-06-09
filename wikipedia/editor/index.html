@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wiki Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=31" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=32" />
 </head>
 <body>
-  <script src="/components/site-config.js?v=31"></script>
-  <script src="/components/wiki-utils.js?v=31"></script>
-  <script src="/components/navbar/inject-navbar.js?v=31" defer></script>
+  <script src="/components/site-config.js?v=32"></script>
+  <script src="/components/wiki-utils.js?v=32"></script>
+  <script src="/components/navbar/inject-navbar.js?v=32" defer></script>
 
   <!-- Floating format toolbar -->
   <div class="fmt-toolbar" id="fmt-toolbar">
@@ -155,6 +155,7 @@
     let categoriesCache  = []; // [{slug, category}] from pages.json
     const pendingImages  = new Map(); // blobUrl → { file, figEl } — uploaded at publish time
     let lastFocusedBody  = null;      // last focused ed-body — target for sidebar image inserts
+    let draggingFig      = null;      // figure element currently being drag-moved between sections
 
     const wikiRoot = 'wikipedia/' + wikiSlug;
 
@@ -404,6 +405,7 @@
       body.querySelectorAll('figure').forEach(fig => {
         fig.contentEditable = 'false';
         wireFigureClick(fig);
+        wireFigureDrag(fig);
       });
 
       sectionsEl.appendChild(div);
@@ -656,9 +658,11 @@
     // ── Image drag-and-drop ────────────────────────────────────────────────────
     function wireDropTarget(bodyEl) {
       bodyEl.addEventListener('dragover', e => {
-        if ([...e.dataTransfer.types].includes('Files')) {
+        const isFigMove = draggingFig !== null;
+        const isFile    = [...e.dataTransfer.types].includes('Files');
+        if (isFigMove || isFile) {
           e.preventDefault();
-          e.dataTransfer.dropEffect = 'copy';
+          e.dataTransfer.dropEffect = isFigMove ? 'move' : 'copy';
           bodyEl.classList.add('drag-over');
         }
       });
@@ -666,10 +670,22 @@
         if (!bodyEl.contains(e.relatedTarget)) bodyEl.classList.remove('drag-over');
       });
       bodyEl.addEventListener('drop', e => {
+        bodyEl.classList.remove('drag-over');
+
+        // Figure being moved between (or within) sections
+        if (draggingFig) {
+          e.preventDefault();
+          const fig = draggingFig;
+          draggingFig = null;
+          insertFigureIntoBody(fig, e.clientY, bodyEl);
+          lastFocusedBody = bodyEl;
+          return;
+        }
+
+        // New file drop
         const file = [...e.dataTransfer.files].find(f => f.type.startsWith('image/'));
         if (!file) return;
         e.preventDefault();
-        bodyEl.classList.remove('drag-over');
         lastFocusedBody = bodyEl;
         const fig = createImageFigure(file);
         insertFigureIntoBody(fig, e.clientY, bodyEl);
@@ -684,6 +700,19 @@
         fig.classList.toggle('wiki-figure-right', toRight);
         fig.classList.toggle('wiki-figure-left',  !toRight);
       });
+    }
+
+    function wireFigureDrag(fig) {
+      fig.draggable = true;
+      fig.addEventListener('dragstart', e => {
+        // Don't start a figure-move drag from the caption field
+        if (e.target.classList.contains('ed-caption')) { e.preventDefault(); return; }
+        draggingFig = fig;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', 'figure'); // required for Firefox
+        e.stopPropagation(); // prevent contenteditable from intercepting
+      });
+      fig.addEventListener('dragend', () => { draggingFig = null; });
     }
 
     // Insert a figure as a block-level sibling (never inside a <p>), near the drop Y position.
@@ -726,6 +755,7 @@
         '<img src="' + blobUrl + '" alt="" style="max-width:260px;" />' +
         '<figcaption class="ed-caption" contenteditable="true"></figcaption>';
       wireFigureClick(fig);
+      wireFigureDrag(fig);
       pendingImages.set(blobUrl, { file, figEl: fig });
       return fig;
     }
@@ -834,7 +864,7 @@
       const leadEl = $('ed-lead');
       leadEl.innerHTML = state.leadHtml ? state.leadHtml : state.lead ? textToHtml(state.lead) : '';
       wireDropTarget(leadEl);
-      leadEl.querySelectorAll('figure').forEach(fig => { fig.contentEditable = 'false'; wireFigureClick(fig); });
+      leadEl.querySelectorAll('figure').forEach(fig => { fig.contentEditable = 'false'; wireFigureClick(fig); wireFigureDrag(fig); });
 
       // Sections
       $('ed-sections').innerHTML = '';
@@ -904,10 +934,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${esc(title)} — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=31" />
-  <script src="/components/site-config.js?v=31"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=31" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=31" defer><\/script>
+  <link rel="stylesheet" href="/components/themes/theme.css?v=32" />
+  <script src="/components/site-config.js?v=32"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=32" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=32" defer><\/script>
 </head>
 <body>
 

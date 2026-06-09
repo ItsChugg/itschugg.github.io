@@ -1595,6 +1595,7 @@ a.editor-sidebar-slug:hover {
   margin: -6px -8px;
   min-height: 1.85em;
   word-break: break-word;
+  display: flow-root; /* BFC: contains floated figures so they don't escape the div */
 }
 
 .ed-heading:empty::before {
@@ -1627,7 +1628,7 @@ a.editor-sidebar-slug:hover {
 }
 
 .ed-body figure:hover::after {
-  content: '⇄ flip';
+  content: '↕ drag  ·  ⇄ flip';
   position: absolute;
   bottom: 28px;
   left: 50%;
