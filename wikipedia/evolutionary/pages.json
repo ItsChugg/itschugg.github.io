@@ -1,24 +1,5 @@
 [
   {
-    "slug": "technology",
-    "category": "Technology",
-    "lead": "",
-    "pages": [
-      {
-        "title": "Ichor Drive",
-        "file": "technology/ichor-drive/index.html"
-      },
-      {
-        "title": "Tectonic Generator",
-        "file": "technology/tectonic-generator/index.html"
-      },
-      {
-        "title": "Glacier",
-        "file": "technology/glacier/index.html"
-      }
-    ]
-  },
-  {
     "slug": "unique-systems",
     "category": "Unique Systems",
     "lead": "",
