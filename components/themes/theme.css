@@ -1019,7 +1019,7 @@ hr {
 
 .wiki-figure {
   margin: 0 0 16px 0;
-  max-width: 280px;
+  max-width: 100%; /* inline style.maxWidth from editor overrides; old articles keep img max-width */
   font-size: 0;
 }
 .wiki-figure.wiki-figure-right {
@@ -1621,7 +1621,7 @@ a.editor-sidebar-slug:hover {
   background: var(--amber-faint) !important;
 }
 
-/* Figure drag affordance (pointer events, no hint text) */
+/* Figure drag affordance + resize handles */
 .ed-body figure {
   cursor: grab;
   position: relative;
@@ -1629,6 +1629,24 @@ a.editor-sidebar-slug:hover {
 .ed-body figure:active {
   cursor: grabbing;
 }
+
+.fig-rh {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  background: var(--amber);
+  border: 1px solid var(--bg-panel);
+  border-radius: 1px;
+  opacity: 0;
+  transition: opacity 0.12s;
+  z-index: 20;
+  pointer-events: all;
+}
+.ed-body figure:hover .fig-rh { opacity: 1; }
+.fig-rh-tl { top: -4px;    left:  -4px;  cursor: nwse-resize; }
+.fig-rh-tr { top: -4px;    right: -4px;  cursor: nesw-resize; }
+.fig-rh-bl { bottom: -4px; left:  -4px;  cursor: nesw-resize; }
+.fig-rh-br { bottom: -4px; right: -4px;  cursor: nwse-resize; }
 
 /* Squarespace-style insertion line shown while dragging a figure */
 .fig-drop-indicator {

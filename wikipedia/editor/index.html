@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wiki Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=33" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=34" />
 </head>
 <body>
-  <script src="/components/site-config.js?v=33"></script>
-  <script src="/components/wiki-utils.js?v=33"></script>
-  <script src="/components/navbar/inject-navbar.js?v=33" defer></script>
+  <script src="/components/site-config.js?v=34"></script>
+  <script src="/components/wiki-utils.js?v=34"></script>
+  <script src="/components/navbar/inject-navbar.js?v=34" defer></script>
 
   <!-- Floating format toolbar -->
   <div class="fmt-toolbar" id="fmt-toolbar">
@@ -173,6 +173,7 @@
       div.innerHTML = html;
       div.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
       div.querySelectorAll('.ed-caption').forEach(el => el.classList.remove('ed-caption'));
+      div.querySelectorAll('[data-rh]').forEach(el => el.remove()); // strip resize handles
       return div.innerHTML;
     }
 
@@ -678,9 +679,10 @@
 
     // ── Figure pointer-drag (move between sections, click to flip) ─────────────
     function wireFigureDrag(fig) {
-      // Prevent browser's native image drag
+      // Prevent browser's native image drag and add resize handles
       const img = fig.querySelector('img');
       if (img) img.draggable = false;
+      addResizeHandles(fig);
 
       let active = false;
       let startX = 0, startY = 0;
@@ -689,6 +691,7 @@
       const THRESHOLD = 6;
 
       fig.addEventListener('pointerdown', e => {
+        if (e.target.dataset.rh) return;   // let resize handles handle their own events
         if (e.target.classList.contains('ed-caption')) return;
         e.preventDefault();
         startX = e.clientX; startY = e.clientY;
@@ -703,9 +706,10 @@
           if (Math.hypot(e.clientX - startX, e.clientY - startY) < THRESHOLD) return;
           active = true;
 
-          // Ghost
+          // Ghost (clone without handles so it looks clean)
           const r = fig.getBoundingClientRect();
           ghost = fig.cloneNode(true);
+          ghost.querySelectorAll('[data-rh]').forEach(h => h.remove());
           ghost.style.cssText = 'position:fixed;left:' + r.left + 'px;top:' + r.top + 'px;' +
             'width:' + r.width + 'px;opacity:0.55;pointer-events:none;z-index:9999;' +
             'transform:rotate(1.5deg);box-shadow:0 8px 28px rgba(0,0,0,0.55);transition:none;';
@@ -719,24 +723,27 @@
           fig.style.opacity = '0.2';
         }
 
-        // Move ghost with cursor (centered)
-        const r = fig.getBoundingClientRect();
-        ghost.style.left = (e.clientX - r.width  / 2) + 'px';
-        ghost.style.top  = (e.clientY - r.height / 2) + 'px';
-
+        // Find drop slot first so we know which side the figure will land on
         currentDrop = findFigDropTarget(e.clientX, e.clientY, fig);
         renderFigIndicator(indicator, currentDrop, fig);
+
+        // Snap ghost to the side it'll land on (left or right of body midpoint)
+        const r = fig.getBoundingClientRect();
+        if (currentDrop) {
+          const br = currentDrop.bodyEl.getBoundingClientRect();
+          const isLeft = e.clientX < br.left + br.width / 2;
+          ghost.style.left = (isLeft ? br.left : br.right - r.width) + 'px';
+        } else {
+          ghost.style.left = (e.clientX - r.width / 2) + 'px';
+        }
+        ghost.style.top = (e.clientY - r.height / 2) + 'px';
       });
 
       fig.addEventListener('pointerup', e => {
         if (!fig.hasPointerCapture(e.pointerId)) return;
         fig.releasePointerCapture(e.pointerId);
 
-        if (!active) {
-          // Short tap with no drag = flip alignment
-          flipFigure(fig);
-          return;
-        }
+        if (!active) return; // short tap — no action
 
         active = false;
         fig.style.opacity = '';
@@ -744,6 +751,11 @@
         if (indicator) { indicator.remove(); indicator = null; }
 
         if (currentDrop) {
+          // Alignment determined by which side of the body the cursor ended up on
+          const br = currentDrop.bodyEl.getBoundingClientRect();
+          const isLeft = e.clientX < br.left + br.width / 2;
+          fig.classList.toggle('wiki-figure-left',   isLeft);
+          fig.classList.toggle('wiki-figure-right', !isLeft);
           insertFigureAt(fig, currentDrop);
           lastFocusedBody = currentDrop.bodyEl;
         }
@@ -759,10 +771,49 @@
       });
     }
 
-    function flipFigure(fig) {
-      const isLeft = fig.classList.contains('wiki-figure-left');
-      fig.classList.toggle('wiki-figure-right',  isLeft);
-      fig.classList.toggle('wiki-figure-left',  !isLeft);
+    // Add amber corner handles that resize the figure via pointer events.
+    // Idempotent — safe to call on already-wired figures.
+    function addResizeHandles(fig) {
+      if (fig.querySelector('[data-rh]')) return;
+
+      // Normalise legacy figures: move max-width from <img> style → figure inline width
+      if (!fig.style.width) {
+        const img = fig.querySelector('img');
+        const mwMatch = img && (img.getAttribute('style') || '').match(/max-width\s*:\s*(\d+)/);
+        setFigWidth(fig, mwMatch ? +mwMatch[1] : 260);
+        if (img) img.style.removeProperty('max-width');
+      }
+
+      ['tl', 'tr', 'bl', 'br'].forEach(pos => {
+        const h = document.createElement('span');
+        h.dataset.rh = pos;
+        h.className  = 'fig-rh fig-rh-' + pos;
+        fig.appendChild(h);
+
+        const isLeft = pos[1] === 'l';
+        let startX = 0, startW = 0;
+
+        h.addEventListener('pointerdown', e => {
+          e.preventDefault();
+          e.stopPropagation(); // don't bubble to figure's drag listener
+          startX = e.clientX;
+          startW = fig.offsetWidth;
+          h.setPointerCapture(e.pointerId);
+        });
+        h.addEventListener('pointermove', e => {
+          if (!h.hasPointerCapture(e.pointerId)) return;
+          const delta = isLeft ? -(e.clientX - startX) : (e.clientX - startX);
+          setFigWidth(fig, Math.max(80, Math.min(600, startW + delta)));
+        });
+        h.addEventListener('pointerup', e => {
+          if (h.hasPointerCapture(e.pointerId)) h.releasePointerCapture(e.pointerId);
+        });
+      });
+    }
+
+    function setFigWidth(fig, w) {
+      fig.style.width    = w + 'px';
+      fig.style.maxWidth = w + 'px'; // override CSS max-width
     }
 
     // Find the nearest insertion slot across all .ed-body regions
@@ -848,8 +899,9 @@
       fig.className = 'wiki-figure wiki-figure-right';
       fig.contentEditable = 'false';
       fig.dataset.pending = 'true';
+      setFigWidth(fig, 260);
       fig.innerHTML =
-        '<img src="' + blobUrl + '" alt="" style="max-width:260px;" />' +
+        '<img src="' + blobUrl + '" alt="" />' +
         '<figcaption class="ed-caption" contenteditable="true"></figcaption>';
       wireFigureDrag(fig);
       pendingImages.set(blobUrl, { file, figEl: fig });
@@ -1030,10 +1082,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${esc(title)} — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=33" />
-  <script src="/components/site-config.js?v=33"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=33" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=33" defer><\/script>
+  <link rel="stylesheet" href="/components/themes/theme.css?v=34" />
+  <script src="/components/site-config.js?v=34"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=34" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=34" defer><\/script>
 </head>
 <body>
 
