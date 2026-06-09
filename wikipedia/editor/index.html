@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wiki Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=32" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=33" />
 </head>
 <body>
-  <script src="/components/site-config.js?v=32"></script>
-  <script src="/components/wiki-utils.js?v=32"></script>
-  <script src="/components/navbar/inject-navbar.js?v=32" defer></script>
+  <script src="/components/site-config.js?v=33"></script>
+  <script src="/components/wiki-utils.js?v=33"></script>
+  <script src="/components/navbar/inject-navbar.js?v=33" defer></script>
 
   <!-- Floating format toolbar -->
   <div class="fmt-toolbar" id="fmt-toolbar">
@@ -155,7 +155,6 @@
     let categoriesCache  = []; // [{slug, category}] from pages.json
     const pendingImages  = new Map(); // blobUrl → { file, figEl } — uploaded at publish time
     let lastFocusedBody  = null;      // last focused ed-body — target for sidebar image inserts
-    let draggingFig      = null;      // figure element currently being drag-moved between sections
 
     const wikiRoot = 'wikipedia/' + wikiSlug;
 
@@ -404,7 +403,6 @@
       // Wire any figures that were injected via HTML (backward compat / load)
       body.querySelectorAll('figure').forEach(fig => {
         fig.contentEditable = 'false';
-        wireFigureClick(fig);
         wireFigureDrag(fig);
       });
 
@@ -655,14 +653,12 @@
       }
     }
 
-    // ── Image drag-and-drop ────────────────────────────────────────────────────
+    // ── File drag-and-drop into body regions ──────────────────────────────────
     function wireDropTarget(bodyEl) {
       bodyEl.addEventListener('dragover', e => {
-        const isFigMove = draggingFig !== null;
-        const isFile    = [...e.dataTransfer.types].includes('Files');
-        if (isFigMove || isFile) {
+        if ([...e.dataTransfer.types].includes('Files')) {
           e.preventDefault();
-          e.dataTransfer.dropEffect = isFigMove ? 'move' : 'copy';
+          e.dataTransfer.dropEffect = 'copy';
           bodyEl.classList.add('drag-over');
         }
       });
@@ -670,78 +666,179 @@
         if (!bodyEl.contains(e.relatedTarget)) bodyEl.classList.remove('drag-over');
       });
       bodyEl.addEventListener('drop', e => {
-        bodyEl.classList.remove('drag-over');
-
-        // Figure being moved between (or within) sections
-        if (draggingFig) {
-          e.preventDefault();
-          const fig = draggingFig;
-          draggingFig = null;
-          insertFigureIntoBody(fig, e.clientY, bodyEl);
-          lastFocusedBody = bodyEl;
-          return;
-        }
-
-        // New file drop
         const file = [...e.dataTransfer.files].find(f => f.type.startsWith('image/'));
         if (!file) return;
         e.preventDefault();
+        bodyEl.classList.remove('drag-over');
         lastFocusedBody = bodyEl;
         const fig = createImageFigure(file);
-        insertFigureIntoBody(fig, e.clientY, bodyEl);
+        insertFigureAt(fig, { bodyEl, insertBefore: null }); // append to bottom of target body
       });
     }
 
-    function wireFigureClick(fig) {
-      fig.addEventListener('click', e => {
-        if (e.target.classList.contains('ed-caption')) return;
-        e.stopPropagation();
-        const toRight = fig.classList.contains('wiki-figure-left');
-        fig.classList.toggle('wiki-figure-right', toRight);
-        fig.classList.toggle('wiki-figure-left',  !toRight);
-      });
-    }
-
+    // ── Figure pointer-drag (move between sections, click to flip) ─────────────
     function wireFigureDrag(fig) {
-      fig.draggable = true;
-      fig.addEventListener('dragstart', e => {
-        // Don't start a figure-move drag from the caption field
-        if (e.target.classList.contains('ed-caption')) { e.preventDefault(); return; }
-        draggingFig = fig;
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', 'figure'); // required for Firefox
-        e.stopPropagation(); // prevent contenteditable from intercepting
+      // Prevent browser's native image drag
+      const img = fig.querySelector('img');
+      if (img) img.draggable = false;
+
+      let active = false;
+      let startX = 0, startY = 0;
+      let ghost = null, indicator = null;
+      let currentDrop = null;
+      const THRESHOLD = 6;
+
+      fig.addEventListener('pointerdown', e => {
+        if (e.target.classList.contains('ed-caption')) return;
+        e.preventDefault();
+        startX = e.clientX; startY = e.clientY;
+        active = false;
+        fig.setPointerCapture(e.pointerId);
       });
-      fig.addEventListener('dragend', () => { draggingFig = null; });
+
+      fig.addEventListener('pointermove', e => {
+        if (!fig.hasPointerCapture(e.pointerId)) return;
+
+        if (!active) {
+          if (Math.hypot(e.clientX - startX, e.clientY - startY) < THRESHOLD) return;
+          active = true;
+
+          // Ghost
+          const r = fig.getBoundingClientRect();
+          ghost = fig.cloneNode(true);
+          ghost.style.cssText = 'position:fixed;left:' + r.left + 'px;top:' + r.top + 'px;' +
+            'width:' + r.width + 'px;opacity:0.55;pointer-events:none;z-index:9999;' +
+            'transform:rotate(1.5deg);box-shadow:0 8px 28px rgba(0,0,0,0.55);transition:none;';
+          document.body.appendChild(ghost);
+
+          // Drop indicator line
+          indicator = document.createElement('div');
+          indicator.className = 'fig-drop-indicator';
+          document.body.appendChild(indicator);
+
+          fig.style.opacity = '0.2';
+        }
+
+        // Move ghost with cursor (centered)
+        const r = fig.getBoundingClientRect();
+        ghost.style.left = (e.clientX - r.width  / 2) + 'px';
+        ghost.style.top  = (e.clientY - r.height / 2) + 'px';
+
+        currentDrop = findFigDropTarget(e.clientX, e.clientY, fig);
+        renderFigIndicator(indicator, currentDrop, fig);
+      });
+
+      fig.addEventListener('pointerup', e => {
+        if (!fig.hasPointerCapture(e.pointerId)) return;
+        fig.releasePointerCapture(e.pointerId);
+
+        if (!active) {
+          // Short tap with no drag = flip alignment
+          flipFigure(fig);
+          return;
+        }
+
+        active = false;
+        fig.style.opacity = '';
+        if (ghost)     { ghost.remove();     ghost = null;     }
+        if (indicator) { indicator.remove(); indicator = null; }
+
+        if (currentDrop) {
+          insertFigureAt(fig, currentDrop);
+          lastFocusedBody = currentDrop.bodyEl;
+        }
+        currentDrop = null;
+      });
+
+      fig.addEventListener('pointercancel', () => {
+        active = false;
+        fig.style.opacity = '';
+        if (ghost)     { ghost.remove();     ghost = null;     }
+        if (indicator) { indicator.remove(); indicator = null; }
+        currentDrop = null;
+      });
     }
 
-    // Insert a figure as a block-level sibling (never inside a <p>), near the drop Y position.
-    // Appending inside a <p> via caretRangeFromPoint produces invalid HTML that browsers
-    // shuffle around, causing the layout glitches we saw.
-    function insertFigureIntoBody(fig, clientY, bodyEl) {
-      // Walk direct children to find the first block whose bottom edge is below the drop point
-      const siblings = [...bodyEl.children];
-      let insertBefore = null;
-      for (const child of siblings) {
-        if (child === fig) continue;
-        if (clientY < child.getBoundingClientRect().bottom) {
-          insertBefore = child;
-          break;
+    function flipFigure(fig) {
+      const isLeft = fig.classList.contains('wiki-figure-left');
+      fig.classList.toggle('wiki-figure-right',  isLeft);
+      fig.classList.toggle('wiki-figure-left',  !isLeft);
+    }
+
+    // Find the nearest insertion slot across all .ed-body regions
+    function findFigDropTarget(cx, cy, movingFig) {
+      const bodies = [...document.querySelectorAll('.ed-body')];
+      let best = null, bestDist = Infinity;
+
+      for (const bodyEl of bodies) {
+        const br = bodyEl.getBoundingClientRect();
+        if (cx < br.left - 80 || cx > br.right + 80) continue; // out of horizontal range
+
+        const kids = [...bodyEl.children].filter(c => c !== movingFig);
+
+        if (kids.length === 0) {
+          const d = Math.abs(cy - (br.top + br.height / 2));
+          if (d < bestDist) { bestDist = d; best = { bodyEl, insertBefore: null }; }
+          continue;
+        }
+
+        // Slot before first child
+        const d0 = Math.abs(cy - kids[0].getBoundingClientRect().top);
+        if (d0 < bestDist) { bestDist = d0; best = { bodyEl, insertBefore: kids[0] }; }
+
+        // Slots between/after children
+        for (let i = 0; i < kids.length; i++) {
+          const bot = kids[i].getBoundingClientRect().bottom;
+          const top = i + 1 < kids.length ? kids[i + 1].getBoundingClientRect().top : bot;
+          const slotY = (bot + top) / 2;
+          const d = Math.abs(cy - slotY);
+          if (d < bestDist) {
+            bestDist = d;
+            best = { bodyEl, insertBefore: i + 1 < kids.length ? kids[i + 1] : null };
+          }
         }
       }
+      return best;
+    }
+
+    // Render the amber insertion-line indicator
+    function renderFigIndicator(indicator, drop, movingFig) {
+      if (!indicator) return;
+      if (!drop) { indicator.style.display = 'none'; return; }
+      const { bodyEl, insertBefore } = drop;
+      const br   = bodyEl.getBoundingClientRect();
+      const kids = [...bodyEl.children].filter(c => c !== movingFig);
+      let y;
       if (insertBefore) {
-        bodyEl.insertBefore(fig, insertBefore);
+        y = insertBefore.getBoundingClientRect().top;
+      } else if (kids.length > 0) {
+        y = kids[kids.length - 1].getBoundingClientRect().bottom;
       } else {
-        bodyEl.appendChild(fig);
+        y = br.top + 4;
       }
-      // Ensure there's always an empty paragraph after the figure so the
-      // cursor doesn't get trapped when the figure is the last child.
+      indicator.style.cssText = 'display:block;position:fixed;height:2px;pointer-events:none;' +
+        'z-index:9998;background:var(--amber);box-shadow:0 0 6px var(--amber);' +
+        'top:' + (y - 1) + 'px;left:' + br.left + 'px;width:' + br.width + 'px;';
+    }
+
+    // Insert a figure at a specific drop slot and ensure a trailing <p>
+    function insertFigureAt(fig, { bodyEl, insertBefore }) {
+      if (insertBefore) bodyEl.insertBefore(fig, insertBefore);
+      else              bodyEl.appendChild(fig);
       const next = fig.nextElementSibling;
       if (!next || next.tagName === 'FIGURE') {
-        const p = document.createElement('p');
-        p.innerHTML = '<br>';
-        fig.after(p);
+        const p = document.createElement('p'); p.innerHTML = '<br>'; fig.after(p);
       }
+    }
+
+    // Insert at approximate Y position within a specific body (used for file drops)
+    function insertFigureIntoBody(fig, clientY, bodyEl) {
+      const kids = [...bodyEl.children].filter(c => c !== fig);
+      let insertBefore = null;
+      for (const child of kids) {
+        if (clientY < child.getBoundingClientRect().bottom) { insertBefore = child; break; }
+      }
+      insertFigureAt(fig, { bodyEl, insertBefore });
     }
 
     // Creates a figure from a File, registers it as pending (uploaded at publish time)
@@ -754,7 +851,6 @@
       fig.innerHTML =
         '<img src="' + blobUrl + '" alt="" style="max-width:260px;" />' +
         '<figcaption class="ed-caption" contenteditable="true"></figcaption>';
-      wireFigureClick(fig);
       wireFigureDrag(fig);
       pendingImages.set(blobUrl, { file, figEl: fig });
       return fig;
@@ -864,7 +960,7 @@
       const leadEl = $('ed-lead');
       leadEl.innerHTML = state.leadHtml ? state.leadHtml : state.lead ? textToHtml(state.lead) : '';
       wireDropTarget(leadEl);
-      leadEl.querySelectorAll('figure').forEach(fig => { fig.contentEditable = 'false'; wireFigureClick(fig); wireFigureDrag(fig); });
+      leadEl.querySelectorAll('figure').forEach(fig => { fig.contentEditable = 'false'; wireFigureDrag(fig); });
 
       // Sections
       $('ed-sections').innerHTML = '';
@@ -934,10 +1030,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${esc(title)} — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=32" />
-  <script src="/components/site-config.js?v=32"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=32" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=32" defer><\/script>
+  <link rel="stylesheet" href="/components/themes/theme.css?v=33" />
+  <script src="/components/site-config.js?v=33"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=33" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=33" defer><\/script>
 </head>
 <body>
 

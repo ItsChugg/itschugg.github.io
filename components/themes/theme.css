@@ -1621,27 +1621,24 @@ a.editor-sidebar-slug:hover {
   background: var(--amber-faint) !important;
 }
 
-/* Figure alignment flip hint */
+/* Figure drag affordance (pointer events, no hint text) */
 .ed-body figure {
-  cursor: pointer;
+  cursor: grab;
   position: relative;
 }
+.ed-body figure:active {
+  cursor: grabbing;
+}
 
-.ed-body figure:hover::after {
-  content: '↕ drag  ·  ⇄ flip';
-  position: absolute;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 0.58rem;
-  font-family: var(--font-mono);
-  color: var(--text-faint);
-  background: var(--bg-panel);
-  border: var(--border);
-  padding: 1px 6px;
-  white-space: nowrap;
+/* Squarespace-style insertion line shown while dragging a figure */
+.fig-drop-indicator {
+  position: fixed;
+  height: 2px;
   pointer-events: none;
-  z-index: 10;
+  z-index: 9998;
+  background: var(--amber);
+  box-shadow: 0 0 6px var(--amber);
+  display: none;
 }
 
 .ed-caption { outline: none; }
