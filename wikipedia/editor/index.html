@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wiki Editor — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=34" />
+  <link rel="stylesheet" href="/components/themes/theme.css?v=35" />
 </head>
 <body>
-  <script src="/components/site-config.js?v=34"></script>
-  <script src="/components/wiki-utils.js?v=34"></script>
-  <script src="/components/navbar/inject-navbar.js?v=34" defer></script>
+  <script src="/components/site-config.js?v=35"></script>
+  <script src="/components/wiki-utils.js?v=35"></script>
+  <script src="/components/navbar/inject-navbar.js?v=35" defer></script>
 
   <!-- Floating format toolbar -->
   <div class="fmt-toolbar" id="fmt-toolbar">
@@ -1082,10 +1082,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${esc(title)} — ITSCHU.GG</title>
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=34" />
-  <script src="/components/site-config.js?v=34"><\/script>
-  <script src="/components/navbar/inject-navbar.js?v=34" defer><\/script>
-  <script src="/components/sidebar/inject-sidebar.js?v=34" defer><\/script>
+  <link rel="stylesheet" href="/components/themes/theme.css?v=35" />
+  <script src="/components/site-config.js?v=35"><\/script>
+  <script src="/components/navbar/inject-navbar.js?v=35" defer><\/script>
+  <script src="/components/sidebar/inject-sidebar.js?v=35" defer><\/script>
 </head>
 <body>
 
@@ -1148,6 +1148,31 @@ ${catHtml}
           genHTML(),
           'docs: publish "' + title + '"'
         );
+
+        // Index the page in pages.json so the category page shows it.
+        // Removes from all categories first (handles moves), then re-adds to the current one.
+        if (activeCategory) {
+          status.textContent = 'Indexing…';
+          try {
+            const pagesPath = 'wikipedia/' + wikiSlug + '/pages.json';
+            const pagesUrl  = 'https://api.github.com/repos/' + REPO + '/contents/' + pagesPath;
+            const pagesResp = await fetch(pagesUrl, { headers: authHdrs() });
+            if (pagesResp.ok) {
+              const pd      = await pagesResp.json();
+              const pages   = JSON.parse(atob(pd.content.replace(/\n/g, '')));
+              const relPath = fp.replace('wikipedia/' + wikiSlug + '/', '') + '/index.html';
+              const entry   = { title, file: relPath };
+              const updated = pages.map(g => {
+                const rest = g.pages.filter(p => p.file !== relPath);
+                return { ...g, pages: g.slug === activeCategory ? [...rest, entry] : rest };
+              });
+              await WIKI.ghPut(pagesPath, JSON.stringify(updated, null, 2), 'docs: index "' + title + '"');
+            }
+          } catch (indexErr) {
+            console.warn('pages.json index failed:', indexErr);
+          }
+        }
+
         status.className = 'pub-status ok';
         status.textContent = 'Published — live in ~60s at itschu.gg/' + fp + '/';
       } catch(err) {
