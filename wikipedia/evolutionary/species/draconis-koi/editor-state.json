@@ -1,0 +1,15 @@
+{
+  "v": 2,
+  "parent": "wikipedia/evolutionary/species",
+  "title": "Draconis Koi",
+  "slug": "draconis-koi",
+  "leadHtml": "Scientific Name: Dolor Piscium",
+  "sections": [
+    {
+      "h": "Summary",
+      "html": "Named for being found on a planet in the Sigma Draconis system, these fish pose a remarkable intelligence. Originally discovered by creeped-out Russian colonists realizing they were being observed by a swarm of them, further examination and testing revealed their capability of to recognize individual researchers, basic symbols, and objects. Additionally, they seem to have a basic form of body language, which seems to be how and how fast they move their mouths. In fact, these motions can be fast enough to produce bubbles, in a similar manner that Pistol Shrimp from Earth can.<p></p>"
+    }
+  ],
+  "saRows": [],
+  "activeCategory": "species"
+}
