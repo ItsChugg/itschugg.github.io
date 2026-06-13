@@ -1,0 +1,15 @@
+{
+  "v": 2,
+  "parent": "wikipedia/evolutionary/species",
+  "title": "Floating Algae",
+  "slug": "floating-algae",
+  "leadHtml": "Scientific Name: Chlorophyta Carbo<br>A form of Algae that lives primarily in clouds or atop the peaks of mountains.",
+  "sections": [
+    {
+      "h": "Summary",
+      "html": "Chlorophyta Carbo generally reproduce and divide within the moist clouds of the atmosphere. They remain afloat from splitting water molecules, and keeping the buoyant hydrogen within their cell walls, while releasing the oxygen. Occasionally they'll burst, and fall gently down onto the surface until they can replace enough hydrogen to begin floating back up again. They can hamper airspace with their presence, making air travel and space travel slightly more dangerous.<br><br>The hydrogen they produce<p></p>"
+    }
+  ],
+  "saRows": [],
+  "activeCategory": "species"
+}
