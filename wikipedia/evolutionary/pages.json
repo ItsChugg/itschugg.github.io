@@ -4,7 +4,14 @@
     "category": "Species",
     "lead": "",
     "pages": [
-      { "title": "Chlorophyta carbo", "file": "species/chlorophyta-carbo/index.html" }
+      {
+        "title": "Chlorophyta carbo",
+        "file": "species/chlorophyta-carbo/index.html"
+      },
+      {
+        "title": "Floating Algae",
+        "file": "species/floating-algae/index.html"
+      }
     ]
   }
 ]
