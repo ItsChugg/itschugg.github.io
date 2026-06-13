@@ -11,6 +11,10 @@
       {
         "title": "Floating Algae",
         "file": "species/floating-algae/index.html"
+      },
+      {
+        "title": "Hurricane Fungus",
+        "file": "species/hurricane-fungus/index.html"
       }
     ]
   }
