@@ -3,6 +3,8 @@
     "slug": "species",
     "category": "Species",
     "lead": "",
-    "pages": []
+    "pages": [
+      { "title": "Chlorophyta carbo", "file": "species/chlorophyta-carbo/index.html" }
+    ]
   }
 ]

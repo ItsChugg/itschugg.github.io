@@ -1,5 +1,5 @@
 /**
- * inject-sidebar.js?v=35 — Builds a collapsible sidebar from the current wiki's
+ * inject-sidebar.js?v=36 — Builds a collapsible sidebar from the current wiki's
  * pages.json and injects it into #sidebar-container.
  *
  * Each category header is split into:
