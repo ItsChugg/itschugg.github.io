@@ -8,7 +8,11 @@
   <meta name="theme-color" content="#4f8fd6" />
   <link rel="icon" href="/assets/icons/favicon.png?v=2" type="image/png" />
   <link rel="preload" as="image" href="/assets/backgrounds/ocean-sky-blur.jpg" />
-  <link rel="stylesheet" href="/components/themes/aero.css?v=36" />
+  <script>
+    // The old wiki login kept a GitHub token in the browser. It's no longer used, so remove it.
+    try { localStorage.removeItem('wiki_session'); sessionStorage.removeItem('oauth_state'); } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="/components/themes/aero.css?v=37" />
 </head>
 <body>
 
@@ -21,7 +25,7 @@
     <section class="glass pane" aria-labelledby="who">
       <div class="identity">
         <div class="orb">
-          <img src="/assets/profile_pictures/mizuiguess4.png" alt="" />
+          <img src="/assets/profile_pictures/mizuiguess4-256.webp" width="116" height="116" alt="" />
         </div>
         <h1 id="who">ItsChugg</h1>
       </div>
@@ -30,42 +34,42 @@
       <ul class="socials">
         <li>
           <a class="pill" style="--brand:#ff0000" href="https://www.youtube.com/@ItsChugg" target="_blank" rel="noopener">
-            <span class="pill-icon"><img src="/assets/icons/youtube-round.svg" alt="" /></span>
+            <span class="pill-icon"><img src="/assets/icons/youtube-round.svg" width="46" height="46" alt="" /></span>
             <span class="pill-text"><span class="pill-name">YouTube</span><span class="pill-handle">@ItsChugg</span></span>
             <span class="pill-arrow" aria-hidden="true">&rsaquo;</span>
           </a>
         </li>
         <li>
           <a class="pill" style="--brand:#5865f2" href="https://discord.gg/SZ6Cep8bmJ" target="_blank" rel="noopener">
-            <span class="pill-icon"><img src="/assets/icons/discord-round.svg" alt="" /></span>
+            <span class="pill-icon"><img src="/assets/icons/discord-round.svg" width="46" height="46" alt="" /></span>
             <span class="pill-text"><span class="pill-name">Discord</span><span class="pill-handle">Join the server</span></span>
             <span class="pill-arrow" aria-hidden="true">&rsaquo;</span>
           </a>
         </li>
         <li>
           <a class="pill" style="--brand:#ffffff" href="https://x.com/ItsChugg_" target="_blank" rel="noopener">
-            <span class="pill-icon"><img src="/assets/icons/x-round.svg" alt="" /></span>
+            <span class="pill-icon"><img src="/assets/icons/x-round.svg" width="46" height="46" alt="" /></span>
             <span class="pill-text"><span class="pill-name">X</span><span class="pill-handle">@ItsChugg_</span></span>
             <span class="pill-arrow" aria-hidden="true">&rsaquo;</span>
           </a>
         </li>
         <li>
           <a class="pill" style="--brand:#ff4500" href="https://www.reddit.com/user/ItsChugg/" target="_blank" rel="noopener">
-            <span class="pill-icon"><img src="/assets/icons/reddit-round.svg" alt="" /></span>
+            <span class="pill-icon"><img src="/assets/icons/reddit-round.svg" width="46" height="46" alt="" /></span>
             <span class="pill-text"><span class="pill-name">Reddit</span><span class="pill-handle">u/ItsChugg</span></span>
             <span class="pill-arrow" aria-hidden="true">&rsaquo;</span>
           </a>
         </li>
         <li>
           <a class="pill" style="--brand:#66c0f4" href="https://steamcommunity.com/id/ItsChugg/" target="_blank" rel="noopener">
-            <span class="pill-icon"><img src="/assets/icons/steam.png" alt="" /></span>
+            <span class="pill-icon"><img src="/assets/icons/steam.png" width="46" height="46" alt="" /></span>
             <span class="pill-text"><span class="pill-name">Steam</span><span class="pill-handle">ItsChugg</span></span>
             <span class="pill-arrow" aria-hidden="true">&rsaquo;</span>
           </a>
         </li>
         <li>
           <a class="pill" style="--brand:#c9d1d9" href="https://github.com/ItsChugg" target="_blank" rel="noopener">
-            <span class="pill-icon"><img src="/assets/icons/github.png" alt="" /></span>
+            <span class="pill-icon"><img src="/assets/icons/github.png" width="46" height="46" alt="" /></span>
             <span class="pill-text"><span class="pill-name">GitHub</span><span class="pill-handle">ItsChugg</span></span>
             <span class="pill-arrow" aria-hidden="true">&rsaquo;</span>
           </a>
