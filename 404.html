@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page not found · ItsChugg</title>
+  <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
+  <script>
+    // The old wiki now lives on its own site, and login/account went with it
+    (function () {
+      var p = location.pathname;
+      if (/^\/(wikipedia|pages\/evolutionary|pages\/wikipedia)(\/|$)/.test(p)) location.replace('https://evolutionary.wiki/');
+      else if (/^\/(login|account)(\/|$)/.test(p)) location.replace('/');
+    })();
+  </script>
+  <link rel="stylesheet" href="/components/themes/aero.css?v=36" />
+</head>
+<body>
+  <div class="backdrop" aria-hidden="true"></div>
+  <main class="shell">
+    <section class="glass pane" aria-labelledby="nf">
+      <div class="identity">
+        <h1 id="nf">Not found</h1>
+        <p>That page doesn't exist anymore, or never did.</p>
+      </div>
+      <ul class="site-links">
+        <li><a class="tile" href="/"><strong>Home</strong><span>Back to the links</span></a></li>
+        <li><a class="tile" href="https://evolutionary.wiki/"><strong>Wiki</strong><span>evolutionary.wiki</span></a></li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

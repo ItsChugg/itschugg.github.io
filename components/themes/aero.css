@@ -1,0 +1,347 @@
+/* ==========================================================================
+   aero.css: liquid glass theme for the itschu.gg landing page.
+   Clear, lightly blurred glass with bright light-catching rims over an
+   ocean and sky photo. Used only by /index.html and /404.html; the rest of
+   the site keeps theme.css.
+
+   Background: "Sea sky and clouds, Ibiza, Spain" by Joselodos, CC0 (public
+   domain), from Wikimedia Commons. Resized and softly blurred for the web.
+   Round logo badges in /assets/icons/*-round.svg use Simple Icons glyphs (CC0).
+   ========================================================================== */
+
+:root {
+  --sea:          #1d4f9a;
+
+  --glass:        rgba(255, 255, 255, 0.10);
+  --glass-hover:  rgba(255, 255, 255, 0.18);
+  --rim-bright:   rgba(255, 255, 255, 0.95);
+  --rim-soft:     rgba(255, 255, 255, 0.18);
+  --text:         #ffffff;
+  --text-dim:     rgba(255, 255, 255, 0.80);
+  --text-shadow:  0 1px 3px rgba(0, 25, 70, 0.45), 0 0 12px rgba(0, 25, 70, 0.18);
+  --shadow:       rgba(0, 25, 70, 0.28);
+
+  --radius-lg: 32px;
+  --radius-md: 20px;
+  --blur: 14px;
+
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display",
+          "Segoe UI", system-ui, "Helvetica Neue", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; min-height: 100%; }
+
+body {
+  font-family: var(--font);
+  color: var(--text);
+  background: linear-gradient(180deg, #6fa9e6 0%, #d3e7fa 52%, var(--sea) 56%, #0e2f66 100%);
+  background-color: var(--sea);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Backdrop photo ───────────────────────────────────────────────────── */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.backdrop::before {
+  content: "";
+  position: absolute;
+  inset: -2%;
+  background: url("/assets/backgrounds/ocean-sky-blur.jpg") center 55% / cover no-repeat;
+  animation: drift 50s ease-in-out infinite alternate;
+}
+/* A light wash so white text holds up against the bright clouds */
+.backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10, 45, 110, 0.22) 0%, rgba(10, 45, 110, 0.06) 45%, rgba(5, 25, 70, 0.30) 100%);
+}
+
+@keyframes drift {
+  from { transform: scale(1); }
+  to   { transform: scale(1.035); }
+}
+
+/* ── Liquid glass surface ─────────────────────────────────────────────── */
+/* Clear body, light blur, and a rim that catches light at the top left and
+   bottom right like the edge of a lens. The rim is a masked gradient border. */
+.glass {
+  position: relative;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(170%) brightness(0.84);
+  backdrop-filter: blur(var(--blur)) saturate(170%) brightness(0.84);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.55),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.12),
+    inset 0 0 24px rgba(255, 255, 255, 0.06),
+    0 1px 2px rgba(0, 20, 60, 0.10),
+    0 18px 48px -16px var(--shadow);
+  isolation: isolate;
+}
+.glass::after,
+.pill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.25px;
+  background: linear-gradient(135deg,
+    var(--rim-bright) 0%,
+    var(--rim-soft) 22%,
+    rgba(255, 255, 255, 0.04) 50%,
+    var(--rim-soft) 78%,
+    rgba(255, 255, 255, 0.75) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
+}
+
+/* Browsers without backdrop-filter get a solid pane so text stays readable */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass { background: rgba(40, 90, 165, 0.85); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: rgba(40, 90, 165, 0.92);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* ── Layout ───────────────────────────────────────────────────────────── */
+.shell {
+  position: relative;
+  z-index: 1;
+  width: min(540px, 100%);
+  margin: 0 auto;
+  padding: clamp(28px, 7vh, 72px) 16px 48px;
+  display: grid;
+  gap: 18px;
+}
+
+.pane { padding: 30px 24px 24px; }
+
+.pane-title {
+  margin: 0 0 14px;
+  text-align: center;
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-shadow: var(--text-shadow);
+}
+
+/* ── Profile ──────────────────────────────────────────────────────────── */
+.identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  margin-bottom: 26px;
+}
+
+.orb {
+  width: 116px;
+  height: 116px;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.6),
+    0 0 0 6px rgba(255, 255, 255, 0.12),
+    0 12px 30px -10px var(--shadow);
+}
+.orb img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.identity h1 {
+  margin: 0;
+  font-weight: 700;
+  font-size: clamp(2rem, 6.5vw, 2.6rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-shadow: var(--text-shadow);
+}
+.identity p {
+  margin: 4px 0 0;
+  color: var(--text-dim);
+  font-size: 1rem;
+  text-shadow: var(--text-shadow);
+}
+
+/* ── Social pills ─────────────────────────────────────────────────────── */
+.socials {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.pill {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 18px 8px 8px;
+  border-radius: 999px;
+  color: var(--text);
+  text-decoration: none;
+  text-shadow: var(--text-shadow);
+  background: rgba(255, 255, 255, 0.10);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.45),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.10),
+    0 4px 14px -6px var(--shadow);
+  isolation: isolate;
+  transition: transform .25s cubic-bezier(.2,.8,.2,1), background .25s ease, box-shadow .25s ease;
+}
+.pill::after { padding: 1px; opacity: .8; }
+.pill:hover,
+.pill:focus-visible {
+  transform: scale(1.015);
+  background: var(--glass-hover);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.15),
+    0 8px 22px -8px var(--shadow),
+    0 0 22px -6px var(--brand, #fff);
+  outline: none;
+}
+.pill:focus-visible { box-shadow: 0 0 0 2px #fff, 0 8px 22px -8px var(--shadow); }
+.pill:active { transform: scale(0.99); }
+
+.pill-icon {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35), 0 3px 8px -3px rgba(0, 20, 60, 0.45);
+}
+.pill-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pill-text { display: flex; flex-direction: column; min-width: 0; }
+.pill-name { font-size: 1.02rem; font-weight: 600; letter-spacing: -0.005em; }
+.pill-handle {
+  font-size: .86rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pill-arrow {
+  margin-left: auto;
+  opacity: .55;
+  font-size: 1.3rem;
+  transition: transform .2s ease, opacity .2s ease;
+}
+.pill:hover .pill-arrow,
+.pill:focus-visible .pill-arrow { opacity: 1; transform: translateX(3px); }
+
+/* ── Site links pane ──────────────────────────────────────────────────── */
+.site-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 100%;
+  padding: 13px 15px;
+  border-radius: var(--radius-md);
+  color: var(--text);
+  text-decoration: none;
+  text-shadow: var(--text-shadow);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  transition: background .2s ease, box-shadow .2s ease, transform .25s cubic-bezier(.2,.8,.2,1);
+}
+.tile:hover,
+.tile:focus-visible {
+  background: var(--glass-hover);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.6),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+  transform: scale(1.02);
+  outline: none;
+}
+.tile:focus-visible { box-shadow: 0 0 0 2px #fff; }
+.tile strong { font-weight: 600; font-size: .98rem; }
+.tile span { font-size: .82rem; color: var(--text-dim); line-height: 1.3; }
+
+/* ── Side column and intro ────────────────────────────────────────────── */
+.side { display: grid; gap: inherit; align-content: start; }
+.intro p {
+  margin: 0;
+  text-align: center;
+  font-size: .98rem;
+  line-height: 1.6;
+  color: var(--text);
+  text-shadow: var(--text-shadow);
+}
+
+/* ── Entrance ─────────────────────────────────────────────────────────── */
+.pane { animation: rise .7s cubic-bezier(.2,.8,.2,1) both; }
+.side .pane:nth-child(1) { animation-delay: .1s; }
+.side .pane:nth-child(2) { animation-delay: .2s; }
+@keyframes rise {
+  from { opacity: 0; transform: translateY(16px) scale(.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop::before, .pane { animation: none; }
+  .pill, .pill-arrow, .tile { transition: none; }
+}
+
+/* ── Wide screens: site links sit beside the socials ─────────────────── */
+@media (min-width: 900px) {
+  .shell {
+    width: min(960px, 100%);
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 22px;
+  }
+  .site-links { grid-template-columns: 1fr; }
+}
+
+/* ── Small screens ────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .shell { gap: 14px; padding-top: 24px; }
+  .pane { padding: 24px 14px 16px; }
+  .orb { width: 96px; height: 96px; }
+}
+@media (max-width: 360px) {
+  .site-links { grid-template-columns: 1fr; }
+}

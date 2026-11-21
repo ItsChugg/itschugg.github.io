@@ -4,110 +4,95 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ItsChugg</title>
+  <meta name="description" content="ItsChugg's links: YouTube, Discord, X, Reddit, Steam, GitHub and everything else on itschu.gg." />
+  <meta name="theme-color" content="#4f8fd6" />
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=36" />
+  <link rel="preload" as="image" href="/assets/backgrounds/ocean-sky-blur.jpg" />
+  <link rel="stylesheet" href="/components/themes/aero.css?v=36" />
 </head>
 <body>
-  <div class="page-wrapper">
 
-    <div class="home-layout">
+  <!-- Blurred ocean and sky behind the glass -->
+  <div class="backdrop" aria-hidden="true"></div>
 
-      <!-- Left column -->
-      <div>
+  <main class="shell">
 
-        <!-- Socials -->
-        <div class="panel">
-          <div class="panel-label">SOCIAL MEDIA</div>
-          <div class="profile-block">
-            <img class="profile-avatar"
-                 src="/assets/profile_pictures/itschugg_profile_picture.png"
-                 alt="ItsChugg" />
-            <div class="profile-name">ItsChugg</div>
-          </div>
-
-          <div class="buttons">
-            <a href="https://www.youtube.com/@ItsChugg" target="_blank" rel="noopener" title="YouTube">
-              <img src="/assets/icons/youtube.png" alt="YouTube">
-            </a>
-            <a href="https://discord.gg/SZ6Cep8bmJ" target="_blank" rel="noopener" title="Discord">
-              <img src="/assets/icons/discord.png" alt="Discord">
-            </a>
-            <a href="https://x.com/ItIsChugg" target="_blank" rel="noopener" title="Twitter / X">
-              <img src="/assets/icons/twitter.png" alt="Twitter">
-            </a>
-            <a href="https://steamcommunity.com/id/ItsChugg/" target="_blank" rel="noopener" title="Steam">
-              <img src="/assets/icons/steam.png" alt="Steam">
-            </a>
-            <a href="https://github.com/ItsChugg" target="_blank" rel="noopener" title="GitHub">
-              <img src="/assets/icons/github.png" alt="GitHub">
-            </a>
-          </div>
+    <!-- Profile and socials -->
+    <section class="glass pane" aria-labelledby="who">
+      <div class="identity">
+        <div class="orb">
+          <img src="/assets/profile_pictures/mizuiguess4.png" alt="" />
         </div>
-
-        <!-- Contributors -->
-        <div class="panel">
-          <div class="panel-label">CONTRIBUTORS</div>
-          <ul class="contributors">
-            <li class="contributor-item">
-              <img src="/assets/profile_pictures/itschugg_profile_picture.png" alt="ItsChugg" />
-              <div>
-                <div class="contributor-name">ItsChugg</div>
-                <div class="contributor-role">Host, Programmer, Wikipedia</div>
-              </div>
-            </li>
-            <li class="contributor-item">
-              <img src="/assets/profile_pictures/zachary_n_kaleno_profile_picture.jpg" alt="Kaleno" />
-              <div>
-                <div class="contributor-name">Kaleno</div>
-                <div class="contributor-role">Wikipedia</div>
-              </div>
-            </li>
-            <li class="contributor-item">
-              <img src="/assets/profile_pictures/zm.b_profile_picture.png" alt="ZM.B" />
-              <div>
-                <div class="contributor-name">ZM.B</div>
-                <div class="contributor-role">Wikipedia</div>
-              </div>
-            </li>
-            <li class="contributor-item">
-              <img src="/assets/profile_pictures/claude.png" alt="Claude" />
-              <div>
-                <div class="contributor-name">Claude</div>
-                <div class="contributor-role">Programmer</div>
-              </div>
-            </li>
-          </ul>
-        </div>
-
+        <h1 id="who">ItsChugg</h1>
       </div>
 
-      <!-- Right column — stretched to match left -->
-      <div style="display:flex; flex-direction:column;">
-        <div class="panel" style="flex:1;">
-          <div class="panel-label">INFORMATION</div>
-          <p>
-            You can find a bunch of stuff about me and my projects here.
-            If you're just looking for links to my other social sites,
-            you can find them on the left. Contributors are right below that,
-            and you can find my other projects on the navigation bar at the top!
-          </p>
-        </div>
-      </div>
+      <h2 class="pane-title">Find me on</h2>
+      <ul class="socials">
+        <li>
+          <a class="pill" style="--brand:#ff0000" href="https://www.youtube.com/@ItsChugg" target="_blank" rel="noopener">
+            <span class="pill-icon"><img src="/assets/icons/youtube-round.svg" alt="" /></span>
+            <span class="pill-text"><span class="pill-name">YouTube</span><span class="pill-handle">@ItsChugg</span></span>
+            <span class="pill-arrow" aria-hidden="true">&rsaquo;</span>
+          </a>
+        </li>
+        <li>
+          <a class="pill" style="--brand:#5865f2" href="https://discord.gg/SZ6Cep8bmJ" target="_blank" rel="noopener">
+            <span class="pill-icon"><img src="/assets/icons/discord-round.svg" alt="" /></span>
+            <span class="pill-text"><span class="pill-name">Discord</span><span class="pill-handle">Join the server</span></span>
+            <span class="pill-arrow" aria-hidden="true">&rsaquo;</span>
+          </a>
+        </li>
+        <li>
+          <a class="pill" style="--brand:#ffffff" href="https://x.com/ItsChugg_" target="_blank" rel="noopener">
+            <span class="pill-icon"><img src="/assets/icons/x-round.svg" alt="" /></span>
+            <span class="pill-text"><span class="pill-name">X</span><span class="pill-handle">@ItsChugg_</span></span>
+            <span class="pill-arrow" aria-hidden="true">&rsaquo;</span>
+          </a>
+        </li>
+        <li>
+          <a class="pill" style="--brand:#ff4500" href="https://www.reddit.com/user/ItsChugg/" target="_blank" rel="noopener">
+            <span class="pill-icon"><img src="/assets/icons/reddit-round.svg" alt="" /></span>
+            <span class="pill-text"><span class="pill-name">Reddit</span><span class="pill-handle">u/ItsChugg</span></span>
+            <span class="pill-arrow" aria-hidden="true">&rsaquo;</span>
+          </a>
+        </li>
+        <li>
+          <a class="pill" style="--brand:#66c0f4" href="https://steamcommunity.com/id/ItsChugg/" target="_blank" rel="noopener">
+            <span class="pill-icon"><img src="/assets/icons/steam.png" alt="" /></span>
+            <span class="pill-text"><span class="pill-name">Steam</span><span class="pill-handle">ItsChugg</span></span>
+            <span class="pill-arrow" aria-hidden="true">&rsaquo;</span>
+          </a>
+        </li>
+        <li>
+          <a class="pill" style="--brand:#c9d1d9" href="https://github.com/ItsChugg" target="_blank" rel="noopener">
+            <span class="pill-icon"><img src="/assets/icons/github.png" alt="" /></span>
+            <span class="pill-text"><span class="pill-name">GitHub</span><span class="pill-handle">ItsChugg</span></span>
+            <span class="pill-arrow" aria-hidden="true">&rsaquo;</span>
+          </a>
+        </li>
+      </ul>
+    </section>
 
+    <div class="side">
+      <!-- Rest of the site -->
+      <nav class="glass pane" aria-labelledby="explore">
+        <h2 class="pane-title" id="explore">Around the site</h2>
+        <ul class="site-links">
+          <li><a class="tile" href="https://evolutionary.wiki/" target="_blank" rel="noopener"><strong>Evolutionary Wikipedia</strong><span>evolutionary.wiki</span></a></li>
+          <li><a class="tile" href="/map-to-globe/"><strong>Map to Globe</strong><span>Change your map from 2D to 3D</span></a></li>
+          <li><a class="tile" href="/map-projection/"><strong>Map Projection</strong><span>Change your map's projection</span></a></li>
+          <li><a class="tile" href="/rizk/"><strong>Rizk</strong><span>A flash game I recovered</span></a></li>
+        </ul>
+      </nav>
+
+      <!-- About -->
+      <section class="glass pane intro" aria-labelledby="about">
+        <h2 class="pane-title" id="about">Brief Introduction</h2>
+        <p>Hey there, I'm ItsChugg. I create content and manage projects, such as Worldbuilding, Livestreaming, Narration, and Video Editing. I'm a bit of a Jack of All Trades, and I like learning new things. Check out some of my social media, or see what I've fooled around with here on my site.</p>
+      </section>
     </div>
 
-    <!-- Wikis (margin-bottom of the grid panels provides the top gap) -->
-    <div class="panel">
-      <div class="panel-label">WIKIPEDIAS</div>
-      <div class="wiki-hub-grid" id="home-wiki-grid"></div>
-    </div>
+  </main>
 
-
-  </div>
-
-  <script src="/components/site-config.js?v=36"></script>
-  <script src="/components/navbar/inject-navbar.js?v=36" defer></script>
-  <script src="/components/wiki-utils.js?v=36"></script>
-  <script>WIKI.renderWikiGrid('home-wiki-grid');</script>
 </body>
 </html>

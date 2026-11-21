@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <!-- Simple white snoo on a round Reddit-orange badge -->
+  <circle cx="24" cy="24" r="24" fill="#FF4500"/>
+  <g fill="#fff">
+    <!-- antenna -->
+    <path d="M24.6 17.2 26.4 10.6 31.6 11.8" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="33.4" cy="12.2" r="2.4"/>
+    <!-- ears -->
+    <circle cx="13.6" cy="23.2" r="3.4"/>
+    <circle cx="34.4" cy="23.2" r="3.4"/>
+    <!-- head -->
+    <ellipse cx="24" cy="27.6" rx="12.6" ry="9"/>
+  </g>
+  <!-- eyes and smile -->
+  <circle cx="19.2" cy="26.4" r="2" fill="#FF4500"/>
+  <circle cx="28.8" cy="26.4" r="2" fill="#FF4500"/>
+  <path d="M19.6 31.2q4.4 2.8 8.8 0" fill="none" stroke="#FF4500" stroke-width="1.4" stroke-linecap="round"/>
+</svg>

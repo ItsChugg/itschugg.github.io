@@ -1,8 +1,8 @@
 /**
- * site-config.js?v=36 — Site-wide constants and shared session helper.
- * Load this BEFORE inject-navbar.js and any inline scripts that need SITE.
+ * site-config.js?v=36 — Site-wide constants.
+ * Load this BEFORE inject-navbar.js.
  *
- * Exposes: window.SITE = { REPO, ALLOWED, getSession() }
+ * Exposes: window.SITE = { REPO }
  *
  * This file is loaded synchronously (no defer/async) so it also handles
  * theme flash prevention — applying the saved theme before the first paint.
@@ -18,18 +18,6 @@
   } catch (e) {}
 }());
 
-(function () {
-  window.SITE = {
-    REPO:    'ItsChugg/itschugg.github.io',
-    ALLOWED: ['ItsChugg', 'zmbprotocol', 'Zachary-N-Kaleno'],
-
-    /** Returns the current session object or null if expired / missing. */
-    getSession() {
-      try {
-        const s = JSON.parse(localStorage.getItem('wiki_session') || 'null');
-        if (!s || Date.now() > s.expires) return null;
-        return s;
-      } catch { return null; }
-    }
-  };
-}());
+window.SITE = {
+  REPO: 'ItsChugg/itschugg.github.io',
+};

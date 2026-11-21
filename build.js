@@ -6,8 +6,8 @@
  * Or:      npm run build
  *
  * Increments buildId in package.json and rewrites every ?v=... query string
- * on theme.css, inject-navbar.js, inject-sidebar.js, site-config.js,
- * wiki-utils.js and navbar.html throughout the project.
+ * on theme.css, aero.css, inject-navbar.js, site-config.js and navbar.html
+ * throughout the project.
  *
  * A .githooks/pre-commit hook runs this automatically before each commit.
  * Enable it once with:  git config core.hooksPath .githooks
@@ -28,20 +28,15 @@ console.log(`\n🔨  Build #${VER}\n`);
 // and the replacement string containing the new version.
 const STAMPS = [
   { re: /theme\.css\?v=[^"'\s]*/g,                        out: `theme.css?v=${VER}` },
+  { re: /aero\.css\?v=[^"'\s]*/g,                         out: `aero.css?v=${VER}` },
   { re: /inject-navbar\.js\?v=[^"'\s]*/g,                 out: `inject-navbar.js?v=${VER}` },
-  { re: /inject-sidebar\.js(?:\?v=[^"'\s]*)?(?=["'\s>])/g, out: `inject-sidebar.js?v=${VER}` },
   { re: /site-config\.js(?:\?v=[^"'\s]*)?(?=["'\s>])/g,   out: `site-config.js?v=${VER}` },
-  { re: /wiki-utils\.js(?:\?v=[^"'\s]*)?(?=["'\s>])/g,    out: `wiki-utils.js?v=${VER}` },
   { re: /navbar\.html\?v=[^"'\s]*/g,                       out: `navbar.html?v=${VER}` },
 ];
 
 // ── File walker ───────────────────────────────────────────────────────────────
 const SKIP_DIRS = new Set(['_backup', 'node_modules', '.git', 'assets']);
 
-// Wiki tool slugs under wikipedia/ that ARE part of the codebase (should be stamped).
-// Everything else under wikipedia/{slug}/ is published user content — skipping it
-// prevents SHA conflicts when the editor tries to publish articles.
-const WIKI_TOOLS = new Set(['editor', 'hub-editor', 'new']);
 
 function walk(dir) {
   const results = [];
@@ -49,12 +44,6 @@ function walk(dir) {
     if (SKIP_DIRS.has(f)) continue;
     const full = path.join(dir, f);
     if (fs.statSync(full).isDirectory()) {
-      // Skip published wiki content: wikipedia/{non-tool-slug}/
-      const rel   = path.relative('.', full).replace(/\\/g, '/');
-      const parts = rel.split('/');
-      if (parts[0] === 'wikipedia' && parts.length === 2 && !WIKI_TOOLS.has(parts[1])) {
-        continue; // e.g. wikipedia/evolutionary/, wikipedia/test/ — user content, leave alone
-      }
       results.push(...walk(full));
     } else if (f.endsWith('.html') || f.endsWith('.js')) {
       results.push(full);
