@@ -312,6 +312,19 @@ body {
   .pill, .pill-arrow, .tile { transition: none; }
 }
 
+/* ── Wide screens: site links sit beside the socials ─────────────────── */
+@media (min-width: 900px) {
+  .shell {
+    width: min(960px, 100%);
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 22px;
+  }
+  .site-links { grid-template-columns: 1fr; }
+  .tile { flex-direction: row; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .tile span { text-align: right; }
+}
+
 /* ── Small screens ────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
   .shell { gap: 14px; padding-top: 24px; }
