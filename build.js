@@ -6,7 +6,7 @@
  * Or:      npm run build
  *
  * Increments buildId in package.json and rewrites every ?v=... query string
- * on theme.css, inject-navbar.js, inject-sidebar.js, site-config.js,
+ * on theme.css, aero.css, inject-navbar.js, inject-sidebar.js, site-config.js,
  * wiki-utils.js and navbar.html throughout the project.
  *
  * A .githooks/pre-commit hook runs this automatically before each commit.
@@ -28,6 +28,7 @@ console.log(`\n🔨  Build #${VER}\n`);
 // and the replacement string containing the new version.
 const STAMPS = [
   { re: /theme\.css\?v=[^"'\s]*/g,                        out: `theme.css?v=${VER}` },
+  { re: /aero\.css\?v=[^"'\s]*/g,                         out: `aero.css?v=${VER}` },
   { re: /inject-navbar\.js\?v=[^"'\s]*/g,                 out: `inject-navbar.js?v=${VER}` },
   { re: /inject-sidebar\.js(?:\?v=[^"'\s]*)?(?=["'\s>])/g, out: `inject-sidebar.js?v=${VER}` },
   { re: /site-config\.js(?:\?v=[^"'\s]*)?(?=["'\s>])/g,   out: `site-config.js?v=${VER}` },
