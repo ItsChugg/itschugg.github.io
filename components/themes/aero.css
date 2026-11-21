@@ -334,8 +334,6 @@ body {
     gap: 22px;
   }
   .site-links { grid-template-columns: 1fr; }
-  .tile { flex-direction: row; align-items: baseline; justify-content: space-between; gap: 12px; }
-  .tile span { text-align: right; }
 }
 
 /* ── Small screens ────────────────────────────────────────────────────── */
