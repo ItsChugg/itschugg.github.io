@@ -5,48 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ItsChugg</title>
   <meta name="description" content="ItsChugg's links: YouTube, Discord, X, Reddit, Steam, GitHub and everything else on itschu.gg." />
-  <meta name="theme-color" content="#0b2a8a" />
+  <meta name="theme-color" content="#4f8fd6" />
   <link rel="icon" href="/assets/icons/favicon.png" type="image/png" />
-  <script>
-    // Apply the saved glass tint before paint so the page doesn't flash
-    try {
-      var t = localStorage.getItem('itschu-aero-tint');
-      if (t === 'leaf') document.documentElement.setAttribute('data-tint', 'leaf');
-    } catch (e) {}
-  </script>
+  <link rel="preload" as="image" href="/assets/backgrounds/ocean-sky-blur.jpg" />
   <link rel="stylesheet" href="/components/themes/aero.css?v=36" />
 </head>
 <body>
 
-  <!-- Decorative light streaks behind the glass -->
-  <div class="backdrop" aria-hidden="true">
-    <svg viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
-      <defs>
-        <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="2.2" />
-        </filter>
-        <filter id="haze" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="28" />
-        </filter>
-      </defs>
-      <g class="drift">
-        <path class="sheen" filter="url(#haze)" d="M1600 80 C1180 220 980 520 1120 1000 L1600 1000 Z" />
-        <path class="streak" filter="url(#soft)" stroke-width="3"   d="M1650 40  C1220 180 1000 520 1160 1040" />
-        <path class="streak" filter="url(#soft)" stroke-width="1.6" d="M1650 120 C1260 260 1060 560 1240 1040" />
-        <path class="streak" stroke-width=".8"  opacity=".8" d="M1650 200 C1300 330 1120 600 1320 1040" />
-      </g>
-      <g class="drift slow">
-        <path class="streak" filter="url(#soft)" stroke-width="2.4" d="M-60 860 C380 700 820 760 1660 560" />
-        <path class="streak" stroke-width="1"   opacity=".7" d="M-60 920 C420 760 860 820 1660 640" />
-        <path class="streak" stroke-width=".6"  opacity=".5" d="M-60 980 C460 830 900 880 1660 720" />
-      </g>
-    </svg>
-  </div>
+  <!-- Blurred ocean and sky behind the glass -->
+  <div class="backdrop" aria-hidden="true"></div>
 
   <main class="shell">
 
     <!-- Profile and socials -->
-    <section class="glass pane profile" aria-labelledby="who">
+    <section class="glass pane" aria-labelledby="who">
       <div class="identity">
         <div class="orb">
           <img src="/assets/profile_pictures/itschugg_profile_picture.png" alt="" />
@@ -60,29 +32,29 @@
       <h2 class="pane-title">Find me on</h2>
       <ul class="socials">
         <li>
-          <a class="pill" style="--brand:#ff2a2a" href="https://www.youtube.com/@ItsChugg" target="_blank" rel="noopener">
-            <span class="pill-icon"><img src="/assets/icons/youtube.png" alt="" /></span>
+          <a class="pill" style="--brand:#ff0000" href="https://www.youtube.com/@ItsChugg" target="_blank" rel="noopener">
+            <span class="pill-icon"><img src="/assets/icons/youtube-round.svg" alt="" /></span>
             <span class="pill-text"><span class="pill-name">YouTube</span><span class="pill-handle">@ItsChugg</span></span>
             <span class="pill-arrow" aria-hidden="true">&rsaquo;</span>
           </a>
         </li>
         <li>
           <a class="pill" style="--brand:#5865f2" href="https://discord.gg/SZ6Cep8bmJ" target="_blank" rel="noopener">
-            <span class="pill-icon"><img src="/assets/icons/discord.png" alt="" /></span>
+            <span class="pill-icon"><img src="/assets/icons/discord-round.svg" alt="" /></span>
             <span class="pill-text"><span class="pill-name">Discord</span><span class="pill-handle">Join the server</span></span>
             <span class="pill-arrow" aria-hidden="true">&rsaquo;</span>
           </a>
         </li>
         <li>
-          <a class="pill" style="--brand:#1d9bf0" href="https://x.com/ItIsChugg" target="_blank" rel="noopener">
-            <span class="pill-icon"><img src="/assets/icons/twitter.png" alt="" /></span>
+          <a class="pill" style="--brand:#ffffff" href="https://x.com/ItIsChugg" target="_blank" rel="noopener">
+            <span class="pill-icon"><img src="/assets/icons/x-round.svg" alt="" /></span>
             <span class="pill-text"><span class="pill-name">X / Twitter</span><span class="pill-handle">@ItIsChugg</span></span>
             <span class="pill-arrow" aria-hidden="true">&rsaquo;</span>
           </a>
         </li>
         <li>
           <a class="pill" style="--brand:#ff4500" href="https://www.reddit.com/user/ItsChugg/" target="_blank" rel="noopener">
-            <span class="pill-icon"><img src="/assets/icons/reddit.svg" alt="" /></span>
+            <span class="pill-icon"><img src="/assets/icons/reddit-round.svg" alt="" /></span>
             <span class="pill-text"><span class="pill-name">Reddit</span><span class="pill-handle">u/ItsChugg</span></span>
             <span class="pill-arrow" aria-hidden="true">&rsaquo;</span>
           </a>
@@ -95,7 +67,7 @@
           </a>
         </li>
         <li>
-          <a class="pill" style="--brand:#6e7681" href="https://github.com/ItsChugg" target="_blank" rel="noopener">
+          <a class="pill" style="--brand:#c9d1d9" href="https://github.com/ItsChugg" target="_blank" rel="noopener">
             <span class="pill-icon"><img src="/assets/icons/github.png" alt="" /></span>
             <span class="pill-text"><span class="pill-name">GitHub</span><span class="pill-handle">ItsChugg</span></span>
             <span class="pill-arrow" aria-hidden="true">&rsaquo;</span>
@@ -108,83 +80,14 @@
     <nav class="glass pane" aria-labelledby="explore">
       <h2 class="pane-title" id="explore">Around the site</h2>
       <ul class="site-links">
-        <li><a class="tile" href="/wikipedia/"><strong>Wikipedia</strong><span>Our worldbuilding wikis</span></a></li>
+        <li><a class="tile" href="https://evolutionary.wiki/" target="_blank" rel="noopener"><strong>Wiki</strong><span>evolutionary.wiki</span></a></li>
         <li><a class="tile" href="/map-to-globe/"><strong>Map to Globe</strong><span>Wrap a map onto a planet</span></a></li>
         <li><a class="tile" href="/map-projection/"><strong>Map Projection</strong><span>Reproject flat maps</span></a></li>
         <li><a class="tile" href="/rizk/"><strong>Rizk</strong><span>The old Science Museum game</span></a></li>
-        <li><a class="tile" href="/login/" id="login-tile"><strong>Login</strong><span>For wiki editors</span></a></li>
       </ul>
     </nav>
 
-    <!-- Contributors -->
-    <section class="glass pane" aria-labelledby="crew">
-      <h2 class="pane-title" id="crew">Contributors</h2>
-      <ul class="crew">
-        <li><img src="/assets/profile_pictures/itschugg_profile_picture.png" alt="" /><div><b>ItsChugg</b><small>Host, Programmer, Wikipedia</small></div></li>
-        <li><img src="/assets/profile_pictures/zachary_n_kaleno_profile_picture.jpg" alt="" /><div><b>Kaleno</b><small>Wikipedia</small></div></li>
-        <li><img src="/assets/profile_pictures/zm.b_profile_picture.png" alt="" /><div><b>ZM.B</b><small>Wikipedia</small></div></li>
-        <li><img src="/assets/profile_pictures/claude.png" alt="" /><div><b>Claude</b><small>Programmer</small></div></li>
-      </ul>
-    </section>
-
   </main>
 
-  <!-- Bottom glass bar -->
-  <footer class="glass dock">
-    <span class="dock-brand">itschu<b>.gg</b></span>
-    <span class="dock-spacer"></span>
-    <div class="tint-switch" role="group" aria-label="Glass color">
-      <button type="button" data-tint="aqua" aria-pressed="true"><span class="sr-only">Blue glass</span></button>
-      <button type="button" data-tint="leaf" aria-pressed="false"><span class="sr-only">Green glass</span></button>
-    </div>
-    <time class="dock-clock" id="dock-clock"></time>
-  </footer>
-
-  <script src="/components/site-config.js?v=36"></script>
-  <script>
-    (function () {
-      var root = document.documentElement;
-      var meta = document.querySelector('meta[name="theme-color"]');
-      var buttons = document.querySelectorAll('.tint-switch button');
-
-      function applyTint(tint) {
-        if (tint === 'leaf') root.setAttribute('data-tint', 'leaf');
-        else root.removeAttribute('data-tint');
-        buttons.forEach(function (b) {
-          b.setAttribute('aria-pressed', String(b.dataset.tint === (tint || 'aqua')));
-        });
-        if (meta) meta.setAttribute('content', tint === 'leaf' ? '#2e5212' : '#0b2a8a');
-      }
-
-      applyTint(root.getAttribute('data-tint') || 'aqua');
-      buttons.forEach(function (b) {
-        b.addEventListener('click', function () {
-          applyTint(b.dataset.tint);
-          try { localStorage.setItem('itschu-aero-tint', b.dataset.tint); } catch (e) {}
-        });
-      });
-
-      // Little clock in the corner
-      var clock = document.getElementById('dock-clock');
-      function tick() {
-        var now = new Date();
-        clock.textContent = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-        clock.setAttribute('datetime', now.toISOString());
-      }
-      tick();
-      setInterval(tick, 15000);
-
-      // If someone is signed in, point the login tile at their account page
-      try {
-        var session = window.SITE && SITE.getSession && SITE.getSession();
-        if (session) {
-          var tile = document.getElementById('login-tile');
-          tile.href = '/account/';
-          tile.querySelector('strong').textContent = 'Account';
-          tile.querySelector('span').textContent = 'Signed in as ' + (session.username || 'you');
-        }
-      } catch (e) {}
-    })();
-  </script>
 </body>
 </html>

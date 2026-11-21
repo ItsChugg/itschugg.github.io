@@ -1,9 +1,8 @@
 /**
- * inject-navbar.js — Fetches and injects the shared navbar, wires the
- * dark/light toggle + colour theme dropdown, swaps LOGIN for an avatar
- * when signed in, and injects wiki edit buttons on relevant pages.
+ * inject-navbar.js — Fetches and injects the shared navbar and wires the
+ * dark/light toggle + colour theme dropdown.
  *
- * Requires site-config.js?v=36 to be loaded synchronously first (uses SITE.getSession).
+ * Load site-config.js?v=36 synchronously first for theme flash prevention.
  */
 
 // Apply saved theme before first paint to prevent flash.
@@ -12,56 +11,7 @@
   if (t && t !== 'dark') document.documentElement.setAttribute('data-theme', t);
 }());
 
-// Utility paths that sit at /wikipedia/{slug}/ but are NOT wiki hubs
-const WIKI_UTILITY_SLUGS = new Set(['new', 'editor', 'hub-editor']);
-
 function wireNavbar() {
-  const session = SITE.getSession();
-
-  // ── Swap LOGIN → avatar + username when signed in ─────────────────────────
-  const loginLink = document.getElementById('navbar-login-link');
-  if (loginLink && session) {
-    const img     = document.createElement('img');
-    img.src       = session.avatar;
-    img.alt       = session.username;
-    img.className = 'navbar-user-avatar';
-    loginLink.textContent = '';
-    loginLink.appendChild(img);
-    loginLink.appendChild(document.createTextNode(session.username.toUpperCase()));
-    loginLink.href = '/account/';
-    loginLink.classList.add('navbar-user');
-  }
-
-  // ── Wiki action buttons (only for signed-in users) ────────────────────────
-  if (session) {
-    const path  = window.location.pathname;
-    const parts = path.split('/').filter(Boolean);
-
-    if (parts[0] === 'wikipedia' && parts[1] && !WIKI_UTILITY_SLUGS.has(parts[1])) {
-      const slug = parts[1];
-      const btn  = document.createElement('a');
-      btn.className = 'wiki-edit-btn';
-
-      if (parts.length >= 3) {
-        // Article page — single EDIT PAGE button
-        btn.href      = `/wikipedia/editor/?wiki=${slug}&edit=${encodeURIComponent(path)}`;
-        btn.textContent = '✎ EDIT PAGE';
-        document.body.appendChild(btn);
-      } else if (parts.length === 2) {
-        // Wiki hub page — CREATE PAGE (primary) + EDIT HOME (stacked above it)
-        btn.href      = `/wikipedia/editor/?wiki=${slug}`;
-        btn.textContent = '+ CREATE PAGE';
-        document.body.appendChild(btn);
-
-        const editBtn = document.createElement('a');
-        editBtn.href      = `/wikipedia/hub-editor/?wiki=${slug}`;
-        editBtn.textContent = '✎ EDIT HOME';
-        editBtn.className = 'wiki-edit-btn wiki-edit-btn-alt';
-        document.body.appendChild(editBtn);
-      }
-    }
-  }
-
   // ── Mark active nav link ──────────────────────────────────────────────────
   const path = window.location.pathname;
   document.querySelectorAll('.navbar-links a').forEach(a => {
