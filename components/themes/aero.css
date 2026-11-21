@@ -55,7 +55,7 @@ body {
 .backdrop::before {
   content: "";
   position: absolute;
-  inset: -2%;
+  inset: 0;
   background: url("/assets/backgrounds/ocean-sky-blur.jpg") center 55% / cover no-repeat;
 }
 /* A light wash so white text holds up against the bright clouds */
@@ -337,6 +337,8 @@ body {
 
 /* ── Small screens ────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
+  /* Phones get a lighter blur, which is cheaper to draw and looks the same at this size */
+  :root { --blur: 10px; }
   .shell { gap: 14px; padding-top: 24px; }
   .pane { padding: 24px 14px 16px; }
   .orb { width: 96px; height: 96px; }

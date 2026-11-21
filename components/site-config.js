@@ -1,8 +1,15 @@
 /**
- * site-config.js?v=36 — Site-wide constants.
+ * site-config.js?v=37 — Site-wide constants.
  * Load this BEFORE inject-navbar.js.
  *
- * Exposes: window.SITE = { REPO }
+ * Exposes: // ── Clear old wiki login sessions ─────────────────────────────────────────────
+// The wiki and its GitHub login were removed. Anyone who signed in before still
+// has a GitHub token saved in this browser, so throw it away.
+(function () {
+  try { localStorage.removeItem('wiki_session'); sessionStorage.removeItem('oauth_state'); } catch (e) {}
+}());
+
+window.SITE = { REPO }
  *
  * This file is loaded synchronously (no defer/async) so it also handles
  * theme flash prevention — applying the saved theme before the first paint.
