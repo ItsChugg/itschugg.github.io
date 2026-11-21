@@ -304,6 +304,7 @@ body {
 .side { display: grid; gap: inherit; align-content: start; }
 .intro p {
   margin: 0;
+  text-align: center;
   font-size: .98rem;
   line-height: 1.6;
   color: var(--text);
