@@ -102,6 +102,24 @@ body {
   pointer-events: none;
 }
 
+/* Mouse-driven screens (desktops and laptops) skip the live blur. The
+   background never moves, so each pane can show a pre-blurred copy of the
+   same photo, pinned to the viewport so it lines up exactly. It looks the
+   same but costs almost nothing to draw, which matters on PCs where the
+   browser runs without GPU acceleration or on large, high refresh screens.
+   Touch devices keep the real blur because they don't support fixed
+   backgrounds well. */
+@media (hover: hover) and (pointer: fine) {
+  .glass {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background:
+      var(--glass),
+      linear-gradient(180deg, rgba(10, 45, 110, 0.22) 0%, rgba(10, 45, 110, 0.06) 45%, rgba(5, 25, 70, 0.30) 100%) fixed,
+      url("/assets/backgrounds/ocean-sky-glass.jpg") center 55% / cover no-repeat fixed;
+  }
+}
+
 /* Browsers without backdrop-filter get a solid pane so text stays readable */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass { background: rgba(40, 90, 165, 0.85); }
@@ -311,7 +329,7 @@ body {
 }
 
 /* ── Entrance ─────────────────────────────────────────────────────────── */
-.pane { animation: rise .7s cubic-bezier(.2,.8,.2,1) both; }
+.pane { animation: rise .7s cubic-bezier(.2,.8,.2,1) backwards; }
 .side .pane:nth-child(1) { animation-delay: .1s; }
 .side .pane:nth-child(2) { animation-delay: .2s; }
 @keyframes rise {
