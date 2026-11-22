@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Thanks Tanks! · ItsChugg</title>
+  <meta name="description" content="Thanks Tanks!, Isaac Williams' Flash game, preserved and playable in your browser." />
+  <meta name="theme-color" content="#4f8fd6" />
+  <link rel="icon" href="/assets/icons/favicon.png?v=2" type="image/png" />
+  <link rel="preload" as="image" href="/assets/backgrounds/ocean-sky-blur.jpg" />
+  <link rel="stylesheet" href="/components/themes/aero.css?v=42" />
+
+  <script>
+    window.RufflePlayer = window.RufflePlayer || {};
+    window.RufflePlayer.config = {
+      autoplay: "on",
+      unmuteOverlay: "hidden"
+    };
+  </script>
+  <!-- Shares the self-hosted Ruffle copy that lives with Rizk -->
+  <script src="/rizk/ruffle/ruffle.js"></script>
+
+  <style>
+    /* Sized so the pane hugs the 600px game: 600 + 2x20 padding + 2x16 gutter */
+    .game-page { width: min(672px, 100%); }
+    .game-pane { padding: 26px 20px 22px; }
+    /* The game stage is 600x350. Show it at exactly that size, and only shrink
+       it (same shape) when the screen is too narrow to fit it. */
+    .game {
+      width: 100%;
+      max-width: 600px;
+      aspect-ratio: 600 / 350;
+      margin: 18px auto 20px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: #000;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25), 0 10px 30px -12px var(--shadow);
+    }
+    .download { text-align: center; }
+    @media (max-width: 480px) {
+      .game-pane { padding: 22px 12px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="backdrop" aria-hidden="true"></div>
+
+  <main class="page game-page">
+    <a class="glass back" href="/"><img src="/assets/profile_pictures/mizuiguess4-256.webp" width="26" height="26" alt="" />ItsChugg</a>
+
+    <section class="glass pane game-pane" aria-labelledby="title">
+      <h1 id="title">Thanks Tanks!</h1>
+      <p class="lede">
+        <strong>Thanks Tanks!</strong> is a game by Isaac Williams, with music by Robert D. Jordan.
+        Certain Flash games have nearly become lost media, so this game is preserved here. Click the game window to start playing!
+      </p>
+
+      <div id="game" class="game"></div>
+
+      <div class="download">
+        <a class="btn" href="thanks-tanks-game.zip" download>&#11015; Download thanks-tanks-game.zip</a>
+        <p class="note">An offline version of the game is available to download.</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    window.addEventListener("load", async function () {
+      var ruffle = window.RufflePlayer.sources[window.RufflePlayer.newestName];
+      var player = ruffle.createPlayer();
+      var container = document.getElementById("game");
+      container.appendChild(player);
+      player.style.width  = "100%";
+      player.style.height = "100%";
+      // showAll keeps the game's proportions, so it is never distorted
+      await player.load({ url: "thanks-tanks.swf", scale: "showAll", forceScale: true, salign: "", forceAlign: true });
+    });
+  </script>
+
+</body>
+</html>

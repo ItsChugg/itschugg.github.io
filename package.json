@@ -1,7 +1,7 @@
 {
   "name": "itschu.gg",
   "version": "1.0.0",
-  "buildId": 41,
+  "buildId": 42,
   "description": "itschu.gg static website",
   "scripts": {
     "build": "node build.js",
