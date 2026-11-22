@@ -30,12 +30,13 @@
       width: 100%;
       max-width: 640px;
       aspect-ratio: 640 / 480;
-      margin: 18px auto 4px;
+      margin: 18px auto 20px;
       border-radius: var(--radius-md);
       overflow: hidden;
       background: #000;
       box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25), 0 10px 30px -12px var(--shadow);
     }
+    .download { text-align: center; }
     @media (max-width: 480px) {
       .game-pane { padding: 22px 12px 18px; }
     }
@@ -51,11 +52,16 @@
     <section class="glass pane game-pane" aria-labelledby="title">
       <h1 id="title">Little Wheel</h1>
       <p class="lede">
-        <strong>Little Wheel</strong> is a game by One Click Dog, released in 2009. I don't own this game!
-        It's preserved here so it doesn't turn into lost media. Click the game window to play!
+        <strong>Little Wheel</strong> is a game by One Click Dog.
+        I don't own this game! It was almost lost media after Flash shut down, so it's preserved here and available for download. Click the game window to start playing!
       </p>
 
       <div id="game" class="game"></div>
+
+      <div class="download">
+        <a class="btn" href="little-wheel-game.zip" download>&#11015; Download little-wheel-game.zip</a>
+        <p class="note">An offline version of the game is available to download.</p>
+      </div>
     </section>
   </main>
 
