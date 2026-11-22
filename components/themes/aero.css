@@ -226,9 +226,9 @@ body {
   transition: transform .2s ease;
 }
 .pill::after { padding: 1px; opacity: .8; }
-/* Hover tint and brand glow sit on their own layer and only fade in. Animating
-   box-shadow or background directly forces a repaint every frame, and inside
-   a backdrop-filter pane that repaint re-blurs the whole pane, which lags. */
+/* Hover tint sits on its own layer and only fades in. Animating box-shadow or
+   background directly forces a repaint every frame, which lags under glass.
+   It eases in quickly and out a little slower, so a fast sweep leaves a trail. */
 .pill::before,
 .tile::before {
   content: "";
@@ -237,9 +237,8 @@ body {
   z-index: -1;
   border-radius: inherit;
   background: rgba(255, 255, 255, 0.10);
-  box-shadow: 0 0 22px -6px var(--brand, rgba(255, 255, 255, 0.6));
   opacity: 0;
-  transition: opacity .2s ease;
+  transition: opacity .3s ease;
   pointer-events: none;
 }
 .pill:hover,
@@ -247,7 +246,7 @@ body {
 .pill:hover::before,
 .pill:focus-visible::before,
 .tile:hover::before,
-.tile:focus-visible::before { opacity: 1; }
+.tile:focus-visible::before { opacity: 1; transition-duration: .12s; }
 .pill:focus-visible { box-shadow: 0 0 0 2px #fff; }
 .pill:active { transform: none; }
 
