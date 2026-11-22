@@ -3,13 +3,12 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Rizk — Science Museum</title>
+  <title>Rizk · ItsChugg</title>
+  <meta name="description" content="Rizk, the Science Museum's Flash game, preserved and playable in your browser." />
+  <meta name="theme-color" content="#4f8fd6" />
   <link rel="icon" href="/assets/icons/favicon.png?v=2" type="image/png" />
-  <link rel="stylesheet" href="/components/themes/theme.css?v=40" />
-
-  <!-- Apply saved theme before first paint -->
-  <script src="/components/site-config.js?v=40"></script>
-  <script src="/components/navbar/inject-navbar.js?v=40" defer></script>
+  <link rel="preload" as="image" href="/assets/backgrounds/ocean-sky-blur.jpg" />
+  <link rel="stylesheet" href="/components/themes/aero.css?v=41" />
 
   <script>
     // Stub out the Facebook ExternalInterface bridge the SWF calls on startup.
@@ -36,90 +35,48 @@
   <script src="ruffle/ruffle.js"></script>
 
   <style>
-    .rizk-wrap {
-      width: 760px;
-      max-width: calc(100vw - 32px);
-      margin: 28px auto 32px;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-    }
-
-    /* ── Disclaimer ── */
-    .rizk-disclaimer {
-      background: var(--bg-panel);
-      border: var(--border);
-      border-bottom: none;
-      padding: 10px 18px;
-      font-size: 13px;
-      color: var(--text-muted);
-      text-align: center;
-      line-height: 1.7;
-    }
-    .rizk-disclaimer strong { color: var(--amber); }
-    .rizk-disclaimer a      { color: var(--text); text-decoration: underline; }
-    .rizk-disclaimer a:hover { color: var(--amber); }
-
-    /* ── Game ── */
+    .game-pane { padding: 26px 20px 22px; }
+    /* The game is 760x570, so keep that 4:3 shape at any width */
     .rizk-game {
       width: 100%;
-      height: 570px;
+      aspect-ratio: 4 / 3;
+      margin: 18px 0 20px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
       background: #000;
-      display: block;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25), 0 10px 30px -12px var(--shadow);
     }
-
-    /* ── Download bar ── */
-    .rizk-download {
-      background: var(--bg-panel);
-      border: var(--border);
-      border-top: none;
-      padding: 12px 18px;
-      text-align: center;
-    }
-    .rizk-download a {
-      display: inline-block;
-      color: var(--text);
-      border: var(--border);
-      padding: 5px 18px;
-      font-size: 13px;
-      text-decoration: none;
-      transition: color 0.15s, border-color 0.15s, box-shadow 0.15s;
-    }
-    .rizk-download a:hover {
-      color: var(--amber);
-      border-color: var(--amber-dim);
-      box-shadow: var(--glow-sm);
-    }
-    .rizk-download p {
-      margin-top: 7px;
-      font-size: 11px;
-      color: var(--text-faint);
+    .download { text-align: center; }
+    @media (max-width: 480px) {
+      .game-pane { padding: 22px 12px 18px; }
     }
   </style>
 </head>
 <body>
 
-  <div id="navbar-container"></div>
+  <div class="backdrop" aria-hidden="true"></div>
 
-  <div class="rizk-wrap">
+  <main class="page">
+    <a class="glass back" href="/"><img src="/assets/profile_pictures/mizuiguess4-256.webp" width="26" height="26" alt="" />ItsChugg</a>
 
-    <div class="rizk-disclaimer">
-      <strong>Rizk</strong> is a game by the
-      <a href="https://www.sciencemuseum.org.uk/" target="_blank" rel="noopener">Science Museum, London</a>,
-      developed by <a href="https://www.gogonative.com/" target="_blank" rel="noopener">GoGoNative</a>. I don't own this game!<br>
-      This game was almost considered lost media after flash shut down,<br>
-      so the game is now preserved here and available for download.<br>
-      Click the game window to unpause and play!
-    </div>
+    <section class="glass pane game-pane" aria-labelledby="title">
+      <h1 id="title">Rizk</h1>
+      <p class="lede">
+        <strong>Rizk</strong> is a game by the
+        <a href="https://www.sciencemuseum.org.uk/" target="_blank" rel="noopener">Science Museum, London</a>,
+        developed by <a href="https://www.gogonative.com/" target="_blank" rel="noopener">GoGoNative</a>. I don't own this game!
+        It was almost lost media after Flash shut down, so it's preserved here and available for download.
+        Click the game window to unpause and play!
+      </p>
 
-    <div id="game" class="rizk-game"></div>
+      <div id="game" class="rizk-game"></div>
 
-    <div class="rizk-download">
-      <a href="rizk-game.zip" download>⬇ Download rizk-game.zip</a>
-      <p>Local Offline Version<br>Contains everything that is needed, plus a launch script.</p>
-    </div>
-
-  </div>
+      <div class="download">
+        <a class="btn" href="rizk-game.zip" download>&#11015; Download rizk-game.zip</a>
+        <p class="note">Local offline version. Contains everything that's needed, plus a launch script.</p>
+      </div>
+    </section>
+  </main>
 
   <script>
     window.addEventListener("load", async function () {
