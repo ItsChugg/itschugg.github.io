@@ -1,0 +1,327 @@
+/* ==========================================================================
+   glass.css: Planetscape in the site's liquid glass style.
+   Loaded after style.css and replaces theme.css on this page. It defines the
+   colour tokens style.css already uses, then turns the two side panels into
+   floating glass cards over the 3D scene.
+
+   No backdrop-filter here on purpose: the globe redraws every frame, and a
+   live blur over a moving canvas would have to be recomputed every frame too,
+   which is exactly what made the home page lag. Smoked, tinted glass with a
+   bright rim gives the same look for free.
+   ========================================================================== */
+
+:root {
+  --bg:           rgba(8, 20, 45, 0.55);
+  --bg-panel:     linear-gradient(180deg, rgba(40, 80, 150, 0.42), rgba(14, 32, 70, 0.62));
+  --bg-hover:     rgba(255, 255, 255, 0.08);
+  --amber:        #ffffff;
+  --amber-bright: #ffffff;
+  --amber-dim:    rgba(255, 255, 255, 0.35);
+  --amber-faint:  rgba(255, 255, 255, 0.14);
+  --text:         #ffffff;
+  --text-muted:   rgba(255, 255, 255, 0.86);
+  --text-faint:   rgba(255, 255, 255, 0.58);
+  --glow-sm:      0 1px 4px rgba(0, 20, 60, 0.45);
+  --glow-md:      none;
+  --glow-lg:      none;
+  --border:       1px solid rgba(255, 255, 255, 0.16);
+  --accent:       #8fd0ff;
+  --font-head:    -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display",
+                  "Segoe UI", system-ui, "Helvetica Neue", Arial, sans-serif;
+  --font-mono:    var(--font-head);
+  --radius:       24px;
+  --gap:          14px;
+  --top:          70px;
+}
+
+body {
+  background: radial-gradient(ellipse at 50% 40%, #0b1a36 0%, #02060f 70%) #000;
+  color: var(--text-muted);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Top bar: home pill and the app name ──────────────────────────────── */
+#topbar {
+  position: absolute;
+  top: var(--gap);
+  left: var(--gap);
+  right: var(--gap);
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 20;
+}
+#topbar > * { pointer-events: auto; }
+
+.glass-chip {
+  position: relative;
+  background: var(--bg-panel);
+  border-radius: 999px;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    0 8px 24px -10px rgba(0, 10, 30, 0.8);
+}
+
+#home-pill {
+  position: absolute;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px 7px 8px;
+  color: #fff;
+  font: 600 .92rem var(--font-head);
+  text-decoration: none;
+  text-shadow: var(--glow-sm);
+  transition: transform .2s ease;
+}
+#home-pill img { width: 26px; height: 26px; border-radius: 50%; display: block; }
+#home-pill:hover, #home-pill:focus-visible { transform: translateY(-1px); outline: none; }
+#home-pill:focus-visible { box-shadow: 0 0 0 2px #fff; }
+
+#app-title {
+  padding: 9px 22px;
+  color: #fff;
+  font: 700 1rem var(--font-head);
+  letter-spacing: -0.01em;
+  text-shadow: var(--glow-sm);
+}
+
+/* ── Floating glass panels ────────────────────────────────────────────── */
+#panel, #left-panel {
+  top: var(--top);
+  bottom: var(--gap);
+  width: 272px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--bg-panel);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.40),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 24px 60px -24px rgba(0, 10, 30, 0.9);
+  font-family: var(--font-head);
+}
+#panel      { right: var(--gap); border-left: none; }
+#left-panel { left: var(--gap);  border-right: none; }
+
+/* Collapsed: shrink to a round glass button in the corner */
+#panel.collapsed, #left-panel.collapsed {
+  width: 44px;
+  bottom: auto;
+  height: 44px;
+  background: var(--bg-panel);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.40),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+#panel-header, #left-panel-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  padding: 10px 12px;
+}
+#panel.collapsed #panel-header,
+#left-panel.collapsed #left-panel-header { padding: 11px; }
+
+#panel-toggle, #left-panel-toggle {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 9px;
+}
+#panel-toggle:hover, #left-panel-toggle:hover {
+  background: rgba(255, 255, 255, 0.24);
+  color: #fff;
+  border-color: transparent;
+}
+#panel.collapsed #panel-toggle,
+#left-panel.collapsed #left-panel-toggle { color: #fff; border-color: transparent; }
+
+#panel-body, #left-panel-body { scrollbar-color: rgba(255, 255, 255, 0.25) transparent; }
+#panel-body::-webkit-scrollbar-thumb,
+#left-panel-body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.25); border-radius: 4px; }
+
+/* ── Sections ─────────────────────────────────────────────────────────── */
+section {
+  padding: 14px 16px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+section:last-child { border-bottom: none; }
+
+section h2 {
+  font: 600 .72rem var(--font-head);
+  letter-spacing: .08em;
+  color: var(--text-faint);
+}
+.exp-chevron { color: var(--text-faint); font-size: 8px; }
+
+.control-row label {
+  font: 500 .86rem var(--font-head);
+  color: var(--text-muted);
+}
+.control-hint {
+  font: .72rem/1.4 var(--font-head);
+  color: var(--text-faint);
+  opacity: 1;
+}
+
+/* ── Buttons: glass pills ─────────────────────────────────────────────── */
+#panel button, #left-panel button {
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.10);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.35),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font: 600 .8rem var(--font-head);
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 8px 14px;
+  transition: background .2s ease, transform .2s ease;
+}
+#panel button:hover, #left-panel button:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  transform: translateY(-1px);
+}
+#panel button:active, #left-panel button:active { background: rgba(255, 255, 255, 0.24); transform: none; }
+#panel button.btn-active, #left-panel button.btn-active,
+#left-panel .body-select-btn.active {
+  background: rgba(143, 208, 255, 0.30);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.5),
+    inset 0 0 0 1px rgba(143, 208, 255, 0.6);
+  color: #fff;
+}
+#panel .upload-slot-opt button:first-child { font-size: .74rem; padding: 6px 12px; opacity: .8; }
+.clear-btn { font-size: .72rem !important; padding: 4px 9px !important; }
+#left-panel .body-select-btn { border-radius: 14px; }
+#left-panel .body-select-btn.active .body-btn-type { color: var(--accent); opacity: 1; }
+.body-btn-type { font: 600 .62rem var(--font-head); color: var(--text-faint); letter-spacing: .06em; }
+
+/* Toggle-panel buttons keep their compact round shape */
+#panel #panel-toggle, #left-panel #left-panel-toggle {
+  width: 22px;
+  padding: 0;
+  font-size: 9px;
+  box-shadow: none;
+  transform: none;
+}
+#panel.collapsed #panel-toggle,
+#left-panel.collapsed #left-panel-toggle { transform: rotate(180deg); }
+
+/* ── Toggles: iOS style ───────────────────────────────────────────────── */
+input[type="checkbox"] {
+  width: 38px;
+  height: 22px;
+  border: none;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+input[type="checkbox"]::after {
+  width: 18px;
+  height: 18px;
+  top: 2px;
+  left: 2px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 10, 30, 0.5);
+}
+input[type="checkbox"]:checked { background: #4aa8f0; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3); }
+input[type="checkbox"]:checked::after { transform: translateX(16px); background: #fff; }
+
+/* ── Sliders ──────────────────────────────────────────────────────────── */
+input[type="range"] {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.22);
+}
+input[type="range"]::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 10, 30, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 10, 30, 0.55);
+}
+
+/* ── Number boxes, text inputs, selects, colours ──────────────────────── */
+.slider-num, .body-text-input {
+  font: .8rem var(--font-head);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  padding: 3px 6px;
+}
+.slider-num { width: 48px; min-width: 48px; }
+.slider-num:focus, .body-text-input:focus {
+  color: #fff;
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+select {
+  font: .8rem var(--font-head);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.10);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  padding: 5px 24px 5px 10px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23ffffffcc'/%3E%3C/svg%3E");
+}
+select:hover { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35); }
+select option { background: #10264d; color: #fff; }
+
+input[type="color"] {
+  border: none;
+  border-radius: 8px;
+  height: 22px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+input[type="color"]::-webkit-color-swatch { border-radius: 6px; }
+
+#panel span, #left-panel span { font: .8rem var(--font-head); color: var(--text-muted); }
+.info-value { font: .8rem var(--font-head); color: var(--accent); }
+
+/* ── Export progress and footer ───────────────────────────────────────── */
+#gif-progress { border: none; border-radius: 10px; background: rgba(255, 255, 255, 0.08); }
+#gif-progress-bar { height: 4px; background: var(--accent); box-shadow: none; }
+#gif-progress-text { font: .78rem var(--font-head); }
+#panel-version {
+  font: .72rem var(--font-head);
+  letter-spacing: .02em;
+  color: var(--text-faint);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #panel button, #left-panel button, #home-pill { transition: none; }
+}
+
+/* ── Phones: one panel at a time, full width ──────────────────────────── */
+@media (max-width: 760px) {
+  #panel:not(.collapsed), #left-panel:not(.collapsed) {
+    width: calc(100% - 2 * var(--gap));
+    z-index: 15;
+  }
+  /* Hide the other panel's round button while one panel is open */
+  #globe-layout:has(#panel:not(.collapsed)) #left-panel.collapsed,
+  #globe-layout:has(#left-panel:not(.collapsed)) #panel.collapsed { visibility: hidden; }
+}
+@media (max-width: 520px) {
+  #app-title { position: absolute; right: 0; padding: 9px 16px; font-size: .92rem; }
+}

@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Map to System — itschu.gg</title>
+  <title>Planetscape · ItsChugg</title>
+  <meta name="description" content="Planetscape: turn a flat map into a 3D planet, build a solar system around it and export it as a GIF." />
+  <meta name="theme-color" content="#0b1a36" />
   <link rel="icon" href="/assets/icons/favicon.png?v=2" type="image/png" />
   <link rel="stylesheet" href="css/style.css?v=10">
-  <link rel="stylesheet" href="/components/themes/theme.css?v=42">
+  <link rel="stylesheet" href="css/glass.css?v=1">
   <script type="importmap">
   {
     "imports": {
@@ -20,6 +22,12 @@
 
   <div id="globe-layout">
   <canvas id="globe-canvas"></canvas>
+
+  <!-- Home link and app name, floating over the scene -->
+  <header id="topbar">
+    <a id="home-pill" class="glass-chip" href="/"><img src="/assets/profile_pictures/mizuiguess4-256.webp" width="26" height="26" alt="" />ItsChugg</a>
+    <h1 id="app-title" class="glass-chip">Planetscape</h1>
+  </header>
 
   <!-- ── Left panel: system-level controls ──────────────────────────────── -->
   <div id="left-panel">
@@ -491,7 +499,22 @@
 
   <script src="vendor/gif.js"></script>
   <script type="module" src="js/app.js?v=55"></script>
-  <script src="/components/site-config.js?v=42"></script>
-  <script src="/components/navbar/inject-navbar.js?v=42" defer></script>
+  <script>
+    // Phones: start with both panels tucked away, and only let one be open at
+    // a time, since either one fills the screen.
+    (function () {
+      var narrow = window.matchMedia('(max-width: 760px)');
+      var left = document.getElementById('left-panel');
+      var right = document.getElementById('panel');
+      if (narrow.matches) { left.classList.add('collapsed'); right.classList.add('collapsed'); }
+      function closeOther(opened, other) {
+        setTimeout(function () {
+          if (narrow.matches && !opened.classList.contains('collapsed')) other.classList.add('collapsed');
+        }, 0);
+      }
+      document.getElementById('left-panel-toggle').addEventListener('click', function () { closeOther(left, right); });
+      document.getElementById('panel-toggle').addEventListener('click', function () { closeOther(right, left); });
+    })();
+  </script>
 </body>
 </html>
