@@ -35,12 +35,16 @@
   <script src="ruffle/ruffle.js"></script>
 
   <style>
+    /* Sized so the pane hugs the 744px game: 744 + 2x20 padding + 2x16 gutter */
+    .rizk-page { width: min(816px, 100%); }
     .game-pane { padding: 26px 20px 22px; }
-    /* The game stage is 744x480, so keep that shape at any width */
+    /* The game stage is 744x480. Show it at exactly that size, and only shrink
+       it (same shape) when the screen is too narrow to fit it. */
     .rizk-game {
       width: 100%;
+      max-width: 744px;
       aspect-ratio: 744 / 480;
-      margin: 18px 0 20px;
+      margin: 18px auto 20px;
       border-radius: var(--radius-md);
       overflow: hidden;
       background: #000;
@@ -56,7 +60,7 @@
 
   <div class="backdrop" aria-hidden="true"></div>
 
-  <main class="page">
+  <main class="page rizk-page">
     <a class="glass back" href="/"><img src="/assets/profile_pictures/mizuiguess4-256.webp" width="26" height="26" alt="" />ItsChugg</a>
 
     <section class="glass pane game-pane" aria-labelledby="title">
@@ -86,8 +90,8 @@
       container.appendChild(player);
       player.style.width  = "100%";
       player.style.height = "100%";
-      // The game asks Flash not to scale it, so it would sit at 744x480 in the
-      // corner. Force it to fill the box instead.
+      // The game asks Flash not to scale it, which leaves it stuck in the corner
+      // on small screens. showAll keeps its proportions, so it is never distorted.
       await player.load({ url: "SMGame.swf", scale: "showAll", forceScale: true, salign: "", forceAlign: true });
     });
   </script>
