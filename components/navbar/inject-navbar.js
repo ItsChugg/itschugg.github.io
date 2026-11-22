@@ -2,7 +2,7 @@
  * inject-navbar.js — Fetches and injects the shared navbar and wires the
  * dark/light toggle + colour theme dropdown.
  *
- * Load site-config.js?v=38 synchronously first for theme flash prevention.
+ * Load site-config.js?v=39 synchronously first for theme flash prevention.
  */
 
 // Apply saved theme before first paint to prevent flash.
@@ -77,7 +77,7 @@ function wireNavbar() {
 if (document.querySelector('.navbar')) {
   wireNavbar();
 } else {
-  fetch('/components/navbar/navbar.html?v=38')
+  fetch('/components/navbar/navbar.html?v=39')
     .then(res => res.text())
     .then(html => {
       document.body.insertAdjacentHTML('afterbegin', html);
