@@ -36,10 +36,10 @@
 
   <style>
     .game-pane { padding: 26px 20px 22px; }
-    /* The game is 760x570, so keep that 4:3 shape at any width */
+    /* The game stage is 744x480, so keep that shape at any width */
     .rizk-game {
       width: 100%;
-      aspect-ratio: 4 / 3;
+      aspect-ratio: 744 / 480;
       margin: 18px 0 20px;
       border-radius: var(--radius-md);
       overflow: hidden;
@@ -86,7 +86,9 @@
       container.appendChild(player);
       player.style.width  = "100%";
       player.style.height = "100%";
-      await player.load({ url: "SMGame.swf", scale: "showAll" });
+      // The game asks Flash not to scale it, so it would sit at 744x480 in the
+      // corner. Force it to fill the box instead.
+      await player.load({ url: "SMGame.swf", scale: "showAll", forceScale: true, salign: "", forceAlign: true });
     });
   </script>
 
