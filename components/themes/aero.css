@@ -328,17 +328,8 @@ body {
   text-shadow: var(--text-shadow);
 }
 
-/* ── Entrance ─────────────────────────────────────────────────────────── */
-.pane { animation: rise .7s cubic-bezier(.2,.8,.2,1) backwards; }
-.side .pane:nth-child(1) { animation-delay: .1s; }
-.side .pane:nth-child(2) { animation-delay: .2s; }
-@keyframes rise {
-  from { opacity: 0; transform: translateY(16px) scale(.98); }
-  to   { opacity: 1; transform: none; }
-}
-
+/* ── Reduced motion ───────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .pane { animation: none; }
   .pill, .pill-arrow, .tile, .pill::before, .tile::before { transition: none; }
 }
 
