@@ -325,3 +325,10 @@ input[type="color"]::-webkit-color-swatch { border-radius: 6px; }
 @media (max-width: 520px) {
   #app-title { position: absolute; right: 0; padding: 9px 16px; font-size: .92rem; }
 }
+
+/* ── Simple mode: just the map, rotation and export ───────────────────── */
+.simple-mode #left-panel,
+.simple-mode .complex-only { display: none !important; }
+#mode-section .control-row label { font-weight: 600; color: #fff; }
+/* With fewer controls the panel only needs to be as tall as its content */
+.simple-mode #panel:not(.collapsed) { bottom: auto; max-height: calc(100% - var(--top) - var(--gap)); }
