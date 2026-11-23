@@ -234,11 +234,6 @@ $('clear-btn').addEventListener('click', () => {
   $('file-input').value = '';
 });
 
-// ── Panel toggle ──────────────────────────────────────────────────────────────
-$('panel-toggle').addEventListener('click', () => {
-  $('panel').classList.toggle('collapsed');
-});
-
 // ── Main reprojection ─────────────────────────────────────────────────────────
 $('process-btn').addEventListener('click', async () => {
   if (busy || !srcPixels) return;
