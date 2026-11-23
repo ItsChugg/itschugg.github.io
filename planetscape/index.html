@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#0b1a36" />
   <link rel="icon" href="/assets/icons/favicon.png?v=2" type="image/png" />
   <link rel="stylesheet" href="css/style.css?v=10">
-  <link rel="stylesheet" href="css/glass.css?v=1">
+  <link rel="stylesheet" href="css/glass.css?v=2">
   <script type="importmap">
   {
     "imports": {
@@ -360,6 +360,13 @@
             <input type="checkbox" id="rotate-toggle" checked>
           </div>
           <p class="control-hint">Toggles planetary rotation.</p>
+          <div class="simple-only">
+            <div class="control-row">
+              <label for="simple-daynight-toggle">Day/Night Cycle</label>
+              <input type="checkbox" id="simple-daynight-toggle">
+            </div>
+            <p class="control-hint">Lights one side of the planet like a sun would.</p>
+          </div>
           <div class="complex-only">
           <div class="control-row tilt-lock-row">
             <label for="tilt-lock">Tilt Lock</label>
@@ -528,6 +535,17 @@
       }
       apply(saved === 'complex');
       toggle.addEventListener('change', function () { apply(toggle.checked); });
+
+      // The simple mode Day/Night switch drives the real one in the Lighting
+      // section, so both modes always agree.
+      var dn = document.getElementById('daynight-toggle');
+      var simpleDn = document.getElementById('simple-daynight-toggle');
+      simpleDn.checked = dn.checked;
+      simpleDn.addEventListener('change', function () {
+        dn.checked = simpleDn.checked;
+        dn.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      dn.addEventListener('change', function () { simpleDn.checked = dn.checked; });
     })();
 
     // Phones: start with both panels tucked away, and only let one be open at

@@ -332,3 +332,5 @@ input[type="color"]::-webkit-color-swatch { border-radius: 6px; }
 #mode-section .control-row label { font-weight: 600; color: #fff; }
 /* With fewer controls the panel only needs to be as tall as its content */
 .simple-mode #panel:not(.collapsed) { bottom: auto; max-height: calc(100% - var(--top) - var(--gap)); }
+/* Controls that only appear in simple mode (complex mode has them elsewhere) */
+body:not(.simple-mode) .simple-only { display: none !important; }
