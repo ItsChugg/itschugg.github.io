@@ -1,0 +1,1 @@
+const t={"update.title":"update is available!","update.subtext":"press to reload"};export{t as default};

@@ -1,0 +1,1 @@
+import{MemoryStorage as t}from"./CI2Vmj-Y.js";import{OPFSStorage as r}from"./BrTT-aFL.js";async function o(i){if(await r.isAvailable())return r.init();if(await t.isAvailable())return t.init(i||0);throw"no storage method is available"}function m(i,a){return new File([i],i.name,{type:a})}export{o as init,m as retype};

@@ -1,0 +1,26 @@
+{
+    "name": "argon",
+    "short_name": "argon",
+    "id": "/argon/",
+    "start_url": "/argon/",
+    "scope": "/argon/",
+    "icons": [
+        {
+            "src": "/argon/icons/icon-128.png",
+            "sizes": "128x128",
+            "type": "image/png"
+        }
+    ],
+    "share_target": {
+        "method": "GET",
+        "action": "/argon/",
+        "enctype": "application/x-www-form-urlencoded",
+        "params": {
+            "text": "u",
+            "url": "u"
+        }
+    },
+    "theme_color": "#000000",
+    "background_color": "#000000",
+    "display": "standalone"
+}

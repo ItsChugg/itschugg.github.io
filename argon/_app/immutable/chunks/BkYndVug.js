@@ -1,0 +1,1 @@
+const t="save",s="settings",e="updates",o="donate",a="about",n="remux",c={save:t,settings:s,updates:e,donate:o,about:a,remux:n};export{a as about,c as default,o as donate,n as remux,t as save,s as settings,e as updates};

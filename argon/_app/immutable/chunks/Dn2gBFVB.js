@@ -1,0 +1,1 @@
+import"./DO5IUqsv.js";import"./CwTemNRQ.js";import{X as s,Y as i}from"./BmrgCvDi.js";import{a as m,f as p}from"./DDPz40xs.js";import{s as e}from"./CfxqpR-I.js";var d=p('<div class="long-text about"><!></div>');function c(r,a){var o=d(),t=s(o);e(t,a,"default",{}),i(o),m(r,o)}export{c as A};

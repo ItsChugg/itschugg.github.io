@@ -1,0 +1,1 @@
+const e={"status.default":"processing queue","status.completed":"processing queue. all tasks are completed.","status.ongoing":"processing queue. ongoing tasks."};export{e as default};
