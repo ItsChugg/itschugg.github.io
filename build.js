@@ -35,7 +35,8 @@ const STAMPS = [
 ];
 
 // ── File walker ───────────────────────────────────────────────────────────────
-const SKIP_DIRS = new Set(['_backup', 'node_modules', '.git', 'assets']);
+// argon/ is a generated SvelteKit build and argon-src/ is its source; neither uses the stamped assets.
+const SKIP_DIRS = new Set(['_backup', 'node_modules', '.git', 'assets', 'argon', 'argon-src']);
 
 
 function walk(dir) {

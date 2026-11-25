@@ -1,0 +1,1 @@
+const e="drag or select a file",t="supported formats: {{ formats }}.",r={title:e,"title.multiple":"drag or select files","title.drop":"drop the file here!","title.drop.multiple":"drop the files here!",accept:t};export{t as accept,r as default,e as title};

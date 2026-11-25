@@ -1,0 +1,1 @@
+import{d as o}from"./DDPz40xs.js";import{I as s,d as c,a as n}from"./BPSUmcK5.js";import{s as p}from"./C_rnNpd6.js";import{d as r}from"./DIwduiYY.js";const l=a=>Object.keys(n).includes(a),i=o(p,a=>{let e=c;return a.appearance.autoLanguage?l(r.prefers.language)&&(e=r.prefers.language):l(a.appearance.language)&&(e=a.appearance.language),s.set(e),e});export{i as default};

@@ -1,0 +1,1 @@
+const e="argon",o="meowbalt",t="beta",a={cobalt:e,meowbalt:o,beta:t,"embed.description":"argon saves video, audio and photos from your favorite websites. just paste the link."};export{t as beta,e as cobalt,a as default,o as meowbalt};

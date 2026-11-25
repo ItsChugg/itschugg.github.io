@@ -1,0 +1,2 @@
+const t="processing queue",n=`nothing here yet, just the two of us.
+try downloading something!`,e={title:t,stub:n,"state.waiting":"queued","state.retrying":"retrying","state.starting":"starting","state.starting.fetch":"starting downloading","state.starting.remux":"starting remuxing","state.starting.encode":"starting transcoding","state.running.remux":"remuxing","state.running.fetch":"downloading","state.running.encode":"transcoding"};export{e as default,n as stub,t as title};
