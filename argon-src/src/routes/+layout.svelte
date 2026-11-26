@@ -5,6 +5,8 @@
     import "@fontsource/ibm-plex-mono/400.css";
     import "@fontsource/ibm-plex-mono/400-italic.css";
     import "@fontsource/ibm-plex-mono/500.css";
+    // argon: itschu.gg liquid glass look, loaded last so it wins
+    import "../argon-theme.css";
 
     import { onMount } from "svelte";
     import { page } from "$app/stores";

@@ -4,10 +4,10 @@
     import SectionHeading from "$components/misc/SectionHeading.svelte";
 </script>
 
-<section id="cobalt">
+<section id="upstream">
 <SectionHeading
     title="cobalt"
-    sectionId="cobalt"
+    sectionId="upstream"
 />
 
 argon is a modified version of the [cobalt](https://github.com/imputnet/cobalt) web app, made by [imput](https://imput.net/).

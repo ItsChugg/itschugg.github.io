@@ -1,0 +1,260 @@
+/* ==========================================================================
+   argon-theme.css: dresses argon in the itschu.gg liquid glass look
+   (see /components/themes/aero.css on the main site).
+
+   cobalt's own styles are driven by CSS variables, so most of the work is
+   remapping those. argon always uses this one look, whatever the light/dark
+   setting says. The few direct overrides use #cobalt in the selector so they
+   win over svelte's scoped styles.
+
+   The backdrop photos are served by the main site from /assets/backgrounds.
+   ========================================================================== */
+
+[data-theme="light"][data-theme],
+[data-theme="dark"][data-theme],
+:root {
+    /* main text and the contrast color used on "active" white buttons */
+    --secondary: #ffffff;
+    --primary: #0e2f66;
+
+    --gray: rgba(255, 255, 255, 0.72);
+    --blue: #4f8fd6;
+
+    --focus-ring: solid 2px #ffffff;
+
+    /* glass pills and tiles, same values as aero.css */
+    --button: rgba(255, 255, 255, 0.10);
+    --button-hover: rgba(255, 255, 255, 0.16);
+    --button-press: rgba(255, 255, 255, 0.22);
+    --button-active-hover: rgba(255, 255, 255, 0.85);
+
+    --button-hover-transparent: rgba(255, 255, 255, 0.10);
+    --button-press-transparent: rgba(255, 255, 255, 0.16);
+    --button-stroke: rgba(255, 255, 255, 0.16);
+    --button-text: #ffffff;
+    --button-box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.45),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+
+    --button-elevated: rgba(255, 255, 255, 0.14);
+    --button-elevated-hover: rgba(255, 255, 255, 0.20);
+    --button-elevated-press: rgba(255, 255, 255, 0.26);
+    --button-elevated-shimmer: rgba(255, 255, 255, 0.24);
+
+    --popover-glow: rgba(0, 25, 70, 0.28);
+
+    /* dialogs and popovers float over content, so they get a deeper tint */
+    --popup-bg: linear-gradient(180deg, rgba(30, 75, 150, 0.72), rgba(14, 47, 102, 0.82));
+    --popup-stroke: rgba(255, 255, 255, 0.22);
+    --dialog-backdrop: rgba(5, 25, 70, 0.30);
+
+    --sidebar-bg: transparent;
+    --sidebar-highlight: #ffffff;
+    --sidebar-stroke: rgba(255, 255, 255, 0.10);
+
+    --content-border: transparent;
+
+    --input-border: rgba(255, 255, 255, 0.45);
+    --toggle-bg: rgba(255, 255, 255, 0.25);
+    --toggle-bg-enabled: #4f8fd6;
+
+    --border-radius: 16px;
+
+    --sidebar-mobile-gradient: none;
+
+    --argon-text-shadow: 0 1px 3px rgba(0, 25, 70, 0.45), 0 0 12px rgba(0, 25, 70, 0.18);
+    --argon-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display",
+        "Segoe UI", system-ui, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* the site's system font instead of cobalt's monospace one */
+* {
+    font-family: var(--argon-font);
+}
+.long-text,
+.long-text *:not(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--argon-font);
+}
+
+/* ── Backdrop: the ocean and sky photo behind everything ───────────────── */
+body {
+    background: #1d4f9a;
+}
+
+#cobalt {
+    background:
+        linear-gradient(180deg, rgba(10, 45, 110, 0.22) 0%, rgba(10, 45, 110, 0.06) 45%, rgba(5, 25, 70, 0.30) 100%),
+        url("/assets/backgrounds/ocean-sky-blur.jpg") center 55% / cover no-repeat,
+        #1d4f9a;
+    text-shadow: var(--argon-text-shadow);
+}
+
+#cobalt #content {
+    background: transparent;
+    box-shadow: none;
+}
+
+/* ── Sidebar: a glass column ───────────────────────────────────────────── */
+#cobalt #sidebar {
+    background: linear-gradient(180deg, rgba(20, 60, 130, 0.16), rgba(10, 40, 100, 0.26));
+    box-shadow:
+        inset -1px 0 0 rgba(255, 255, 255, 0.18),
+        inset 0 0 24px rgba(255, 255, 255, 0.06);
+}
+
+#cobalt #app-logo {
+    font-family: var(--argon-font);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+@media screen and (max-width: 535px) {
+    #cobalt #sidebar {
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.22),
+            inset 0 0 24px rgba(255, 255, 255, 0.06);
+        -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
+    }
+}
+
+/* ── Glass surfaces that float over content ────────────────────────────── */
+#cobalt .popover,
+#cobalt .dialog-body {
+    background: var(--popup-bg);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.55),
+        inset 0 0 0 1px var(--popup-stroke),
+        0 18px 48px -16px rgba(0, 25, 70, 0.45);
+}
+#cobalt .dialog-body {
+    filter: none;
+}
+
+/* ── Sidebar tabs: the active one is a lit glass pill, not solid white ──── */
+#cobalt .sidebar-tab.active {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.55),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+#cobalt .sidebar-tab {
+    opacity: 0.85;
+}
+
+#cobalt .subnav-tab.active {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.55),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+/* ── Settings and about: the page content sits in a glass pane ─────────── */
+@media screen and (min-width: 751px) {
+    #cobalt .subnav-page-content {
+        position: relative;
+        align-self: start;
+        max-height: calc(100vh - 32px);
+        max-height: calc(100dvh - 32px);
+        /* right margin leaves room for the floating download queue button */
+        margin: 16px 64px 16px 0;
+        border-radius: 32px;
+        background: linear-gradient(180deg, rgba(20, 60, 130, 0.16), rgba(10, 40, 100, 0.26));
+        -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
+        box-shadow:
+            inset 0 1px 1px rgba(255, 255, 255, 0.55),
+            inset 0 -1px 1px rgba(255, 255, 255, 0.12),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+            0 18px 48px -16px rgba(0, 25, 70, 0.28);
+    }
+}
+
+/* ── Save page: the link box sits in a glass pane like the site's cards ── */
+#cobalt #omnibox {
+    padding: 22px;
+    border-radius: 32px;
+    background: linear-gradient(180deg, rgba(20, 60, 130, 0.16), rgba(10, 40, 100, 0.26));
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.55),
+        inset 0 -1px 1px rgba(255, 255, 255, 0.12),
+        inset 0 0 24px rgba(255, 255, 255, 0.06),
+        0 1px 2px rgba(0, 20, 60, 0.10),
+        0 18px 48px -16px rgba(0, 25, 70, 0.28);
+    gap: 10px;
+}
+/* the light-catching rim from aero.css */
+#cobalt #omnibox::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.25px;
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(255, 255, 255, 0.18) 22%,
+        rgba(255, 255, 255, 0.04) 50%,
+        rgba(255, 255, 255, 0.18) 78%,
+        rgba(255, 255, 255, 0.75) 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    pointer-events: none;
+}
+#cobalt #instance-label {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+@media screen and (max-width: 535px) {
+    #cobalt #omnibox {
+        padding: 16px 14px;
+        border-radius: 24px;
+    }
+}
+
+/* ── Link box on the save page ─────────────────────────────────────────── */
+#cobalt #input-container {
+    background: rgba(255, 255, 255, 0.10);
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.45),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.30);
+    outline: none;
+}
+#cobalt #input-container.focused {
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.55),
+        inset 0 0 0 1.5px rgba(255, 255, 255, 0.85);
+}
+#cobalt #link-area::placeholder {
+    color: rgba(255, 255, 255, 0.70);
+}
+
+/* white "active" buttons read as frosted white with deep blue text */
+#cobalt .button.active,
+#cobalt .button.active svg {
+    text-shadow: none;
+}
+
+/* readable text selection on the blue backdrop */
+::selection {
+    color: #0e2f66;
+    background: #ffffff;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    #cobalt .subnav-page-content,
+    #cobalt #omnibox,
+    #cobalt .popover,
+    #cobalt .dialog-body {
+        background: rgba(30, 75, 150, 0.95);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+}
