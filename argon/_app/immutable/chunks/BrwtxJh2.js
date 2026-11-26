@@ -1,1 +1,0 @@
-import{v as t}from"./B_e5CrnX.js";import{g as e}from"./DDPz40xs.js";import{s as r}from"./C_rnNpd6.js";const a=()=>{const n=e(r).processing,s=n.customInstanceURL;return n.enableCustomInstances&&s.length>0?new URL(s).origin:new URL(t.DEFAULT_API).origin};export{a as currentApiURL};

@@ -1,0 +1,1 @@
+import{v as t}from"./J2SW5f-j.js";import{g as e}from"./DDPz40xs.js";import{s as r}from"./ChX795_B.js";const a=()=>{const n=e(r).processing,s=n.customInstanceURL;return n.enableCustomInstances&&s.length>0?new URL(s).origin:new URL(t.DEFAULT_API).origin};export{a as currentApiURL};

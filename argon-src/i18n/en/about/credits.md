@@ -10,8 +10,8 @@
     sectionId="upstream"
 />
 
-argon is a modified version of the [cobalt](https://github.com/imputnet/cobalt) web app, made by [imput](https://imput.net/).
-argon is not affiliated with or endorsed by imput or cobalt.
+Argon is a modified version of the [cobalt](https://github.com/imputnet/cobalt) web app, made by [imput](https://imput.net/).
+Argon is not affiliated with or endorsed by imput or cobalt.
 
 if you find it useful, consider supporting the original project at [cobalt.tools](https://cobalt.tools/).
 </section>
@@ -23,7 +23,7 @@ if you find it useful, consider supporting the original project at [cobalt.tools
 />
 
 changes from the original cobalt frontend:
-- renamed to argon, with cobalt's logos, mascot art and update banners removed.
+- renamed to Argon, with cobalt's logos, mascot art and update banners removed.
 - served from the /argon path on itschu.gg and pointed at a private processing server.
 - in-browser processing is off by default and the remux tab is hidden, so the processing server does the work.
 - removed the donate, updates, community, privacy policy and terms pages, and the russian translation.
@@ -37,12 +37,12 @@ the modified source code is in the [itschu.gg repository](https://github.com/Its
     sectionId="licenses"
 />
 
-argon's frontend code, like cobalt's, is licensed under [CC-BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+Argon's frontend code, like cobalt's, is licensed under [CC-BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 see the [original license](https://github.com/imputnet/cobalt/blob/main/web/LICENSE).
 
 the processing server runs the unmodified cobalt api, licensed under [AGPL-3.0](https://github.com/imputnet/cobalt/blob/main/api/LICENSE).
 
-argon also relies on open source fonts, icons and libraries, including
+Argon also relies on open source fonts, icons and libraries, including
 [svelte](https://svelte.dev), [libav.js](https://github.com/imputnet/libav.js),
 [tabler icons](https://tabler.io/icons), ibm plex mono, noto sans mono and redaction.
 </section>
