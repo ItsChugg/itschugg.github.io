@@ -1,5 +1,5 @@
 /**
- * site-config.js?v=45 — Site-wide constants.
+ * site-config.js?v=47 — Site-wide constants.
  * Load this BEFORE inject-navbar.js.
  *
  * Exposes: // ── Clear old wiki login sessions ─────────────────────────────────────────────

@@ -1,1 +1,0 @@
-import{s as i}from"./C_rnNpd6.js";import{g as e,w as o}from"./DDPz40xs.js";const s=o(!1),a=()=>{if(!e(s)&&!e(i).accessibility.dontAutoOpenQueue)return s.update(t=>!t)};export{a as openQueuePopover,s as queueVisible};

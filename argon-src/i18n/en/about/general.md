@@ -13,7 +13,7 @@
     sectionId="summary"
 />
 
-argon saves video, audio, photos and gifs from your favorite websites. paste a link and you're done.
+Argon saves video, audio, photos and gifs from your favorite websites. paste a link and you're done.
 
 it's a personal, self-hosted tool on [itschu.gg](https://itschu.gg/), built on the open source [cobalt](https://github.com/imputnet/cobalt) project by imput.
 </section>
@@ -24,7 +24,7 @@ it's a personal, self-hosted tool on [itschu.gg](https://itschu.gg/), built on t
     sectionId="access"
 />
 
-argon's processing server only accepts requests with an access key.
+Argon's processing server only accepts requests with an access key.
 if you have one, add it in [instance settings]({instanceSettings}).
 </section>
 
